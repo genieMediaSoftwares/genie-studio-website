@@ -76,20 +76,20 @@ export const SERVICES = [
     name: "Podcast Shoots",
     path: "/services/podcast-shoots",
     // Highest-priority page on the site.
-    title: "Podcast Studio in Vizag | Podcast Shoot & Production | GenieStudio",
+    title: "Podcast Studio in Visakhapatnam & Vizag | GenieStudio",
     description:
-      "Looking for a podcast studio in Vizag? GenieStudio offers professional podcast shoots, video recording, podcast production and studio services in Visakhapatnam.",
+      "Book a podcast studio in Visakhapatnam (Yendada, Vizag). Genie Studio offers multi-camera video & audio podcast shoots, editing and delivery.",
+    image: `${SITE_URL}/uploads/1786531745_1786531742798-721756481.webp`,
     keywords: {
-      primary: "podcast studio in Vizag",
+      primary: "Podcast Studio in Visakhapatnam",
       secondary: [
-        "podcast studio Vizag",
-        "podcast studio Visakhapatnam",
-        "podcast shoot Vizag",
-        "podcast recording studio Vizag",
-        "podcast recording Visakhapatnam",
-        "podcast production Vizag",
-        "video podcast studio Vizag",
-        "podcast filming studio Vizag",
+        "Podcast Studio Rental in Vizag",
+        "Podcast Recording Studio in Vizag",
+        "Podcast Shoot in Visakhapatnam",
+        "Video Podcast Recording in Vizag",
+        "Professional Podcast Production",
+        "Podcast Studio Rental in Visakhapatnam",
+        "Podcast Audio and Video Recording",
       ],
     },
   },
@@ -97,37 +97,86 @@ export const SERVICES = [
     key: "product",
     name: "Product Shoots",
     path: "/services/product-shoots",
-    title: "Product Photography & Product Shoots in Vizag | GenieStudio",
+    title: "Product Photography in Vizag | Genie Studio",
     description:
-      "Product photography in Vizag built to sell — e-commerce, catalogue and lifestyle product shoots, shot and retouched at GenieStudio Visakhapatnam.",
-    keywords: { primary: "product photography Vizag", secondary: ["product shoots Vizag"] },
+      "Get professional product photography in Visakhapatnam at Genie Studio. Create high-quality product images for e-commerce, advertising, marketing and brand promotions.",
+    image: `${SITE_URL}/uploads/1786531726_1786531724729-939039825.webp`,
+    keywords: {
+      primary: "Product Photography in Visakhapatnam",
+      secondary: [
+        "Product Photography Services in Vizag",
+        "Product Shoots in Visakhapatnam",
+        "Professional Product Photography Studio in Vizag",
+        "Commercial Product Photography",
+        "E-commerce Product Photography",
+        "Product Photography for Businesses",
+        "Product Photography for Brands",
+      ],
+    },
   },
   {
     key: "corporate",
     name: "Corporate Shoots",
     path: "/services/corporate-shoots",
-    title: "Corporate Photography & Corporate Shoots in Vizag | GenieStudio",
+    title: "Corporate Photography & Video Production in Visakhapatnam | Genie Studio",
     description:
-      "Corporate photography in Vizag — executive headshots, team portraits and office culture shoots, from GenieStudio in Visakhapatnam.",
-    keywords: { primary: "corporate photography Vizag", secondary: ["corporate shoots Vizag"] },
+      "Professional corporate photography and video production in Visakhapatnam. Showcase your workplace, team and brand with Genie Studio.",
+    image: `${SITE_URL}/uploads/1786601041_1786601041120-705832864.png`,
+    keywords: {
+      primary: "Corporate Photography and Video Production in Visakhapatnam",
+      secondary: [
+        "Corporate Photography in Vizag",
+        "Corporate Video Production in Visakhapatnam",
+        "Corporate Photoshoot in Vizag",
+        "Office Photography in Visakhapatnam",
+        "Executive Portrait Photography",
+        "Corporate Team Photography",
+        "Company Profile Video Production",
+        "Business Photography Services in Vizag",
+      ],
+    },
   },
   {
     key: "event",
     name: "Event Shoots",
     path: "/services/event-shoots",
-    title: "Event Photography & Event Shoots in Vizag | GenieStudio",
+    title: "Event Photography in Visakhapatnam | GenieStudio",
     description:
-      "Event photography in Vizag — full coverage of launches, conferences and corporate events, edited for immediate use. GenieStudio, Visakhapatnam.",
-    keywords: { primary: "event photography Vizag", secondary: ["event shoots Vizag"] },
+      "Looking for professional event photography in Visakhapatnam? GenieStudio offers event photography and videography for corporate events, conferences, launches and celebrations. Contact us for a quote.",
+    image: `${SITE_URL}/uploads/1786601438_1786601436150-15515106.png`,
+    keywords: {
+      primary: "Event Photography in Visakhapatnam",
+      secondary: [
+        "Event Photographers in Visakhapatnam",
+        "Event Videography in Visakhapatnam",
+        "Event Photography Services in Vizag",
+        "Corporate Event Photography in Visakhapatnam",
+        "Conference Photography in Vizag",
+        "Product Launch Photography",
+        "Event Photography in Yendada",
+      ],
+    },
   },
   {
     key: "professional",
     name: "Professional Shoots",
     path: "/services/professional-shoots",
-    title: "Professional Photography Services in Vizag | GenieStudio",
+    title: "Professional Photography in Visakhapatnam | GenieStudio",
     description:
-      "Professional photography in Vizag — personal branding portraits and headshots for founders, leaders and professionals. GenieStudio, Visakhapatnam.",
-    keywords: { primary: "professional photography Vizag", secondary: ["personal branding photography Vizag"] },
+      "Looking for professional photography in Visakhapatnam? GenieStudio offers portrait photography, professional headshots and personal branding photoshoots in Vizag. Contact us to book.",
+    image: `${SITE_URL}/uploads/1786608030_1786608028512-709035430.png`,
+    keywords: {
+      primary: "Professional Photography in Visakhapatnam",
+      secondary: [
+        "Professional Photographers in Visakhapatnam",
+        "Professional Photoshoot in Vizag",
+        "Portrait Photography in Visakhapatnam",
+        "Professional Headshots in Vizag",
+        "Personal Branding Photography in Visakhapatnam",
+        "Business Headshot Photography",
+        "Professional Photographer in Yendada",
+      ],
+    },
   },
 ];
 
@@ -161,9 +210,10 @@ export const SEO = {
   },
   portfolio: {
     path: "/portfolio",
-    title: `Portfolio | ${BRAND} Photography & Video Work`,
+    title: "Genie Studio Portfolio | Podcast & Video Production in Visakhapatnam",
     description:
-      "Browse GenieStudio's portfolio of Podcast Shoots, Product Shoots, Corporate Shoots, Event Shoots and Professional Shoots produced for brands in Visakhapatnam.",
+      "Explore Genie Studio's podcast videos, podcast shorts, interviews, promotional videos, social media reels, corporate films and professional video editing work.",
+    image: `${SITE_URL}/uploads/1786524726_1786524725461-113127996.JPG`,
   },
   gallery: {
     path: "/gallery",
@@ -185,9 +235,10 @@ export const SEO = {
   },
   businessPortfolio: {
     path: "/services/business-portfolio-shoots",
-    title: `Business Portfolio Photography in Vizag | ${BRAND}`,
+    title: `Business Portfolio Photography in Visakhapatnam | ${BRAND}`,
     description:
-      "Business portfolio photography in Vizag — visual storytelling that packages your brand, team and product range into one coherent set of images.",
+      "Business portfolio photography in Visakhapatnam by GenieStudio — executive portraits, corporate team photos, workplace photography and brand visuals in Vizag.",
+    image: `${SITE_URL}/uploads/1786519476_1786519476246-824255335.jpg`,
   },
 };
 
@@ -200,6 +251,7 @@ export const SERVICE_SEO = Object.fromEntries(
       name: service.name,
       title: service.title,
       description: service.description,
+      ...(service.image ? { image: service.image } : {}),
     },
   ])
 );

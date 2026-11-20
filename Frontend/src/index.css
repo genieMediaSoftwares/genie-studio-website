@@ -27,6 +27,14 @@
     font-family: "Brockmann", sans-serif;
     font-size: 15px;
     overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   @media (min-width: 640px) {
@@ -222,4 +230,31 @@ summary:focus-visible,
 }
 @media (prefers-reduced-motion: reduce) {
   .oi-shimmer::after { animation: none; }
+}
+
+/* ── Homepage podcast hero sans-serif heading & ticker marquee ─────────── */
+.hero-sans-heading {
+  font-family: "Inter", "Brockmann", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+@keyframes hero-ticker-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.hero-ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: hero-ticker-scroll 34s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-ticker-track {
+    animation: none;
+  }
 }

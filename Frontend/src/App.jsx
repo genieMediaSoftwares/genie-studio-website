@@ -7,18 +7,6 @@ import FloatingSocial from "./components/FloatingSocial";
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import DeferredSplashCursor from "./components/DeferredSplashCursor";
-/**
- * Every route except Home is code-split.
- *
- * Home stays eagerly imported because a visitor landing on "/" must not wait an
- * extra network round trip for its chunk — that would push LCP out, which is
- * the opposite of the goal.
- *
- * Everything else is loaded on navigation. Admin matters most (it dragged the
- * entire TipTap editor into the initial bundle) but the public pages add up
- * too: a visitor reading the homepage was downloading and parsing the Portfolio
- * grid, the Dome gallery and six service pages they may never open.
- */
 const About = lazy(() => import("./pages/About"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -59,7 +47,7 @@ function App() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
       <DeferredSplashCursor />
       <ScrollToTop />
       <Header />
@@ -72,64 +60,64 @@ function App() {
             synchronously exactly as before, so nothing about the visitor-facing
             pages changes. */}
         <Suspense fallback={null}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/services/corporate-shoots" element={<Corporateshoots />} />
-          <Route path="/services/event-shoots" element={<Eventshoots />} />
-          <Route path="/services/product-shoots" element={<Productshoots />} />
-          <Route path="/services/podcast-shoots" element={<Podcastshoots />} />
-          <Route path="/services/professional-shoots" element={<Professionalshoots />} />
-          <Route path="/services/business-portfolio-shoots" element={<Businessportfolioshoots />} />
-          <Route path="/admin" element={<AdminLogin />} />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/services/corporate-shoots" element={<Corporateshoots />} />
+            <Route path="/services/event-shoots" element={<Eventshoots />} />
+            <Route path="/services/product-shoots" element={<Productshoots />} />
+            <Route path="/services/podcast-shoots" element={<Podcastshoots />} />
+            <Route path="/services/professional-shoots" element={<Professionalshoots />} />
+            <Route path="/services/business-portfolio-shoots" element={<Businessportfolioshoots />} />
+            <Route path="/admin" element={<AdminLogin />} />
 
-          <Route
-            path="/admin/blogs"
-            element={
-              <ProtectedRoute>
-                <AdminBlogs />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/blogs"
+              element={
+                <ProtectedRoute>
+                  <AdminBlogs />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/images"
-            element={
-              <ProtectedRoute>
-                <AdminImages />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/images"
+              element={
+                <ProtectedRoute>
+                  <AdminImages />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/portfolio"
-            element={
-              <ProtectedRoute>
-                <AdminPortfolio />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/portfolio"
+              element={
+                <ProtectedRoute>
+                  <AdminPortfolio />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/gallery"
-            element={
-              <ProtectedRoute>
-                <AdminGallery />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/admin/gallery"
+              element={
+                <ProtectedRoute>
+                  <AdminGallery />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route path="/blogs" element={<Blogs />} />
-          <Route path="/blog/*" element={<BlogDetail />} />
-          {/* Apache rewrites unmatched paths to index.html, so without this a
+            <Route path="/blogs" element={<Blogs />} />
+            <Route path="/blog/*" element={<BlogDetail />} />
+            {/* Apache rewrites unmatched paths to index.html, so without this a
               bad URL rendered a blank page on a 200 — a soft 404 to Google.
               NotFound sends noindex instead. Must stay last. */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </Suspense>
       </div>
       <FloatingSocial />

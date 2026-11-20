@@ -1,155 +1,222 @@
 import { Link } from "react-router-dom";
-import { Instagram, Linkedin, Youtube } from "lucide-react";
+import {
+  Instagram,
+  Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  Youtube,
+} from "lucide-react";
+
+const QUICK_LINKS = [
+  { label: "Home", to: "/" },
+  { label: "About", to: "/about" },
+  { label: "Portfolio", to: "/portfolio" },
+  { label: "Services", to: "/services" },
+  { label: "Gallery", to: "/gallery" },
+  { label: "Contact", to: "/contact" },
+  { label: "Blog", to: "/blogs" },
+];
+
+const SERVICE_LINKS = [
+  { label: "Corporate Shoots", to: "/services/corporate-shoots" },
+  { label: "Event Shoots", to: "/services/event-shoots" },
+  { label: "Product Shoots", to: "/services/product-shoots" },
+  { label: "Podcast Shoots", to: "/services/podcast-shoots" },
+  { label: "Professional Shoots", to: "/services/professional-shoots" },
+  {
+    label: "Business Portfolio Shoots",
+    to: "/services/business-portfolio-shoots",
+  },
+];
+
+const SOCIAL_LINKS = [
+  {
+    Icon: Instagram,
+    href: "https://www.instagram.com/itsgeniestudio_official/",
+    label: "Follow GenieStudio on Instagram",
+  },
+  {
+    Icon: Linkedin,
+    href: "https://www.linkedin.com/in/yourprofile",
+    label: "Follow GenieStudio on LinkedIn",
+  },
+  {
+    Icon: Youtube,
+    href: "https://www.youtube.com/@itsgeniemedia_official",
+    label: "Watch GenieStudio on YouTube",
+  },
+];
 
 const Footer = () => {
   return (
-    <footer className="bg-[#f7f6f3] text-[#111]">
-      <div className=" max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-14 md:py-20 " >
-        <div className=" grid  grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-10 lg:gap-14">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              {/* Decorative: the wordmark beside it already says the name. */}
+    <footer className="bg-[#FAF8F5] text-[#1A1512] border-t border-[#EAE2D6]">
+      <div className="w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-12 sm:pt-14 pb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+          {/* Column 1: Company Branding */}
+          <div className="space-y-4 min-w-0">
+            {/* Brand row: GenieStudio logo (same as header) + typography */}
+            <Link
+              to="/"
+              className="inline-flex items-center gap-3 sm:gap-3.5 group"
+              aria-label="GenieStudio Home"
+            >
               <img
-                src="https://geniestudio.in/Images%20For%20GenieStudio/GenieStudio.png"
+                src="/GenieStudio.png"
                 alt=""
-                width="30" height="93"
+                width="30"
+                height="93"
+                className="h-9 sm:h-10 md:h-11 w-auto object-contain flex-shrink-0"
                 loading="lazy"
                 decoding="async"
-                className="h-8 sm:h-9 w-cover"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
               />
-              <span className="text-lg sm:text-2xl lg:text-3xl xl:text-4xl font-semibold">
+              <span className="text-xl min-[360px]:text-2xl sm:text-[1.75rem] font-bold tracking-tight text-[#1A1512] leading-none">
                 Genie
-                <span className="text-[var(--accent-color-on-light)]">Studio</span>
+                <span className="text-[var(--accent-color-on-light)]">
+                  Studio
+                </span>
               </span>
-            </div>
-
-            <p className="text-sm sm:text-sm lg:text-base text-[#555] leading-relaxed max-w-sm">
-              Capturing moments, stories, and brands with creativity,
-              precision, and professional excellence.
-            </p>
-            <Link
-              to="/services"
-              className=" inline-flex items-center gap-2 px-4 sm:px-6  py-2.5 sm:py-3 rounded-full bg-[#6b4a2d] text-white text-xs sm:text-sm lg:text-base font-medium w-fit transition-colors hover:bg-[#6b4a2d] ">
-              More services <span>↗</span>
             </Link>
+
+            {/* Company Description */}
+            <p className="text-sm text-[#5A5149] leading-relaxed max-w-sm">
+              GenieStudio offers professional photography, podcast production and video services in Visakhapatnam.
+            </p>
+
+            {/* Social Media Icons */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-1">
+              {SOCIAL_LINKS.map((item) => {
+                const SocialIcon = item.Icon;
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={item.label}
+                    className="w-9 h-9 rounded-full border border-[#D6CBBF] bg-white flex items-center justify-center text-[#1A1512] transition-colors duration-200 hover:bg-[#6B4A2D] hover:border-[#6B4A2D] hover:text-white"
+                  >
+                    <SocialIcon className="w-4 h-4" aria-hidden="true" />
+                  </a>
+                );
+              })}
+            </div>
           </div>
 
-          {/* These column titles are h2, not h3. They used to be h3 while the
-              deepest heading above them on a sparse page (Gallery, 404, an
-              empty Blog list) was the h1 — a skipped level, which is what
-              "Heading elements are not in a sequentially-descending order"
-              was reporting. Classes are untouched, so they look the same. */}
-          <div className="grid grid-cols-2 gap-4 sm:space-y-6 sm:block">
+          {/* Column 2: Quick Links */}
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-[#1A1512] tracking-wide">
+              Quick Links
+            </h2>
+            <div
+              aria-hidden="true"
+              className="w-8 h-0.5 rounded-full bg-[#6B4A2D] mt-2 mb-4"
+            />
+            <nav aria-label="Footer Quick Links">
+              <ul className="space-y-2 text-sm text-[#5A5149]">
+                {QUICK_LINKS.map((item) => (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      className="inline-block hover:text-[#6B4A2D] transition-colors duration-150"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
 
-            <div>
-              <h2 className="font-semibold mb-2 text-base sm:text-base lg:text-lg">
-                Address
-              </h2>
-              <p className="text-xs sm:text-sm lg:text-base text-[#555] leading-relaxed">
-                5A-2, KP Icon, Yendada,
-                <br />
-                Visakhapatnam,
-                <br />
-                Andhra Pradesh – 530045
-              </p>
-            </div>
+          {/* Column 3: Our Services */}
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-[#1A1512] tracking-wide">
+              Our Services
+            </h2>
+            <div
+              aria-hidden="true"
+              className="w-8 h-0.5 rounded-full bg-[#6B4A2D] mt-2 mb-4"
+            />
+            <nav aria-label="Footer Services">
+              <ul className="space-y-2 text-sm text-[#5A5149]">
+                {SERVICE_LINKS.map((item) => (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      className="inline-block hover:text-[#6B4A2D] transition-colors duration-150"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
 
-            <div>
-              <h2 className="font-semibold mb-2 text-base sm:text-base lg:text-lg">
-                Contact
-              </h2>
-              <div className="space-y-1 text-xs sm:text-sm lg:text-base text-[#555]">
+          {/* Column 4: Contact Information */}
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-[#1A1512] tracking-wide">
+              Contact Information
+            </h2>
+            <div
+              aria-hidden="true"
+              className="w-8 h-0.5 rounded-full bg-[#6B4A2D] mt-2 mb-4"
+            />
+            <address className="not-italic space-y-3 text-sm text-[#5A5149]">
+              <div className="flex items-start gap-2.5">
+                <Phone
+                  className="w-4 h-4 mt-1 flex-shrink-0 text-[#6B4A2D]"
+                  aria-hidden="true"
+                />
                 <a
                   href="tel:+919032845433"
-                  className="block tap-target hover:text-[#111] transition-colors"
+                  className="hover:text-[#1A1512] transition-colors duration-150"
                 >
                   +91 9032845433
                 </a>
+              </div>
 
+              <div className="flex items-start gap-2.5">
+                <Mail
+                  className="w-4 h-4 mt-1 flex-shrink-0 text-[#6B4A2D]"
+                  aria-hidden="true"
+                />
                 <a
                   href="mailto:admin@geniestudio.in"
-                  className="block tap-target hover:text-[#111] transition-colors"
+                  className="break-all hover:text-[#1A1512] transition-colors duration-150"
                 >
                   admin@geniestudio.in
                 </a>
               </div>
 
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-2 lg:col-span-2">
-            <div>
-              <h2 className="font-semibold mb-2 text-base sm:text-base lg:text-lg">
-                Quick links
-              </h2>
-              <ul className="space-y-1 text-xs sm:text-sm lg:text-base text-[#555]">
-                <li><Link to="/" className="inline-block tap-target">Home</Link></li>
-                <li><Link to="/about" className="inline-block tap-target">About</Link></li>
-                <li><Link to="/portfolio" className="inline-block tap-target">Portfolio</Link></li>
-                <li><Link to="/services" className="inline-block tap-target">Services</Link></li>
-                <li><Link to="/contact" className="inline-block tap-target">Contact</Link></li>
-              </ul>
-            </div>
-
-
-            <div>
-              <h2 className="font-semibold mb-2 text-base sm:text-base lg:text-lg">
-                Services
-              </h2>
-              {/* The inner <ul> was a direct child of the outer <ul> — only
-                  <li> may sit there, which is what Lighthouse's "Lists contain
-                  only <li> elements" audit was failing on. Same six links,
-                  one list. */}
-              <ul className="space-y-1 text-xs sm:text-sm lg:text-base text-[#555]">
-                <li><a href="/services/corporate-shoots" className="inline-block tap-target">Corporate Shoots</a></li>
-                <li><a href="/services/event-shoots" className="inline-block tap-target">Event Shoots</a></li>
-                <li><a href="/services/product-shoots" className="inline-block tap-target">Product Shoots</a></li>
-                <li><a href="/services/podcast-shoots" className="inline-block tap-target">Podcast Shoots</a></li>
-                <li><a href="/services/professional-shoots" className="inline-block tap-target">Professional Shoots</a></li>
-                <li><a href="/services/business-portfolio-shoots" className="inline-block tap-target">Business Portfolio Shoots</a></li>
-              </ul>
-            </div>
+              <div className="flex items-start gap-2.5">
+                <MapPin
+                  className="w-4 h-4 mt-1 flex-shrink-0 text-[#6B4A2D]"
+                  aria-hidden="true"
+                />
+                <p className="leading-relaxed">
+                  5A-2, KP Icon, Yendada,
+                  <br />
+                  Visakhapatnam,
+                  <br />
+                  Andhra Pradesh – 530045
+                </p>
+              </div>
+            </address>
           </div>
         </div>
-        <div className="border-t border-[#ddd] mt-8 sm:mt-12 pt-5 sm:pt-6">
-          <div
-            className=" flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
-            <p className="text-sm sm:text-sm text-[#555] text-center md:text-left">
-              © {new Date().getFullYear()} Genie Studio. All rights reserved.
-            </p>
 
-            <div className="flex gap-2 sm:gap-3">
-              {/* Icon-only links carry no text, so without a label a screen
-                  reader announces them as "link" three times over. */}
-              {[
-                {
-                  Icon: Instagram,
-                  link: "https://www.instagram.com/itsgeniestudio_official/",
-                  label: "Follow Genie Studio on Instagram",
-                },
-                {
-                  Icon: Linkedin,
-                  link: "https://www.linkedin.com/in/yourprofile",
-                  label: "Follow Genie Studio on LinkedIn",
-                },
-                {
-                  Icon: Youtube,
-                  link: "https://www.youtube.com/@itsgeniemedia_official",
-                  label: "Watch Genie Studio on YouTube",
-                },
-              ].map(({ Icon, link, label }, i) => (
-                <a
-                  key={i}
-                  href={link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className=" w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#ddd] flex items-center justify-center text-[#111] transition-colors hover:bg-[#111] hover:text-white " >
-                  <Icon size={16} className="sm:w-[18px] sm:h-[18px]" aria-hidden="true" />
-                </a>
-              ))}
-            </div>
-          </div>
+        {/* Bottom Footer Bar */}
+        <div className="border-t border-[#EAE2D6] mt-10 pt-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs sm:text-sm text-[#5A5149]">
+          <p className="text-center sm:text-left">
+            © 2026 GenieStudio. All Rights Reserved.
+          </p>
+          <p className="text-center sm:text-right">
+            Visakhapatnam, Andhra Pradesh
+          </p>
         </div>
       </div>
     </footer>

@@ -79,19 +79,18 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Genie Studio" />
   <meta property="og:locale" content="en_IN" />
-  <meta property="og:title"
-    content="Genie Studio | Photography, Podcast, Product &amp; Professional Shoots" />
+  <meta property="og:title" content="Genie Studio | Photography, Podcast, Product &amp; Professional Shoots" />
   <meta property="og:description"
     content="Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography." />
   <meta property="og:url" content="https://geniestudio.in/" />
   <meta property="og:image" content="https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Genie Studio — professional photography and video studio in Yendada, Visakhapatnam" />
+  <meta property="og:image:alt"
+    content="Genie Studio — professional photography and video studio in Yendada, Visakhapatnam" />
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title"
-    content="Genie Studio | Photography, Podcast, Product &amp; Professional Shoots" />
+  <meta name="twitter:title" content="Genie Studio | Photography, Podcast, Product &amp; Professional Shoots" />
   <meta name="twitter:description"
     content="Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography." />
   <meta name="twitter:image" content="https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png" />
@@ -99,41 +98,9 @@
   <!-- Every photo on the site comes from this origin. Opening the TCP + TLS
        connection during HTML parse saves a full round trip before the first
        image byte arrives — worth ~100-300ms on mobile networks. -->
-  <link rel="preconnect" href="https://geniestudio.in" crossorigin>
-  <link rel="dns-prefetch" href="https://geniestudio.in">
-
-  <!-- Blog/portfolio/gallery data comes from Render, whose free tier cold
-       starts; warming the connection early overlaps some of that latency. -->
-  <link rel="preconnect" href="https://geinestudio-czl3.onrender.com" crossorigin>
-
   <!-- The header logo renders on every route, so it is always in the critical
        path. -->
-  <link rel="preload" as="image" href="/GenieStudio-logo.webp" fetchpriority="high">
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       LCP PRELOAD — the homepage hero.
-       This is a client-rendered SPA: index.html contains no hero markup, so
-       the browser's preload scanner cannot see the hero at all. It only
-       learns about the image after downloading React, parsing it, and
-       rendering the inline background-image — a four-step chain that is
-       exactly what PageSpeed flags as "LCP request discovery". Declaring it
-       here starts the fetch on the first byte instead.
-
-       imagesrcset/imagesizes so a phone still pulls the 400/800 file rather
-       than the desktop one — preloading the wrong size would trade one
-       problem for another.
-
-       TRADE-OFF: this preload also fires on routes that do not use the image,
-       costing them one wasted request. It is worth it because "/" is the
-       primary landing page and its hero is the LCP element; it would not be
-       worth it for an image only used deeper in the site.
-       ══════════════════════════════════════════════════════════════════ -->
-  <link rel="preload" as="image" fetchpriority="high"
-    imagesrcset="https://geniestudio.in/uploads/1786619977_1786601041_1786601041120-705832864-400.webp 400w,
-                 https://geniestudio.in/uploads/1786619978_1786601041_1786601041120-705832864-800.webp 800w,
-                 https://geniestudio.in/uploads/1786619978_1786601041_1786601041120-705832864-1200.webp 1200w"
-    imagesizes="100vw"
-    href="https://geniestudio.in/uploads/1786619978_1786601041_1786601041120-705832864-800.webp">
+  <link rel="preload" as="image" href="/GenieStudio.png" fetchpriority="high">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -155,12 +122,11 @@
        look.
        ══════════════════════════════════════════════════════════════════ -->
   <link rel="preload" as="style"
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap">
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
   <link rel="stylesheet" media="print" onload="this.media='all'"
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap">
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
   <noscript>
-    <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
   </noscript>
 
   <!-- ══════════════════════════════════════════════════════════════════
@@ -173,110 +139,127 @@
        and map results, which is the point of naming Visakhapatnam.
        ══════════════════════════════════════════════════════════════════ -->
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebSite",
-        "@id": "https://geniestudio.in/#website",
-        "name": "GenieStudio",
-        "alternateName": ["Genie Studio", "Genie Studio Visakhapatnam"],
-        "url": "https://geniestudio.in/",
-        "description": "Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography.",
-        "inLanguage": "en-IN",
-        "publisher": { "@id": "https://geniestudio.in/#organization" },
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": {
-            "@type": "EntryPoint",
-            "urlTemplate": "https://geniestudio.in/blogs?q={search_term_string}"
-          },
-          "query-input": "required name=search_term_string"
-        }
+{
+  "@context": "https://schema.org",
+  "@graph": [
+
+    {
+      "@type": "Organization",
+      "@id": "https://geniestudio.in/#organization",
+      "name": "Genie Media and Studio",
+      "alternateName": [
+        "Genie Studio",
+        "GenieStudio",
+        "Genie Studio Visakhapatnam"
+      ],
+      "url": "https://geniestudio.in/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://geniestudio.in/GenieStudio.png"
       },
-      {
-        "@type": "Organization",
-        "@id": "https://geniestudio.in/#organization",
-        "name": "GenieStudio",
-        "alternateName": ["Genie Studio", "Genie Studio Visakhapatnam"],
-        "url": "https://geniestudio.in/",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://geniestudio.in/GenieStudio.png"
-        },
-        "description": "Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography."
+      "description": "Genie Media and Studio, operating as Genie Studio, is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
+      "sameAs": [
+        "https://www.instagram.com/itsgeniestudio_official/"
+      ]
+    },
+
+    {
+      "@type": "LocalBusiness",
+      "@id": "https://geniestudio.in/#business",
+      "name": "Genie Media and Studio",
+      "alternateName": [
+        "Genie Studio",
+        "GenieStudio",
+        "Genie Studio Visakhapatnam"
+      ],
+      "url": "https://geniestudio.in/",
+      "image": "https://geniestudio.in/GenieStudio.png",
+      "logo": "https://geniestudio.in/GenieStudio.png",
+      "description": "Genie Studio is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
+      "telephone": "+91 9032845433",
+      "email": "admin@geniestudio.in",
+
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "5A-2, KP Icon, Yendada",
+        "addressLocality": "Visakhapatnam",
+        "addressRegion": "Andhra Pradesh",
+        "postalCode": "530045",
+        "addressCountry": "IN"
       },
-      {
-        "@type": "PhotographyBusiness",
-        "@id": "https://geniestudio.in/#localbusiness",
-        "name": "Genie Studio",
-        "alternateName": ["GenieStudio", "Genie Studio Visakhapatnam"],
-        "url": "https://geniestudio.in/",
-        "image": "https://geniestudio.in/GenieStudio.png",
-        "description": "Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography.",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "5A-2, KP Icon, Yendada",
-          "addressLocality": "Visakhapatnam",
-          "addressRegion": "Andhra Pradesh",
-          "postalCode": "530045",
-          "addressCountry": "IN"
-        },
-        "areaServed": {
-          "@type": "City",
-          "name": "Visakhapatnam"
-        },
-        "parentOrganization": { "@id": "https://geniestudio.in/#organization" },
-        "hasOfferCatalog": {
-          "@type": "OfferCatalog",
-          "name": "Photography and Video Production Services",
-          "itemListElement": [
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Podcast Shoots",
-                "url": "https://geniestudio.in/services/podcast-shoots"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Product Shoots",
-                "url": "https://geniestudio.in/services/product-shoots"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Corporate Shoots",
-                "url": "https://geniestudio.in/services/corporate-shoots"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Event Shoots",
-                "url": "https://geniestudio.in/services/event-shoots"
-              }
-            },
-            {
-              "@type": "Offer",
-              "itemOffered": {
-                "@type": "Service",
-                "name": "Professional Shoots",
-                "url": "https://geniestudio.in/services/professional-shoots"
-              }
+
+      "areaServed": {
+        "@type": "City",
+        "name": "Visakhapatnam"
+      },
+
+      "parentOrganization": {
+        "@id": "https://geniestudio.in/#organization"
+      },
+
+      "sameAs": [
+        "https://www.instagram.com/itsgeniestudio_official/"
+      ],
+
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Photography, Videography and Podcast Production Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Podcast Shoots",
+              "url": "https://geniestudio.in/services/podcast-shoots"
             }
-          ]
-        }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Product Shoots",
+              "url": "https://geniestudio.in/services/product-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Corporate Shoots",
+              "url": "https://geniestudio.in/services/corporate-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Event Shoots",
+              "url": "https://geniestudio.in/services/event-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Professional Shoots",
+              "url": "https://geniestudio.in/services/professional-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Business Portfolio Shoots",
+              "url": "https://geniestudio.in/services/business-portfolio-shoots"
+            }
+          }
+        ]
       }
-    ]
-  }
-  </script>
+    }
+
+  ]
+}
+</script>
 </head>
 
 <body>

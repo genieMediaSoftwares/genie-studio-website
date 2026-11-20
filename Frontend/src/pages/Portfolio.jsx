@@ -1,343 +1,649 @@
-import { useState, useMemo, useEffect, useRef } from "react";
-import AOS from "aos";
-import { fetchPortfolio } from "../lib/portfolioApi";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  Building2,
+  Camera,
+  Clapperboard,
+  Film,
+  Mic,
+  MonitorPlay,
+  Phone,
+  Play,
+  PlayCircle,
+  Scissors,
+  Smartphone,
+  Users,
+  Video,
+} from "lucide-react";
 import OptimizedImage from "../components/OptimizedImage";
-import { useTargetWidth } from "../lib/useResponsiveImage";
-import { bestVariantUrl } from "../lib/imageManifest";
+import Breadcrumbs from "../components/Breadcrumbs";
 import Seo from "../components/Seo";
-import { SEO } from "../lib/seoConfig";
+import { SEO, SITE_URL, absolute } from "../lib/seoConfig";
 
-/** Images rendered per batch — the rest stream in as the visitor scrolls. */
-const BATCH = 12;
+const CRUMBS = [
+  { name: "Home", path: "/" },
+  { name: "Portfolio", path: "/portfolio" },
+];
+
+const HERO_CAPABILITIES = [
+  {
+    title: "Podcast Productions",
+    targetId: "podcast-videos",
+    icon: Mic,
+  },
+  {
+    title: "Interviews & Conversations",
+    targetId: "interviews-expert-conversations",
+    icon: Video,
+  },
+  {
+    title: "Short-Form Content",
+    targetId: "social-media-reels",
+    icon: PlayCircle,
+  },
+  {
+    title: "Promotional Videos",
+    targetId: "promotional-videos",
+    icon: Clapperboard,
+  },
+  {
+    title: "Corporate & Brand Videos",
+    targetId: "corporate-brand-videos",
+    icon: Building2,
+  },
+  {
+    title: "Video Editing & Post-Production",
+    targetId: "video-editing-post-production",
+    icon: MonitorPlay,
+  },
+];
+
+const PRODUCTION_CATEGORIES = [
+  {
+    id: "podcast-videos",
+    icon: Mic,
+    title: "Podcast Videos",
+    description:
+      "We have worked on podcast productions featuring professionals, business owners, entrepreneurs and individuals sharing their knowledge, experiences and perspectives. From recording complete podcast episodes to producing visually engaging multi-camera conversations, we focus on capturing authentic discussions with professional audio and video quality.",
+    image:
+      "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt: "Multi-camera podcast video recording session at Genie Studio in Visakhapatnam",
+    servicePath: "/services/podcast-shoots",
+    serviceLabel: "Explore Podcast Shoots services",
+  },
+  {
+    id: "podcast-shorts-highlights",
+    icon: Scissors,
+    title: "Podcast Shorts & Highlights",
+    description:
+      "A podcast conversation often holds several valuable moments worth sharing independently. We transform selected portions of longer podcast recordings into short-form videos, highlighting important discussions, insights and memorable moments. These videos are prepared for platforms such as Instagram, YouTube Shorts and other digital channels.",
+    image:
+      "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt: "Podcast audio recording and short-form highlight clip production at Genie Studio",
+    servicePath: "/services/podcast-shoots",
+    serviceLabel: "Learn about Podcast Shoots production",
+  },
+  {
+    id: "interviews-expert-conversations",
+    icon: Users,
+    title: "Interviews & Expert Conversations",
+    description:
+      "We have produced interview-style videos featuring professionals, industry experts, business representatives and special guests. Our work focuses on presenting conversations naturally while maintaining clear audio, professional framing and a comfortable recording environment.",
+    image:
+      "https://geniestudio.in/uploads/1786520957_1786520953868-540240767.webp",
+    alt: "Professional interview and expert conversation framing at Genie Studio",
+    servicePath: "/services/professional-shoots",
+    serviceLabel: "View Professional Shoots services",
+  },
+  {
+    id: "promotional-videos",
+    icon: Clapperboard,
+    title: "Promotional Videos",
+    description:
+      "We work on promotional video productions that help businesses showcase their services, products, facilities and brand identity. From concept-based promotional shoots to business presentations, we focus on communicating the message through compelling visuals and structured storytelling.",
+    image:
+      "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
+    alt: "Product and promotional video shoot setup at Genie Studio",
+    servicePath: "/services/product-shoots",
+    serviceLabel: "Explore Product Shoots services",
+  },
+  {
+    id: "social-media-reels",
+    icon: Smartphone,
+    title: "Social Media Reels & Short-Form Content",
+    description:
+      "We create short-form video content for businesses, brands and individual creators. This includes informational reels, talking-head videos, promotional clips, educational content and creative social media videos. Our production approach focuses on presenting ideas clearly while maintaining visual consistency and audience engagement.",
+    image:
+      "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
+    alt: "Creator filming social media reels and short-form content at Genie Studio",
+    servicePath: "/services/business-portfolio-shoots",
+    serviceLabel: "Explore Business Portfolio Shoots",
+  },
+  {
+    id: "corporate-brand-videos",
+    icon: Building2,
+    title: "Corporate & Brand Videos",
+    description:
+      "We produce corporate and brand-focused videos that help businesses introduce their organisation, communicate their capabilities and present their work professionally. These productions are designed to give audiences a better understanding of the people, services and ideas behind a business.",
+    image:
+      "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
+    alt: "Corporate and brand video production by Genie Studio",
+    servicePath: "/services/corporate-shoots",
+    serviceLabel: "View Corporate Shoots services",
+  },
+  {
+    id: "video-editing-post-production",
+    icon: MonitorPlay,
+    title: "Video Editing & Post-Production",
+    description:
+      "Beyond recording, we also handle video editing and post-production requirements. From assembling raw footage and refining conversations to creating short clips, adding visual elements and preparing final video outputs, we help turn recorded material into polished content ready for publication.",
+    image:
+      "https://geniestudio.in/uploads/1786602496_1786602495549-844717374.jpg",
+    alt: "Video editing and post-production workstation and creative studio work at Genie Studio",
+    servicePath: "/services",
+    serviceLabel: "Browse all Genie Studio services",
+  },
+];
+
+const COLLECTION_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: SEO.portfolio.title,
+  description: SEO.portfolio.description,
+  url: absolute(SEO.portfolio.path),
+  primaryImageOfPage: {
+    "@type": "ImageObject",
+    url: SEO.portfolio.image,
+  },
+  about: PRODUCTION_CATEGORIES.map((category) => ({
+    "@type": "Thing",
+    name: category.title,
+    description: category.description,
+  })),
+  provider: {
+    "@id": `${SITE_URL}/#business`,
+  },
+};
+
+const PortfolioImageFallback = ({ icon, title }) => {
+  const IconComponent = icon;
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none"
+      style={{
+        background:
+          "radial-gradient(circle at 50% 35%, rgba(255,193,7,0.18) 0%, rgba(0,207,232,0.08) 45%, #101828 85%)",
+      }}
+    >
+      <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-[#FFC107] mb-2.5">
+        <IconComponent className="w-6 h-6" />
+      </div>
+      <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#FFC107]/90">
+        Genie Studio
+      </span>
+      <span className="text-white/90 font-semibold text-sm mt-1">{title}</span>
+    </div>
+  );
+};
 
 const Portfolio = () => {
-  // Hero paints via CSS background-image, which cannot carry a srcSet.
-  const targetWidth = useTargetWidth();
-  const optimizeImage = (url) =>
-    url?.includes("cloudinary")
-      ? url.replace(
-        "/upload/",
-        "/upload/w_900,q_auto:best,f_auto/"
-      )
-      : url;
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [shuffledAll, setShuffledAll] = useState([]);
-  const [portfolioItems, setPortfolioItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  // Progressive loading: only this many tiles are mounted at a time
-  const [visibleCount, setVisibleCount] = useState(BATCH);
-  const sentinelRef = useRef(null);
+  const [failedImages, setFailedImages] = useState({});
 
-  // Images come from the admin Portfolio Manager (/admin/portfolio) — nothing
-  // about this page is hardcoded any more.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const rows = await fetchPortfolio();
-        if (cancelled) return;
-        const items = rows.map((row) => ({
-          id: row.id,
-          category: row.category,
-          image: row.image_url,
-          title: row.title || "",
-          description: row.description || "",
-        }));
-        setPortfolioItems(items);
-        setShuffledAll(shuffleArray(items));
-      } catch {
-        if (!cancelled) setPortfolioItems([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    const resize = () => setIsMobile(window.innerWidth < 768);
-    resize();
-    window.addEventListener("resize", resize);
-    return () => window.removeEventListener("resize", resize);
-  }, []);
-
-  const categories = [
-    { id: "all", name: "All" },
-    { id: "corporate", name: "Corporate" },
-    { id: "events", name: "Event" },
-    { id: "product", name: "Product" },
-    { id: "podcast", name: "Podcast" },
-    { id: "professional", name: "Professional" },
-    { id: "business", name: "Business Portfolio" },
-  ];
-
-  const shuffleArray = (array) => {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
+  const handleImageError = (key) => (e) => {
+    e.currentTarget.style.opacity = "0";
+    setFailedImages((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
   };
-  const allItems = useMemo(() => {
-    if (activeCategory === "all") {
-      return shuffledAll;
+
+  const scrollToSection = (targetId) => (e) => {
+    const target = document.getElementById(targetId);
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-    return portfolioItems.filter(
-      (item) => item.category === activeCategory
-    );
-  }, [activeCategory, shuffledAll, portfolioItems]);
-
-  // Only the first `visibleCount` tiles are mounted; the sentinel below the
-  // grid pulls in the next batch as it approaches the viewport. Without this
-  // the "All" tab mounted every image at once.
-  const shownItems = useMemo(
-    () => allItems.slice(0, visibleCount),
-    [allItems, visibleCount]
-  );
-  const hasMore = visibleCount < allItems.length;
-
-  // AOS hides [data-aos] elements until it animates them, and it only tracks
-  // elements it has already scanned. Newly appended batches must be re-scanned
-  // or they stay at opacity:0 forever.
-  useEffect(() => {
-    AOS.refreshHard();
-  }, [shownItems.length]);
-
-  // Escape closes the enlarged image. Clicking the backdrop already did, but
-  // that is a mouse-only escape hatch.
-  useEffect(() => {
-    if (!selectedImage) return;
-    const onKey = (e) => { if (e.key === "Escape") setSelectedImage(null); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selectedImage]);
-
-  useEffect(() => {
-    if (!hasMore) return;
-    const el = sentinelRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleCount((c) => Math.min(c + BATCH, allItems.length));
-        }
-      },
-      // Start fetching before the sentinel is actually on screen
-      { rootMargin: "800px 0px" }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [hasMore, allItems.length]);
-
-
-
-
-
+  };
 
   return (
-    <main className="w-full overflow-x-hidden">
+    <main className="w-full overflow-x-hidden bg-white">
       <Seo
         {...SEO.portfolio}
-        breadcrumbs={[
-          { name: "Home", path: "/" },
-          { name: "Portfolio", path: SEO.portfolio.path },
-        ]}
+        schema={COLLECTION_SCHEMA}
+        breadcrumbs={CRUMBS}
       />
 
-
-      <section className="relative min-h-[50vh] md:min-h-[60vh] lg:min-h-[55vh] xl:min-h-[50vh] text-white overflow-hidden flex items-center">
+      {/* SECTION 1 – HERO */}
+      <section className="relative bg-[#090B10] text-white pt-16 md:pt-20 overflow-hidden">
+        {/* Ambient background glows */}
         <div
-          className="absolute inset-0 bg-cover bg-center"
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 -left-24 -translate-y-1/2 w-[360px] h-[360px] rounded-full opacity-55 blur-3xl"
           style={{
-            backgroundImage: `url('${bestVariantUrl(
-              "https://geniestudio.in/uploads/1786602496_1786602495549-844717374.jpg",
-              targetWidth
-            )}')`,
+            background:
+              "radial-gradient(circle, rgba(168,28,158,0.42) 0%, rgba(34,211,238,0.12) 48%, rgba(9,11,16,0) 72%)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none hidden sm:block absolute top-[54%] -left-10 -translate-y-1/2 w-[210px] h-[210px] rounded-full border border-fuchsia-400/20 opacity-45"
+          style={{
+            background:
+              "radial-gradient(circle at 35% 40%, rgba(192,38,211,0.35) 0%, rgba(88,28,135,0.16) 55%, rgba(9,11,16,0) 75%)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-24 right-8 w-[460px] h-[340px] rounded-full opacity-35 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(255,193,7,0.34) 0%, rgba(255,193,7,0) 70%)",
           }}
         />
 
-        <div className="absolute inset-0 bg-black/60"></div>
-
+        {/* Subtle dot matrices */}
         <div
-          className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
-          data-aos="fade-up"
-        >
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-            Our Portfolio
-          </h1>
-
-          <p className="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            Discover a collection of visuals crafted with creativity and purpose.          </p>
-        </div>
-      </section>
-
-
-
-      {selectedImage && (
+          aria-hidden="true"
+          className="pointer-events-none hidden sm:block absolute bottom-6 left-4 w-28 h-24 opacity-25"
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(255,193,7,0.55) 1px, transparent 1px)",
+            backgroundSize: "10px 10px",
+          }}
+        />
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={selectedImage.title ? `${selectedImage.title} — enlarged` : "Enlarged portfolio image"}
-          className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center px-4"
-          onClick={() => setSelectedImage(null)}
+          aria-hidden="true"
+          className="pointer-events-none hidden lg:block absolute top-1/2 right-4 -translate-y-1/2 w-24 h-36 opacity-25"
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(255,193,7,0.6) 1px, transparent 1px)",
+            backgroundSize: "10px 10px",
+          }}
+        />
+
+        {/* Faint decorative clapperboard outline (top-right) */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 180 180"
+          fill="none"
+          className="pointer-events-none hidden md:block absolute top-20 right-8 lg:right-14 w-36 h-36 lg:w-44 lg:h-44 opacity-[0.07] text-white -rotate-6"
         >
-          <button
-            type="button"
-            onClick={() => setSelectedImage(null)}
-            aria-label="Close enlarged image"
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-slate-300 transition z-10"
-          >
-            <svg
-              aria-hidden="true"
-              className="w-9 h-9"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          <path
+            d="M24 58L148 28L154 48L30 78L24 58Z"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M44 53L56 71M74 46L86 64M104 39L116 57M134 32L142 50"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          />
+          <rect
+            x="28"
+            y="78"
+            width="128"
+            height="74"
+            rx="6"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          />
+          <path
+            d="M48 78L60 94M78 78L90 94M108 78L120 94M138 78L150 94"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          />
+        </svg>
+
+        {/* Flowing yellow SVG waveforms behind capability grid */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 900 520"
+          fill="none"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-y-0 right-0 w-full lg:w-[66%] h-full opacity-75"
+        >
+          <defs>
+            <linearGradient
+              id="portfolio-wave-grad-1"
+              x1="0%"
+              y1="50%"
+              x2="100%"
+              y2="50%"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+              <stop offset="0%" stopColor="#FFC107" stopOpacity="0" />
+              <stop offset="35%" stopColor="#FFC107" stopOpacity="0.65" />
+              <stop offset="70%" stopColor="#FFE082" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#FFC107" stopOpacity="0.08" />
+            </linearGradient>
+            <linearGradient
+              id="portfolio-wave-grad-2"
+              x1="0%"
+              y1="80%"
+              x2="100%"
+              y2="20%"
+            >
+              <stop offset="0%" stopColor="#FFC107" stopOpacity="0" />
+              <stop offset="45%" stopColor="#FFC107" stopOpacity="0.7" />
+              <stop offset="85%" stopColor="#FFD54F" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#FFC107" stopOpacity="0.1" />
+            </linearGradient>
+          </defs>
 
-          <div
-            className="flex flex-col items-center justify-center max-w-6xl w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={selectedImage.image}
-              alt={selectedImage.title}
-              className="max-h-[75vh] w-auto object-contain rounded-lg"
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((idx) => (
+            <path
+              key={`top-wave-${idx}`}
+              d={`M ${120 + idx * 12} ${190 - idx * 5} C ${280 + idx * 14} ${
+                95 + idx * 10
+              }, ${470 - idx * 8} ${245 - idx * 9}, ${900} ${75 + idx * 14}`}
+              stroke="url(#portfolio-wave-grad-1)"
+              strokeWidth={1.15 - idx * 0.06}
+              strokeOpacity={0.62 - idx * 0.05}
             />
+          ))}
 
-            {(selectedImage.title || selectedImage.description) && (
-              <div className="text-center text-white mt-4 px-2">
-                {selectedImage.title && (
-                  <h3 className="text-xl sm:text-2xl font-bold">
-                    {selectedImage.title}
-                  </h3>
-                )}
-                {selectedImage.description && (
-                  <p className="text-slate-300 text-sm sm:text-base">
-                    {selectedImage.description}
-                  </p>
-                )}
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((idx) => (
+            <path
+              key={`bottom-wave-${idx}`}
+              d={`M ${80 + idx * 14} ${505 - idx * 6} C ${310 + idx * 12} ${
+                445 - idx * 8
+              }, ${540 - idx * 6} ${495 - idx * 9}, ${900} ${315 + idx * 13}`}
+              stroke="url(#portfolio-wave-grad-2)"
+              strokeWidth={1.25 - idx * 0.06}
+              strokeOpacity={0.7 - idx * 0.05}
+            />
+          ))}
+        </svg>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.22fr_1fr] gap-10 lg:gap-12 items-center">
+            {/* Left Side */}
+            <div className="space-y-4 sm:space-y-5">
+              <Breadcrumbs items={CRUMBS} className="text-white/70" />
+
+              <h1 className="hero-sans-heading text-[26px] min-[360px]:text-[32px] sm:text-[44px] lg:text-[54px] font-extrabold leading-[1.06] tracking-[-0.025em] text-white">
+                Our <span className="text-[#FFC107] italic">Portfolio</span>
+              </h1>
+
+              <p className="hero-sans-heading border-l-[3px] border-[#FFC107] pl-3.5 text-lg sm:text-[21px] font-bold text-white leading-snug">
+                Bringing Ideas to Life Through Professional Production.
+              </p>
+
+              <p className="text-slate-300 text-[15px] sm:text-[16px] leading-[1.68] max-w-xl">
+                At Genie Studio, our work spans different forms of video and
+                audio production. We have worked with businesses, professionals,
+                creators and brands to produce content that communicates their
+                ideas, shares their stories and presents their work effectively.
+              </p>
+
+              <p className="text-slate-300 text-[15px] sm:text-[16px] leading-[1.68] max-w-xl">
+                From in-depth podcast conversations to engaging short-form
+                videos and promotional productions, every project gives us an
+                opportunity to bring together creative thinking, technical
+                expertise and professional execution.
+              </p>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3.5">
+                <a
+                  href="#production-experience"
+                  onClick={scrollToSection("production-experience")}
+                  className="inline-flex items-center gap-2.5 bg-[#FFC107] hover:bg-[#ffca2c] text-[#090B10] font-semibold text-sm px-6 py-3 rounded-full shadow-lg shadow-[#FFC107]/20 transition-all hover:scale-[1.02]"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  Explore Our Work
+                </a>
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center gap-2.5 bg-[#090B10]/60 hover:bg-white/10 text-white border border-white/55 hover:border-[#FFC107] font-semibold text-sm px-6 py-3 rounded-full transition-all"
+                >
+                  Book Your Studio
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
-            )}
+            </div>
+
+            {/* Right Side – 6 Capability Icon Grid */}
+            <nav aria-label="Portfolio production categories">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-3.5">
+                {HERO_CAPABILITIES.map((capability) => {
+                  const Icon = capability.icon;
+                  return (
+                    <a
+                      key={capability.targetId}
+                      href={`#${capability.targetId}`}
+                      onClick={scrollToSection(capability.targetId)}
+                      className="group relative rounded-xl bg-[#12151C]/80 backdrop-blur-md border border-white/12 hover:border-[#FFC107]/60 hover:bg-[#171B24]/90 px-3 py-5 sm:py-6 flex flex-col items-center justify-center text-center gap-3 shadow-[0_12px_30px_rgba(0,0,0,0.45)] transition-all duration-200 hover:-translate-y-0.5"
+                    >
+                      <Icon
+                        className="w-7 h-7 sm:w-8 sm:h-8 text-[#FFC107] transition-transform duration-200 group-hover:scale-110"
+                        strokeWidth={1.7}
+                      />
+                      <span className="hero-sans-heading text-[12.5px] sm:text-[13px] font-medium text-white/95 leading-snug">
+                        {capability.title}
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+            </nav>
           </div>
         </div>
-      )}
+      </section>
 
+      {/* SECTION 2 – OUR PRODUCTION EXPERIENCE */}
+      <section
+        id="production-experience"
+        className="py-12 sm:py-16 lg:py-20 bg-white scroll-mt-20"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-center gap-4 mb-12 sm:mb-16">
+            <span
+              aria-hidden="true"
+              className="hidden sm:block h-[2px] w-12 bg-[#FFC107] rounded-full"
+            />
+            <h2 className="hero-sans-heading text-2xl sm:text-4xl lg:text-[42px] font-extrabold text-[#101828] tracking-[-0.02em] text-center">
+              Our Production <span className="text-[#FFC107]">Experience</span>
+            </h2>
+            <span
+              aria-hidden="true"
+              className="hidden sm:block h-[2px] w-12 bg-[#FFC107] rounded-full"
+            />
+          </div>
 
-      <section className="bg-white sticky top-16 z-40 shadow-sm py-3">
-        <div className="flex gap-3 px-4 sm:justify-center overflow-x-auto">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => {
-                setActiveCategory(cat.id);
-                setVisibleCount(BATCH);   // start each category from the top
+          <div className="space-y-12 sm:space-y-16 lg:space-y-20">
+            {PRODUCTION_CATEGORIES.map((category, index) => {
+              const Icon = category.icon;
+              const imageFirstOnDesktop = index % 2 === 0;
 
-                if (cat.id === "all") {
-                  setShuffledAll(shuffleArray(portfolioItems));
-                }
-              }}
+              return (
+                <article
+                  key={category.id}
+                  id={category.id}
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center scroll-mt-24"
+                >
+                  {/* Image Column */}
+                  <div
+                    className={`lg:col-span-6 ${
+                      imageFirstOnDesktop ? "lg:order-1" : "lg:order-2"
+                    }`}
+                  >
+                    <div className="group relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[16/10] bg-[#101828] border border-slate-200/80 shadow-md hover:shadow-xl transition-shadow duration-300">
+                      {failedImages[category.id] ? (
+                        <PortfolioImageFallback
+                          icon={Icon}
+                          title={category.title}
+                        />
+                      ) : (
+                        <OptimizedImage
+                          src={category.image}
+                          alt={category.alt}
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          className="w-full h-full"
+                          imgClassName="w-full h-full object-cover text-transparent transition-transform duration-500 ease-out group-hover:scale-105"
+                          onError={handleImageError(category.id)}
+                        />
+                      )}
+                    </div>
+                  </div>
 
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition ${activeCategory === cat.id
-                ? "bg-[#6B4A2D] text-white"
-                : "bg-[#F7F6F3] text-black hover:bg-[#EDE3D9]"
-                }`}
-            >
-              {cat.name}
-            </button>
-          ))}
+                  {/* Text Column */}
+                  <div
+                    className={`lg:col-span-6 space-y-4 ${
+                      imageFirstOnDesktop ? "lg:order-2" : "lg:order-1"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div
+                        aria-hidden="true"
+                        className="w-11 h-11 rounded-xl bg-[#FFC107]/15 border border-[#FFC107]/35 flex items-center justify-center shrink-0"
+                      >
+                        <Icon className="w-5 h-5 text-[#d99b00]" />
+                      </div>
+                      <h3 className="hero-sans-heading text-2xl sm:text-[26px] font-bold text-[#101828] leading-snug">
+                        {category.title}
+                      </h3>
+                    </div>
+
+                    <p className="text-slate-600 text-[15px] sm:text-[16px] leading-[1.7]">
+                      {category.description}
+                    </p>
+
+                    <div className="pt-1">
+                      <Link
+                        to={category.servicePath}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#101828] hover:text-[#087BFF] transition-colors"
+                      >
+                        <span>{category.serviceLabel}</span>
+                        <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      <section className="py-6 sm:py-10 md:py-16 bg-[#F7F6F3]">
-        <div className="max-w-[1300px] mx-auto px-2 sm:px-6">
-
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-[3px] sm:gap-3 lg:gap-5">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-lg sm:rounded-xl overflow-hidden bg-gray-200 animate-pulse">
-                  <div className="aspect-[3/4]" />
+      {/* SECTION 3 – EVERY PROJECT HAS A STORY */}
+      <section className="py-10 sm:py-14 bg-[#F8FAFC]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-white border border-slate-200/80 shadow-sm overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
+              <div className="lg:col-span-7 p-7 sm:p-10 lg:p-12 space-y-4">
+                <div className="flex items-center gap-3.5">
+                  <div
+                    aria-hidden="true"
+                    className="w-11 h-11 rounded-xl bg-[#FFC107]/15 border border-[#FFC107]/35 flex items-center justify-center shrink-0"
+                  >
+                    <Video className="w-5 h-5 text-[#d99b00]" />
+                  </div>
+                  <h2 className="hero-sans-heading text-2xl sm:text-3xl lg:text-[34px] font-extrabold text-[#101828] leading-tight">
+                    <span className="text-[#FFC107] italic">Every Project</span>{" "}
+                    Has a Story.
+                  </h2>
                 </div>
-              ))}
-            </div>
-          ) : allItems.length === 0 ? (
-            <p className="text-center text-slate-600 py-16">
-              No images in this category yet.
-            </p>
-          ) : (
-            <div className=" grid grid-cols-2 md:grid-cols-3 gap-[3px] sm:gap-3 lg:gap-5 " >
-              {/* Was a clickable <div>: no tab stop, no Enter/Space, and
-                  nothing announced it as interactive. A native <button> gives
-                  all three for free. `block w-full text-left` keeps the grid
-                  cell laid out exactly as the div was. */}
-              {shownItems.map((item, index) => (
-                <button
-                  type="button"
-                  key={`${item.category}-${item.id}-${index}`}
-                  onClick={() => setSelectedImage(item)}
-                  aria-label={item.title ? `View ${item.title} enlarged` : "View portfolio image enlarged"}
-                  data-aos={
-                    !isMobile
-                      ? index % 2 === 0
-                        ? 'fade-right'
-                        : 'fade-left'
-                      : undefined
-                  }
-                  data-aos-delay={!isMobile ? (index % BATCH) * 80 : undefined}
-                  className=" group block w-full text-left overflow-hidden rounded-lg sm:rounded-xl bg-black cursor-pointer " >
-                  <OptimizedImage
-                    src={optimizeImage(item.image)}
-                    variants={item.variants}
-                    alt={item.title}
-                    aspectRatio="3 / 4"
-                    /* The first row is above the fold on most screens */
-                    priority={index < 3}
-                    sizes="(max-width: 768px) 50vw, (max-width: 1300px) 33vw, 420px"
-                    imgClassName="transition-transform duration-500 group-hover:scale-105"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
 
-          {/* Pulls in the next batch as it nears the viewport */}
-          {!loading && hasMore && (
-            <div ref={sentinelRef} className="flex justify-center py-8">
-              <span className="text-xs text-slate-600">Loading more…</span>
-            </div>
-          )}
+                <p className="text-slate-600 text-[15px] sm:text-[16.5px] leading-[1.7]">
+                  The work we have undertaken reflects our experience across
+                  different production formats, creative requirements and client
+                  expectations. We value every collaboration and the opportunity
+                  to help individuals and businesses present their ideas through
+                  quality content.
+                </p>
+              </div>
 
+              <div className="lg:col-span-5 h-full">
+                <div className="relative aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[260px] bg-[#101828] overflow-hidden">
+                  {failedImages.story ? (
+                    <PortfolioImageFallback
+                      icon={Film}
+                      title="Creative Studio Production"
+                    />
+                  ) : (
+                    <OptimizedImage
+                      src="https://geniestudio.in/uploads/1786601936_1786601934919-89162093.jpg"
+                      alt="Genie Studio creative production environment in Visakhapatnam"
+                      sizes="(max-width: 1024px) 100vw, 42vw"
+                      className="w-full h-full"
+                      imgClassName="w-full h-full object-cover text-transparent"
+                      onError={handleImageError("story")}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
+      {/* SECTION 4 – FINAL CALL TO ACTION */}
+      <section className="relative bg-[#0B0D12] text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            <div className="lg:col-span-4">
+              <h2 className="hero-sans-heading text-3xl sm:text-4xl font-extrabold leading-[1.12] tracking-[-0.02em]">
+                Have a Story to Tell?{" "}
+                <span className="block text-[#FFC107] italic mt-1">
+                  Let&apos;s Create It Together.
+                </span>
+              </h2>
+            </div>
 
-      <section className="py-14 bg-white text-center">
-        <h2 className="text-3xl font-bold mb-4 text-black">Want to See More?</h2>
-        <p className="text-slate-600 mb-6">
-          Visit our studio or schedule a consultation
-        </p>
-        <a
-          href="/contact"
-          className="inline-block px-7 py-3 bg-[#6B4A2D] text-white rounded-xl hover:bg-[#EDE3D9] hover:text-black"
-        >
-          Schedule a Consultation
-        </a>
+            <div className="lg:col-span-5 space-y-6 lg:border-l lg:border-white/15 lg:pl-8">
+              <p className="text-slate-300 text-[15px] sm:text-[16.5px] leading-[1.7]">
+                At Genie Studio, we bring the space, equipment and production
+                support to help turn your next idea into something worth
+                sharing.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center justify-center gap-2 min-h-[48px] px-7 py-3 rounded-full bg-[#FFC107] hover:bg-[#eab000] text-[#101828] font-semibold text-sm sm:text-[15px] shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <span>Book Your Studio</span>
+                  <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                </Link>
+
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center justify-center gap-2 min-h-[48px] px-7 py-3 rounded-full bg-transparent hover:bg-white/10 border border-white/35 hover:border-white text-white font-semibold text-sm sm:text-[15px] transition-all duration-200"
+                >
+                  <Phone className="w-4 h-4" aria-hidden="true" />
+                  <span>Contact Us</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-3">
+              <div className="relative rounded-2xl overflow-hidden aspect-[16/10] bg-[#101828] border border-white/10 shadow-xl">
+                {failedImages.cta ? (
+                  <PortfolioImageFallback
+                    icon={Camera}
+                    title="Book Your Studio"
+                  />
+                ) : (
+                  <OptimizedImage
+                    src="https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp"
+                    alt="Professional cinema camera lens at Genie Studio"
+                    sizes="(max-width: 1024px) 100vw, 25vw"
+                    className="w-full h-full"
+                    imgClassName="w-full h-full object-cover text-transparent"
+                    onError={handleImageError("cta")}
+                  />
+                )}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-gradient-to-r from-[#0B0D12]/60 via-transparent to-transparent pointer-events-none"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
-
-
     </main>
   );
 };
 
 export default Portfolio;
+

@@ -1,166 +1,269 @@
-import React, { useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { FaPodcast, FaArrowLeft, FaCheckCircle, FaWhatsapp } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  Calendar,
+  CheckCircle2,
+  FileVideo,
+  Headphones,
+  Layers,
+  MessageSquare,
+  Mic,
+  Palette,
+  PlayCircle,
+  Sliders,
+  Sun,
+  Video,
+} from "lucide-react";
+import { FaPodcast, FaWhatsapp } from "react-icons/fa";
 import OptimizedImage from "../components/OptimizedImage";
 import Breadcrumbs from "../components/Breadcrumbs";
-import { useTargetWidth } from "../lib/useResponsiveImage";
-import { bestVariantUrl } from "../lib/imageManifest";
 import Seo from "../components/Seo";
+import { SERVICE_SEO, SITE_URL, absolute, serviceSchema } from "../lib/seoConfig";
 
-/*
- * ACCENT COLOURS
- * #E8600A is the page accent and is unchanged wherever it is decorative — the
- * section rules, the icons and the tinted panels all still use it.
- *
- * White text on it only reached 3.44:1, short of the 4.5:1 WCAG AA asks for, so
- * the handful of surfaces that carry white text (the pill, the two CTAs and
- * the numbered step markers) use #C55209 instead: the same hue with the RGB
- * scaled down until white clears 4.5:1.
- */
-import { SERVICE_SEO, serviceSchema } from "../lib/seoConfig";
-
-/** Declared once, then used by both <Breadcrumbs> and <Seo>'s BreadcrumbList. */
 const CRUMBS = [
   { name: "Home", path: "/" },
   { name: "Services", path: "/services" },
   { name: "Podcast Shoots", path: "/services/podcast-shoots" },
 ];
 
-const Podcastshoots = () => {
-  const navigate = useNavigate();
-  const heroRef = useRef(null);
-  // Hero paints via CSS background-image, which cannot carry a srcSet.
-  const targetWidth = useTargetWidth();
+const HERO_IMAGE =
+  "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp";
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+const WHATSAPP_URL =
+  "https://wa.me/+919966888428?text=" +
+  encodeURIComponent(
+    "Hello Genie Studio, I would like to enquire about booking a podcast shoot in Visakhapatnam."
+  );
+
+const INCLUSIONS = [
+  {
+    icon: Video,
+    title: "Audio & video podcast recording",
+    detail: "Single or multi-camera sessions recorded together in one setup.",
+  },
+  {
+    icon: Sun,
+    title: "Professional studio lighting",
+    detail: "Pre-configured lighting tailored for solo hosts, interviews or panels.",
+  },
+  {
+    icon: Sliders,
+    title: "Sound editing & mastering",
+    detail: "Balanced dialogue levels, clean audio mix and video colour finishing.",
+  },
+  {
+    icon: Layers,
+    title: "Platform-ready content delivery",
+    detail: "Files prepared for YouTube, podcast hosts and short-form channels.",
+  },
+];
+
+const DELIVERABLES = [
+  {
+    icon: FileVideo,
+    title: "Recorded podcast video",
+    detail: "4K multi-camera video podcast footage ready for YouTube and clips.",
+  },
+  {
+    icon: Headphones,
+    title: "Edited podcast audio",
+    detail: "Mixed and mastered audio episode ready for Spotify and Apple Podcasts.",
+  },
+  {
+    icon: Palette,
+    title: "Podcast artwork design",
+    detail: "Episode cover artwork available where you need it for publishing.",
+  },
+  {
+    icon: Layers,
+    title: "Platform-ready exports",
+    detail: "Multiple format exports suited to your podcast host and social feeds.",
+  },
+];
+
+const DELIVERABLE_IMAGES = [
+  {
+    src: "https://geniestudio.in/uploads/1786531742_1786531741887-833036636.webp",
+    alt: "Multi-camera 4K podcast video recording at Genie Studio in Visakhapatnam",
+  },
+  {
+    src: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt: "Studio podcast microphone and audio recording setup at Genie Studio Vizag",
+  },
+];
+
+const PROCESS_STEPS = [
+  {
+    number: "01",
+    step: "Consultation",
+    icon: MessageSquare,
+    body: "We start with a free consultation to understand your show — the format, how many people are on mic, how often you plan to publish, and where the episodes are going.",
+  },
+  {
+    number: "02",
+    step: "Studio Setup",
+    icon: Sliders,
+    body: "We set the studio for your format, whether that is a solo show, a two-person interview or a full panel. Lighting, cameras and microphones are configured before you arrive.",
+  },
+  {
+    number: "03",
+    step: "Recording",
+    icon: Mic,
+    body: "We record audio and video together, so you leave with a video podcast as well as an audio episode rather than having to choose between them.",
+  },
+  {
+    number: "04",
+    step: "Editing & Delivery",
+    icon: PlayCircle,
+    body: "Sound editing and mastering, video colour finishing, podcast artwork where needed, and platform-ready exports for your podcast host and social channels.",
+  },
+];
+
+const PORTFOLIO_PREVIEWS = [
+  {
+    title: "Multi-Camera Podcast Conversations",
+    format: "Full Episode Video & Audio",
+    description:
+      "Two-person interviews and founder conversations filmed with studio lighting, clear framing and synchronized multi-track audio in Yendada, Vizag.",
+    image:
+      "https://geniestudio.in/uploads/1786531741_1786531740123-858872067.webp",
+    alt: "Podcast episode framing and artwork presentation at Genie Studio",
+  },
+  {
+    title: "Short-Form Clips & Multi-Platform Exports",
+    format: "YouTube, Reels & Audio Feeds",
+    description:
+      "Recorded sessions edited into full-length YouTube episodes, clean audio feeds and vertical highlight clips prepared for social channels.",
+    image:
+      "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
+    alt: "Podcast episode exported in multiple formats for YouTube and social channels",
+  },
+];
+
+const FAQS = [
+  {
+    q: "Where is your podcast studio in Vizag located?",
+    a: "Our studio is at 5A-2, KP Icon, Yendada, Visakhapatnam, Andhra Pradesh 530045. Get in touch through the contact page to arrange a visit or a session.",
+  },
+  {
+    q: "Can you record a video podcast, not just audio?",
+    a: "Yes. We record audio and video in the same session, so you get a 4K video podcast alongside the audio episode. Video podcasts are what most creators use for YouTube and for short clips on social platforms.",
+  },
+  {
+    q: "What equipment is used for podcast shoots?",
+    a: "Our studio is equipped with Sony A7M4 and Sony A7M3 full-frame cameras for multi-camera 4K recording, studio Rode PodMics paired with a dedicated audio interface, Hollyland Lark M2 wireless backup microphones, and Digitek studio lighting with Godox LC500R light sticks.",
+  },
+  {
+    q: "What does a podcast shoot include?",
+    a: "A shoot covers audio and video recording with our Sony A7M4 & A7M3 cameras and Rode PodMics, professional Digitek and Godox lighting, sound editing and mastering, and delivery in platform-ready formats.",
+  },
+  {
+    q: "Do you record interviews and panel discussions?",
+    a: "Yes. We handle solo shows, two-person interviews and panel discussions. Tell us the format during the consultation and we set the studio up for it.",
+  },
+  {
+    q: "Who are podcast shoots for?",
+    a: "Creators launching or running a show, and businesses using podcasts for brand and content marketing. The production process is the same for both.",
+  },
+  {
+    q: "How do I book a podcast shoot in Visakhapatnam?",
+    a: "Reach out through our contact page for a free consultation and a custom quote based on your format and episode count.",
+  },
+];
+
+const RELATED_LINKS = [
+  { to: "/services/professional-shoots", label: "Professional photography in Vizag" },
+  { to: "/services/corporate-shoots", label: "Corporate photography & team portraits" },
+  { to: "/services/product-shoots", label: "Product photography for e-commerce" },
+  { to: "/services/event-shoots", label: "Event photography in Visakhapatnam" },
+  { to: "/portfolio", label: "Explore full production portfolio" },
+  { to: "/blogs", label: "Read podcast & video production guides" },
+];
+
+const PodcastImageFallback = ({ icon, title, dark = false }) => {
+  const IconComponent = icon;
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none"
+      style={{
+        background: dark
+          ? "radial-gradient(circle at 50% 35%, rgba(232,96,10,0.22) 0%, #1F1A18 80%)"
+          : "radial-gradient(circle at 50% 35%, rgba(232,96,10,0.12) 0%, #FFF0E8 85%)",
+      }}
+    >
+      <div
+        className="w-11 h-11 rounded-2xl flex items-center justify-center mb-2.5"
+        style={{
+          background: dark ? "rgba(255,255,255,0.08)" : "#FFFFFF",
+          color: "#E8600A",
+          border: dark
+            ? "1px solid rgba(255,255,255,0.12)"
+            : "1px solid rgba(232,96,10,0.2)",
+        }}
+      >
+        <IconComponent className="w-5 h-5" />
+      </div>
+      <span
+        className="text-[11px] font-semibold uppercase tracking-[0.16em]"
+        style={{ color: "#E8600A" }}
+      >
+        Genie Studio
+      </span>
+      <span
+        className={`font-semibold text-sm mt-1 ${
+          dark ? "text-white/90" : "text-slate-800"
+        }`}
+      >
+        {title}
+      </span>
+    </div>
+  );
+};
+
+const Podcastshoots = () => {
+  const [failedImages, setFailedImages] = useState({});
+
+  const handleImageError = (key) => (e) => {
+    e.currentTarget.style.opacity = "0";
+    setFailedImages((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+  };
 
   useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
-    // Coalesce to one write per frame. A scroll event can fire many times
-    // between paints, and each `style.transform =` invalidates layout — so the
-    // unbatched version did several times more work than the screen could
-    // show, which is what surfaces as "forced reflow". The motion is
-    // identical; it just no longer runs ahead of the compositor.
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        hero.style.transform = `translateY(${window.scrollY * 0.35}px)`;
-        ticking = false;
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.scrollTo(0, 0);
   }, []);
 
-  const features = [
-    "Audio & video podcast recording",
-    "Professional studio lighting",
-    "Sound editing & mastering",
-    "Platform-ready content delivery",
-  ];
-
-  const deliverables = [
-    {
-      label: "4K video recording",
-      img: "https://geniestudio.in/uploads/1786531742_1786531741887-833036636.webp",
-      alt: "Multi-camera 4K podcast video recording at the GenieStudio podcast studio",
-    },
-    {
-      label: "Professional audio mix",
-      img: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
-      alt: "Podcast audio being mixed and mastered after a studio recording session",
-    },
-    {
-      label: "Podcast artwork design",
-      img: "https://geniestudio.in/uploads/1786531741_1786531740123-858872067.webp",
-      alt: "Podcast cover artwork designed for a GenieStudio client episode",
-    },
-    {
-      label: "Multiple format exports",
-      img: "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
-      alt: "Podcast episode exported in multiple formats for different platforms",
-    },
-  ];
-
-  /**
-   * The podcast shoot, start to finish. Written from what the studio actually
-   * does — no invented equipment lists, turnaround guarantees or pricing.
-   */
-  const process = [
-    {
-      step: "Consultation",
-      body: "We start with a free consultation to understand your show — the format, how many people are on mic, how often you plan to publish, and where the episodes are going.",
-    },
-    {
-      step: "Studio setup",
-      body: "We set the studio for your format, whether that is a solo show, a two-person interview or a full panel. Lighting, cameras and microphones are configured before you arrive.",
-    },
-    {
-      step: "Recording",
-      body: "We record audio and video together, so you leave with a video podcast as well as an audio episode rather than having to choose between them.",
-    },
-    {
-      step: "Editing & mastering",
-      body: "Sound editing and mastering, colour on the video, and podcast artwork where you need it.",
-    },
-    {
-      step: "Delivery",
-      body: "You receive platform-ready files exported in the formats your podcast host and social channels need.",
-    },
-  ];
-
-  /**
-   * FAQ answers are rendered visibly AND emitted as FAQPage structured data.
-   * Google requires the two to match, and every answer here is grounded in a
-   * service the studio genuinely offers.
-   */
-  const faqs = [
-    {
-      q: "Where is your podcast studio in Vizag located?",
-      a: "Our studio is at 5A-2, KP Icon, Yendada, Visakhapatnam, Andhra Pradesh 530045. Get in touch through the contact page to arrange a visit or a session.",
-    },
-    {
-      q: "Can you record a video podcast, not just audio?",
-      a: "Yes. We record audio and video in the same session, so you get a 4K video podcast alongside the audio episode. Video podcasts are what most creators use for YouTube and for short clips on social platforms.",
-    },
-    {
-      q: "What does a podcast shoot include?",
-      a: "A shoot covers audio and video recording, professional studio lighting, sound editing and mastering, and delivery in platform-ready formats. Podcast artwork design is available where you need it.",
-    },
-    {
-      q: "Do you record interviews and panel discussions?",
-      a: "Yes. We handle solo shows, two-person interviews and panel discussions. Tell us the format during the consultation and we set the studio up for it.",
-    },
-    {
-      q: "Who are podcast shoots for?",
-      a: "Creators launching or running a show, and businesses using podcasts for brand and content marketing. The production process is the same for both.",
-    },
-    {
-      q: "How do I book a podcast shoot in Visakhapatnam?",
-      a: "Reach out through our contact page for a free consultation and a custom quote based on your format and episode count.",
-    },
-  ];
+  const pageUrl = absolute(SERVICE_SEO.podcast.path);
 
   return (
     <main className="w-full overflow-x-hidden bg-white">
       <Seo
         {...SERVICE_SEO.podcast}
         schema={[
-          // serviceType is what tells Google this is a podcast studio rather
-          // than generic photography.
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: SERVICE_SEO.podcast.title,
+            description: SERVICE_SEO.podcast.description,
+            url: pageUrl,
+            isPartOf: { "@id": `${SITE_URL}/#website` },
+            about: { "@id": `${SITE_URL}/#localbusiness` },
+            primaryImageOfPage: {
+              "@type": "ImageObject",
+              url: HERO_IMAGE,
+            },
+          },
           serviceSchema({
-            name: "Podcast Studio & Podcast Production",
+            name: "Podcast Studio & Podcast Production in Visakhapatnam",
             description: SERVICE_SEO.podcast.description,
             path: SERVICE_SEO.podcast.path,
-            serviceType: "Podcast Studio",
+            serviceType: "Podcast Recording Studio",
           }),
           {
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            mainEntity: faqs.map((f) => ({
+            mainEntity: FAQS.map((f) => ({
               "@type": "Question",
               name: f.q,
               acceptedAnswer: { "@type": "Answer", text: f.a },
@@ -170,255 +273,439 @@ const Podcastshoots = () => {
         breadcrumbs={CRUMBS}
       />
 
-
-      <section className="relative min-h-[75vh] flex items-end overflow-hidden" style={{ background: '#1F1A18' }}>
-        <div
-          ref={heroRef}
-          className="absolute inset-0 w-full h-[110%] -top-[5%]"
-          style={{
-            backgroundImage: `url('${bestVariantUrl("https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp", targetWidth)}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            imageRendering: 'auto',
-            willChange: 'transform',
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(to top, rgba(31,26,24,0.85) 25%, rgba(31,26,24,0.45) 55%, transparent 100%)',
-          }}
-        />
-
-
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-10 pb-12 sm:pb-16">
+      {/* SECTION 1 – HERO */}
+      <section className="bg-[#1F1A18] text-white pt-20 md:pt-24 pb-12 sm:pb-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
           <Breadcrumbs items={CRUMBS} className="mb-5 text-white/70" />
 
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full mb-5 text-sm font-semibold tracking-widest uppercase" style={{ background: '#E8600A22', color: '#E8600A', border: '1px solid #E8600A44' }}>
-            <FaPodcast /> Podcast Studio in Visakhapatnam
-          </div>
-          {/* Same two-line display treatment as before, so the hero looks
-              unchanged — but the H1 now states what the page is actually for
-              instead of just naming the service. */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-none mb-4 tracking-tight">
-            Podcast Studio<br />in Vizag
-          </h1>
-          <p className="text-xl sm:text-2xl font-light italic mb-6" style={{ color: '#E8600A' }}>
-            Sound great. Look even better.
-          </p>
-          <div className="inline-block px-5 py-2 rounded-full text-sm font-bold text-white" style={{ background: '#C55209' }}>
-            Starting from
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="w-12 h-1 rounded-full mb-6" style={{ background: '#E8600A' }} />
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-6 leading-tight">What's Included</h2>
-            <p className="text-slate-600 text-lg leading-relaxed mb-8">
-              Produce professional-quality podcast episodes with our complete production service. From recording in our state-of-the-art studio to final editing and delivery, we handle every aspect of your podcast production. Whether it's a solo show, interview format, or panel discussion — we make it look and sound world-class.
-            </p>
-            <Link to="/contact" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5 shadow-lg" style={{ background: '#C55209' }}>
-              <FaWhatsapp className="text-lg" /> Book a Podcast Shoot
-            </Link>
-          </div>
-          <div className="rounded-2xl p-8 sm:p-10" style={{ background: '#FFF0E8' }}>
-            <h3 className="text-xl font-bold text-slate-800 mb-6">Service Highlights</h3>
-            <ul className="space-y-4">
-              {features.map((f, i) => (
-                <li key={i} className="flex items-start gap-3 text-slate-700 text-base">
-                  <FaCheckCircle className="mt-0.5 flex-shrink-0 text-lg" style={{ color: '#E8600A' }} />
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-20" style={{ background: '#FFF0E8' }}>
-        <div className="max-w-6xl mx-auto px-6 sm:px-10">
-          <div className="text-center mb-12">
-            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ background: '#E8600A' }} />
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900">What You'll Receive</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 px-4 sm:px-0">
-            {deliverables.map((item, i) => (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-6 space-y-4 sm:space-y-5">
               <div
-                key={i}
-                data-aos="fade-up"
-                data-aos-delay={i * 100}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 group"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase"
+                style={{
+                  background: "rgba(232, 96, 10, 0.16)",
+                  color: "#FF8A3D",
+                  border: "1px solid rgba(232, 96, 10, 0.38)",
+                }}
               >
-                {/* Image */}
-                <div className="w-full h-40 sm:h-44 overflow-hidden">
-                  <OptimizedImage
-                    src={item.img}
-                    alt={item.alt}
-                    className="w-full h-full"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    imgClassName="transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-
-                {/* Card Footer */}
-                <div className="p-4 sm:p-5 flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs"
-                    style={{ background: '#C55209' }}
-                  >
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-
-                  <p className="text-slate-800 font-semibold text-sm sm:text-base leading-snug">
-                    {item.label}
-                  </p>
-                </div>
+                <FaPodcast aria-hidden="true" />
+                <span>Podcast Shoots</span>
               </div>
-            ))}
+
+              <h1 className="hero-sans-heading text-2xl min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-extrabold leading-[1.08] tracking-[-0.025em] text-white">
+                Podcast Studio in{" "}
+                <span className="text-[#E8600A]">Visakhapatnam</span>
+              </h1>
+
+              <p className="hero-sans-heading text-lg sm:text-xl font-bold text-white/95">
+                Sound great. Look even better.
+              </p>
+
+              <p className="text-white/80 text-[15px] sm:text-base leading-relaxed max-w-xl">
+                Produce professional-quality podcast episodes with our complete
+                production service in Yendada, Vizag. From audio and video
+                podcast recording in our studio to sound editing and
+                platform-ready delivery, we handle every aspect of your podcast
+                shoot.
+              </p>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3.5">
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full text-white font-semibold text-sm shadow-lg transition-all duration-200 motion-reduce:transition-none hover:opacity-95 hover:-translate-y-0.5"
+                  style={{ background: "#C55209" }}
+                >
+                  <Calendar className="w-4 h-4" aria-hidden="true" />
+                  <span>Book a Podcast Shoot</span>
+                </Link>
+
+                <Link
+                  to="/portfolio"
+                  className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full border border-white/35 hover:border-[#E8600A] text-white hover:bg-white/10 font-semibold text-sm transition-all duration-200 motion-reduce:transition-none"
+                >
+                  <PlayCircle className="w-4 h-4" aria-hidden="true" />
+                  <span>View Our Work</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6">
+              <div className="relative rounded-2xl overflow-hidden aspect-[16/10] bg-[#141110] border border-white/15 shadow-2xl">
+                {failedImages.hero ? (
+                  <PodcastImageFallback
+                    icon={Mic}
+                    title="Podcast Studio in Visakhapatnam"
+                    dark
+                  />
+                ) : (
+                  <OptimizedImage
+                    src={HERO_IMAGE}
+                    alt="Genie Studio podcast recording studio in Yendada, Visakhapatnam with microphones, studio seating and lighting"
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="w-full h-full"
+                    imgClassName="w-full h-full object-cover text-transparent"
+                    onError={handleImageError("hero")}
+                  />
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Local relevance + process. Same visual system as the sections
-             above: max-w-6xl, the orange rule, alternating white / #FFF0E8. ── */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6 sm:px-10">
-          <div className="w-12 h-1 rounded-full mb-6" style={{ background: '#E8600A' }} />
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-6 leading-tight">
-            Professional Podcast Studio in Visakhapatnam
-          </h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            <p className="text-slate-600 text-lg leading-relaxed">
-              GenieStudio is a creative studio in Yendada, Visakhapatnam. Our podcast
-              studio is set up so you can record audio and video in the same session
-              — you leave with a video podcast for YouTube and social clips as well
-              as the audio episode, rather than having to pick one.
-            </p>
-            <p className="text-slate-600 text-lg leading-relaxed">
-              We work with creators launching a show and with businesses using
-              podcasts as part of their content and brand marketing. Whether it is a
-              solo episode, a two-person interview or a panel, we configure the
-              lighting, cameras and microphones for your format before you arrive.
-            </p>
+      {/* SECTION 2 – WHAT'S INCLUDED */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl bg-[#FAFAFA] border border-slate-200/80 p-7 sm:p-10 lg:p-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+              <div className="lg:col-span-5 space-y-4">
+                <div
+                  className="w-10 h-1 rounded-full"
+                  style={{ background: "#E8600A" }}
+                  aria-hidden="true"
+                />
+                <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-slate-900">
+                  What&apos;s Included
+                </h2>
+                <p className="text-slate-600 text-[15px] sm:text-base leading-relaxed">
+                  A complete podcast studio rental and production setup in
+                  Visakhapatnam for solo shows, two-person interviews and panel
+                  discussions — recording audio and 4K video together in one
+                  seamless session.
+                </p>
+              </div>
+
+              <div className="lg:col-span-7 lg:border-l lg:border-slate-200 lg:pl-10">
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {INCLUSIONS.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <li key={item.title} className="flex items-start gap-3.5">
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ background: "#FFF0E8", color: "#E8600A" }}
+                          aria-hidden="true"
+                        >
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="hero-sans-heading text-[15px] font-bold text-slate-900 leading-snug">
+                            {item.title}
+                          </h3>
+                          <p className="text-slate-600 text-sm leading-relaxed mt-1">
+                            {item.detail}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-24" style={{ background: '#FFF0E8' }}>
-        <div className="max-w-6xl mx-auto px-6 sm:px-10">
-          <div className="text-center mb-12">
-            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ background: '#E8600A' }} />
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900">
+      {/* SECTION 3 – WHAT YOU'LL RECEIVE */}
+      <section className="py-12 sm:py-16 bg-white border-t border-slate-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-6 space-y-6">
+              <div>
+                <div
+                  className="w-10 h-1 rounded-full mb-4"
+                  style={{ background: "#E8600A" }}
+                  aria-hidden="true"
+                />
+                <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-slate-900">
+                  What You&apos;ll Receive
+                </h2>
+                <p className="text-slate-600 text-[15px] sm:text-base leading-relaxed mt-2">
+                  Every podcast shoot in Vizag is delivered in formats ready for
+                  your podcast host, YouTube channel and social platforms.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {DELIVERABLES.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.title}
+                      className="rounded-xl border border-slate-200/80 bg-[#FAFAFA] p-4 space-y-2"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ background: "#FFF0E8", color: "#E8600A" }}
+                          aria-hidden="true"
+                        >
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <h3 className="hero-sans-heading text-sm font-bold text-slate-900">
+                          {item.title}
+                        </h3>
+                      </div>
+                      <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                        {item.detail}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {DELIVERABLE_IMAGES.map((img, idx) => (
+                <div
+                  key={img.src}
+                  className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-slate-100 border border-slate-200/80 shadow-sm"
+                >
+                  {failedImages[`deliverable-${idx}`] ? (
+                    <PodcastImageFallback
+                      icon={idx === 0 ? Video : Headphones}
+                      title={idx === 0 ? "4K Podcast Video" : "Studio Audio Mix"}
+                    />
+                  ) : (
+                    <OptimizedImage
+                      src={img.src}
+                      alt={img.alt}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="w-full h-full"
+                      imgClassName="w-full h-full object-cover text-transparent"
+                      onError={handleImageError(`deliverable-${idx}`)}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4 – OUR PODCAST SHOOTING PROCESS */}
+      <section className="py-12 sm:py-16 bg-[#FAFAFA] border-y border-slate-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 sm:mb-12">
+            <div
+              className="w-10 h-1 rounded-full mb-4"
+              style={{ background: "#E8600A" }}
+              aria-hidden="true"
+            />
+            <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-slate-900">
               Our Podcast Shooting Process
             </h2>
           </div>
 
-          <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {process.map((item, i) => (
-              <li
-                key={item.step}
-                className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300"
-              >
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs mb-4"
-                  style={{ background: '#C55209' }}
+          <ol className="relative grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
+            {/* Horizontal timeline line on desktop */}
+            <div
+              aria-hidden="true"
+              className="hidden md:block absolute top-6 left-[12.5%] right-[12.5%] h-px bg-slate-200"
+            />
+            {/* Vertical timeline line on mobile */}
+            <div
+              aria-hidden="true"
+              className="md:hidden absolute top-6 bottom-6 left-6 w-px bg-slate-200"
+            />
+
+            {PROCESS_STEPS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li
+                  key={item.number}
+                  className="relative pl-16 md:pl-0 md:text-center flex flex-col md:items-center"
                 >
-                  {String(i + 1).padStart(2, '0')}
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">{item.step}</h3>
-                <p className="text-slate-600 text-sm leading-relaxed">{item.body}</p>
-              </li>
-            ))}
+                  <div
+                    className="absolute left-0 top-0 md:static w-12 h-12 rounded-full flex items-center justify-center border border-[#E8600A]/25 shadow-sm z-10 md:mb-4"
+                    style={{ background: "#FFF0E8", color: "#E8600A" }}
+                    aria-hidden="true"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="hero-sans-heading text-base font-bold text-slate-900 mb-2">
+                    {item.number}. {item.step}
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {item.body}
+                  </p>
+                </li>
+              );
+            })}
           </ol>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-6 sm:px-10">
-          <div className="text-center mb-12">
-            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ background: '#E8600A' }} />
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900">
+      {/* SECTION 5 – PORTFOLIO PREVIEW */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+            <div>
+              <div
+                className="w-10 h-1 rounded-full mb-4"
+                style={{ background: "#E8600A" }}
+                aria-hidden="true"
+              />
+              <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-slate-900">
+                Podcast Production Highlights
+              </h2>
+            </div>
+
+            <Link
+              to="/portfolio"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold hover:underline"
+              style={{ color: "#C55209" }}
+            >
+              <span>View All Work</span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {PORTFOLIO_PREVIEWS.map((item) => (
+              <article
+                key={item.title}
+                className="rounded-2xl border border-slate-200/80 bg-[#FAFAFA] overflow-hidden"
+              >
+                <div className="relative aspect-[16/9] bg-slate-100 overflow-hidden">
+                  {failedImages[`preview-${item.title}`] ? (
+                    <PodcastImageFallback icon={FileVideo} title={item.format} />
+                  ) : (
+                    <OptimizedImage
+                      src={item.image}
+                      alt={item.alt}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="w-full h-full"
+                      imgClassName="w-full h-full object-cover text-transparent"
+                      onError={handleImageError(`preview-${item.title}`)}
+                    />
+                  )}
+                </div>
+                <div className="p-6 space-y-2">
+                  <span
+                    className="inline-block text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: "#C55209" }}
+                  >
+                    {item.format}
+                  </span>
+                  <h3 className="hero-sans-heading text-lg font-bold text-slate-900">
+                    {item.title}
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 6 – FREQUENTLY ASKED QUESTIONS & RELATED SERVICES */}
+      <section className="py-12 sm:py-16 bg-[#FAFAFA] border-t border-slate-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 sm:mb-10">
+            <div
+              className="w-10 h-1 rounded-full mb-4"
+              style={{ background: "#E8600A" }}
+              aria-hidden="true"
+            />
+            <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-slate-900">
               Frequently Asked Questions
             </h2>
           </div>
 
-          {/* Rendered visibly and emitted as FAQPage structured data above.
-              Google requires the two to match — invisible FAQ schema is a
-              structured-data violation, not a shortcut. <details> gives the
-              accordion keyboard support and open-by-default crawlability. */}
           <div className="space-y-3">
-            {faqs.map((faq) => (
+            {FAQS.map((faq) => (
               <details
                 key={faq.q}
-                className="group rounded-2xl border border-slate-200 px-5 py-4 open:shadow-sm transition-all"
+                className="group rounded-xl border border-slate-200 bg-white px-5 py-4 open:shadow-sm transition-shadow motion-reduce:transition-none"
               >
                 <summary className="flex items-center justify-between gap-4 cursor-pointer list-none font-semibold text-slate-900">
-                  <h3 className="text-base sm:text-lg">{faq.q}</h3>
+                  <h3 className="hero-sans-heading text-[15px] sm:text-base font-semibold">
+                    {faq.q}
+                  </h3>
                   <span
-                    className="flex-shrink-0 text-xl leading-none transition-transform group-open:rotate-45"
-                    style={{ color: '#E8600A' }}
+                    className="flex-shrink-0 text-xl leading-none transition-transform duration-200 motion-reduce:transition-none group-open:rotate-45"
+                    style={{ color: "#E8600A" }}
                     aria-hidden="true"
                   >
                     +
                   </span>
                 </summary>
-                <p className="text-slate-600 leading-relaxed mt-3 text-sm sm:text-base">
+                <p className="text-slate-600 leading-relaxed mt-3 text-sm sm:text-[15px]">
                   {faq.a}
                 </p>
               </details>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ── Related services. Gives the podcast page outbound internal links
-             with descriptive anchor text, and passes authority sideways. ── */}
-      <section className="py-16 md:py-20" style={{ background: '#FFF0E8' }}>
-        <div className="max-w-6xl mx-auto px-6 sm:px-10">
-          <div className="w-12 h-1 rounded-full mb-6" style={{ background: '#E8600A' }} />
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mb-6">
-            Related Services at GenieStudio
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {[
-              { to: "/services/professional-shoots", label: "Professional photography in Vizag" },
-              { to: "/services/corporate-shoots", label: "Corporate photography & team portraits" },
-              { to: "/services/product-shoots", label: "Product photography for e-commerce" },
-              { to: "/services/event-shoots", label: "Event photography in Visakhapatnam" },
-              { to: "/portfolio", label: "See our recent work" },
-              { to: "/blogs", label: "Read our photography & video guides" },
-            ].map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className="px-5 py-2.5 rounded-full bg-white text-slate-700 text-sm font-semibold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-              >
-                {link.label}
-              </Link>
-            ))}
+          <div className="mt-10 pt-8 border-t border-slate-200">
+            <h2 className="hero-sans-heading text-sm font-bold uppercase tracking-wider text-slate-700 mb-4 flex items-center gap-2">
+              <CheckCircle2
+                className="w-4 h-4"
+                style={{ color: "#E8600A" }}
+                aria-hidden="true"
+              />
+              <span>Related Services at Genie Studio</span>
+            </h2>
+            <div className="flex flex-wrap gap-2.5">
+              {RELATED_LINKS.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 hover:border-[#E8600A] hover:text-slate-900 text-xs sm:text-sm font-medium transition-colors motion-reduce:transition-none"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-20 text-white text-center" style={{ background: '#1F1A18' }}>
-        <div className="max-w-3xl mx-auto px-6 sm:px-10">
-          <FaPodcast className="text-5xl mx-auto mb-5 opacity-80" style={{ color: '#E8600A' }} />
-          <h2 className="text-3xl sm:text-4xl font-black mb-4">
-            Book a <span style={{ color: '#E8600A' }}>Podcast Shoot in Vizag</span>
-          </h2>
-          <p className="text-white/60 text-lg mb-8">Let's create something remarkable together. Reach out for a free consultation and custom quote.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contact" className="px-8 py-3.5 rounded-xl font-bold text-base hover:opacity-90 hover:-translate-y-0.5 transition-all shadow-lg text-white" style={{ background: '#C55209' }}>
-              Get a Free Quote
-            </Link>
-            <button onClick={() => navigate('/services')} className="px-8 py-3.5 rounded-xl font-bold text-base border border-white/20 text-white/80 hover:bg-white/10 transition-all">
-              View All Services
-            </button>
+      {/* SECTION 7 – FINAL CTA */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative rounded-2xl bg-[#1F1A18] text-white overflow-hidden px-6 py-9 sm:px-10 sm:py-11">
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+              <div className="lg:col-span-5">
+                <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold leading-tight">
+                  Book Your Podcast Shoot in{" "}
+                  <span className="text-[#E8600A]">Visakhapatnam</span>
+                </h2>
+              </div>
+
+              <div className="lg:col-span-7 space-y-5">
+                <p className="text-white/75 text-sm sm:text-base leading-relaxed max-w-2xl">
+                  At Genie Studio in Yendada, Vizag, we bring the studio space,
+                  equipment and production support to record and deliver your
+                  next podcast episode.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3.5">
+                  <Link
+                    to="/contact"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold text-sm shadow-lg transition-all duration-200 motion-reduce:transition-none hover:opacity-95 hover:-translate-y-0.5"
+                    style={{ background: "#C55209" }}
+                  >
+                    <span>Book a Podcast Shoot</span>
+                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  </Link>
+
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 hover:border-[#E8600A] text-white hover:bg-white/10 font-semibold text-sm transition-all duration-200 motion-reduce:transition-none"
+                  >
+                    <FaWhatsapp className="w-4 h-4" aria-hidden="true" />
+                    <span>Chat on WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

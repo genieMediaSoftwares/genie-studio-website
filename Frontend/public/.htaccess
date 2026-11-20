@@ -58,8 +58,10 @@ AddType application/xml .xml
     Header set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
 
-  # Crawlers re-read these often; a long TTL delays picking up new pages.
-  <FilesMatch "^(robots\.txt|sitemap\.xml)$">
+  # Crawlers and AI agents re-read these often; a long TTL delays picking up
+  # new pages. llms.txt is in here for the same reason robots.txt is — it is
+  # a discovery file, not a page.
+  <FilesMatch "^(robots\.txt|sitemap\.xml|llms\.txt)$">
     Header set Cache-Control "public, max-age=3600"
   </FilesMatch>
 </IfModule>

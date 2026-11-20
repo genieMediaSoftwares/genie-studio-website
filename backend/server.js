@@ -1,4 +1,5 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const express = require("express");
 const mysql = require("mysql2");
@@ -6,11 +7,11 @@ const cors = require("cors");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const path = require("path");
 const fs = require("fs");
 const axios = require("axios");
 const FormData = require("form-data");
 const { generateAndUploadVariants } = require("./lib/imagePipeline");
+const { uploadToStorage, deleteFromStorage, hasR2Config } = require("./lib/storageProvider");
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -287,6 +288,342 @@ db.query(
   }
 );
 
+// ================= SITE SECTIONS (PAGE IMAGE ASSIGNMENTS) =================
+const DEFAULT_SITE_SECTIONS = [
+  // Homepage Hero
+  {
+    category: "homepage_hero",
+    section_key: "home_hero_slide_1",
+    section_name: "Slide 1 - Main Podcast Studio",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "Genie Studio podcast recording set in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 1,
+  },
+  {
+    category: "homepage_hero",
+    section_key: "home_hero_slide_2",
+    section_name: "Slide 2 - 4K Multi-Camera Setup",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Multi-camera 4K podcast production setup in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 2,
+  },
+  {
+    category: "homepage_hero",
+    section_key: "home_hero_slide_3",
+    section_name: "Slide 3 - Studio Audio Setup",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt_text: "Genie Studio podcast audio recording and studio sound engineering",
+    aspect_ratio: "16:9",
+    sort_order: 3,
+  },
+
+  // Homepage Services
+  {
+    category: "homepage_services",
+    section_key: "home_service_podcast",
+    section_name: "Podcast Shoots Card",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786530713_1786530711207-616205262.jpg",
+    alt_text: "Podcast Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 1,
+  },
+  {
+    category: "homepage_services",
+    section_key: "home_service_product",
+    section_name: "Product Shoots Card",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
+    alt_text: "Product Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 2,
+  },
+  {
+    category: "homepage_services",
+    section_key: "home_service_corporate",
+    section_name: "Corporate Shoots Card",
+    page_name: "Home Page",
+    image_url: "https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=800",
+    alt_text: "Corporate Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 3,
+  },
+  {
+    category: "homepage_services",
+    section_key: "home_service_event",
+    section_name: "Event Shoots Card",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
+    alt_text: "Event Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 4,
+  },
+  {
+    category: "homepage_services",
+    section_key: "home_service_professional",
+    section_name: "Professional Shoots Card",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786520942_1786520939441-392375551.webp",
+    alt_text: "Professional Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 5,
+  },
+  {
+    category: "homepage_services",
+    section_key: "home_service_business",
+    section_name: "Business Portfolio Card",
+    page_name: "Home Page",
+    image_url: "https://geniestudio.in/uploads/1786519476_1786519476246-824255335.jpg",
+    alt_text: "Business Portfolio Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 6,
+  },
+
+  // Homepage Portfolio
+  {
+    category: "homepage_portfolio",
+    section_key: "home_equipment_1",
+    section_name: "Equipment 1 - Cinema Cameras",
+    page_name: "Home Page",
+    image_url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80",
+    alt_text: "Cinema Cameras",
+    aspect_ratio: "3:4",
+    sort_order: 1,
+  },
+  {
+    category: "homepage_portfolio",
+    section_key: "home_equipment_2",
+    section_name: "Equipment 2 - Studio Lighting",
+    page_name: "Home Page",
+    image_url: "https://images.unsplash.com/photo-1527011046414-4781f1f94f8c?w=800&q=80",
+    alt_text: "Studio Lighting",
+    aspect_ratio: "3:4",
+    sort_order: 2,
+  },
+  {
+    category: "homepage_portfolio",
+    section_key: "home_equipment_3",
+    section_name: "Equipment 3 - Prime Lenses",
+    page_name: "Home Page",
+    image_url: "https://images.unsplash.com/photo-1617005082133-548c4dd27f35?w=800&q=80",
+    alt_text: "Prime Lenses",
+    aspect_ratio: "3:4",
+    sort_order: 3,
+  },
+  {
+    category: "homepage_portfolio",
+    section_key: "home_equipment_4",
+    section_name: "Equipment 4 - Audio Gear",
+    page_name: "Home Page",
+    image_url: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&q=80",
+    alt_text: "Audio Gear",
+    aspect_ratio: "3:4",
+    sort_order: 4,
+  },
+
+  // About Page
+  {
+    category: "about",
+    section_key: "about_story_1",
+    section_name: "Our Story - Studio Microphone Setup",
+    page_name: "About Page",
+    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt_text: "Professional microphone and podcast recording setup at Genie Studio",
+    aspect_ratio: "4:3",
+    sort_order: 1,
+  },
+  {
+    category: "about",
+    section_key: "about_story_2",
+    section_name: "Our Story - Cinema Production Setup",
+    page_name: "About Page",
+    image_url: "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg",
+    alt_text: "Cinema camera and production setup at Genie Studio",
+    aspect_ratio: "4:3",
+    sort_order: 2,
+  },
+  {
+    category: "about",
+    section_key: "about_story_3",
+    section_name: "Our Story - Post-Production Suite",
+    page_name: "About Page",
+    image_url: "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
+    alt_text: "Video editing and post-production workflow at Genie Studio",
+    aspect_ratio: "4:3",
+    sort_order: 3,
+  },
+  {
+    category: "about",
+    section_key: "about_middle_banner",
+    section_name: "Studio Space Showcase Banner",
+    page_name: "About Page",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "Professional podcast recording studio at Genie Studio with cameras and lighting",
+    aspect_ratio: "16:9",
+    sort_order: 4,
+  },
+  {
+    category: "about",
+    section_key: "about_equipment_banner",
+    section_name: "Equipment & Optics Showcase",
+    page_name: "About Page",
+    image_url: "https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp",
+    alt_text: "Professional camera lens and studio production equipment at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 5,
+  },
+
+  // Service Pages
+  {
+    category: "services",
+    section_key: "service_hero_podcast",
+    section_name: "Podcast Shoots Hero Header",
+    page_name: "Podcast Shoots",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Podcast Shoots Hero",
+    aspect_ratio: "16:9",
+    sort_order: 1,
+  },
+  {
+    category: "services",
+    section_key: "service_hero_product",
+    section_name: "Product Shoots Hero Header",
+    page_name: "Product Shoots",
+    image_url: "https://geniestudio.in/uploads/1786531726_1786531724729-939039825.webp",
+    alt_text: "Product Shoots Hero",
+    aspect_ratio: "16:9",
+    sort_order: 2,
+  },
+  {
+    category: "services",
+    section_key: "service_hero_corporate",
+    section_name: "Corporate Shoots Hero Header",
+    page_name: "Corporate Shoots",
+    image_url: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
+    alt_text: "Corporate Shoots Hero",
+    aspect_ratio: "16:9",
+    sort_order: 3,
+  },
+  {
+    category: "services",
+    section_key: "service_hero_event",
+    section_name: "Event Shoots Hero Header",
+    page_name: "Event Shoots",
+    image_url: "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
+    alt_text: "Event Shoots Hero",
+    aspect_ratio: "16:9",
+    sort_order: 4,
+  },
+  {
+    category: "services",
+    section_key: "service_hero_professional",
+    section_name: "Professional Shoots Hero Header",
+    page_name: "Professional Shoots",
+    image_url: "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
+    alt_text: "Professional Shoots Hero",
+    aspect_ratio: "16:9",
+    sort_order: 5,
+  },
+  {
+    category: "services",
+    section_key: "service_hero_business",
+    section_name: "Business Portfolio Shoots Hero Header",
+    page_name: "Business Portfolio Shoots",
+    image_url: "https://geniestudio.in/uploads/1786519476_1786519476246-824255335.jpg",
+    alt_text: "Business Portfolio Shoots Hero",
+    aspect_ratio: "16:9",
+    sort_order: 6,
+  },
+
+  // Portfolio Page
+  {
+    category: "portfolio",
+    section_key: "portfolio_hero_banner",
+    section_name: "Portfolio Page Hero Banner",
+    page_name: "Portfolio Page",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "Genie Studio Portfolio in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 1,
+  },
+
+  // Gallery
+  {
+    category: "gallery",
+    section_key: "gallery_hero_banner",
+    section_name: "Gallery 3D Dome Header Banner",
+    page_name: "Gallery Page",
+    image_url: "https://geniestudio.in/uploads/1786602495_1786602495551-770257142.jpg",
+    alt_text: "Genie Studio Gallery in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 1,
+  },
+
+  // Blog
+  {
+    category: "blog",
+    section_key: "blog_hero_banner",
+    section_name: "Blog Listing Hero Banner",
+    page_name: "Blog Page",
+    image_url: "https://geniestudio.in/uploads/1786602495_1786602495551-770257142.jpg",
+    alt_text: "Genie Studio Blog Banner",
+    aspect_ratio: "16:9",
+    sort_order: 1,
+  },
+];
+
+db.query(
+  `CREATE TABLE IF NOT EXISTS site_sections (
+     id INT AUTO_INCREMENT PRIMARY KEY,
+     category VARCHAR(50) NOT NULL,
+     section_key VARCHAR(100) NOT NULL UNIQUE,
+     section_name VARCHAR(150) NOT NULL,
+     page_name VARCHAR(100) NOT NULL,
+     image_url VARCHAR(500) DEFAULT NULL,
+     alt_text VARCHAR(255) DEFAULT NULL,
+     aspect_ratio VARCHAR(50) DEFAULT '16:9',
+     sort_order INT DEFAULT 0,
+     updated_at BIGINT DEFAULT NULL,
+     KEY idx_category (category)
+   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  (err) => {
+    if (err) return console.log("❌ site_sections table error:", err.message);
+    console.log("✅ site_sections table ready");
+
+    // Seed default section slots if empty
+    db.query("SELECT COUNT(*) AS n FROM site_sections", (err2, rows) => {
+      if (err2 || rows[0].n > 0) return;
+      const now = Date.now();
+      const values = DEFAULT_SITE_SECTIONS.map((s) => [
+        s.category,
+        s.section_key,
+        s.section_name,
+        s.page_name,
+        s.image_url,
+        s.alt_text,
+        s.aspect_ratio,
+        s.sort_order,
+        now,
+      ]);
+      db.query(
+        `INSERT INTO site_sections
+          (category, section_key, section_name, page_name, image_url, alt_text, aspect_ratio, sort_order, updated_at)
+         VALUES ?`,
+        [values],
+        (err3) => {
+          if (err3) console.log("❌ site_sections seed error:", err3.message);
+          else console.log(`✅ site_sections seeded with ${values.length} slots`);
+        }
+      );
+    });
+  }
+);
+
 // ================= MULTER =================
 // Multer is only used as a temp buffer before uploading to Hostinger
 const storage = multer.diskStorage({
@@ -312,9 +649,19 @@ const upload = multer({
   },
 });
 
-// ================= HELPER: Upload file to Hostinger =================
-// Uploads temp file to upload.php, returns full HTTPS URL, cleans up temp file
-const uploadToHostinger = async (tempFilePath) => {
+// ================= HELPER: Upload file to Storage (R2 / Local / Hostinger) =================
+const uploadToHostinger = async (tempFilePath, originalFilename) => {
+  const filename = path.basename(tempFilePath);
+  const ext = path.extname(originalFilename || tempFilePath).toLowerCase();
+  const mimeType = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
+
+  try {
+    const storedUrl = await uploadToStorage(fs.createReadStream(tempFilePath), filename, mimeType);
+    if (storedUrl) return storedUrl;
+  } catch (storageErr) {
+    console.warn("Storage provider upload failed, trying Hostinger fallback:", storageErr.message);
+  }
+
   try {
     const formData = new FormData();
     formData.append("file", fs.createReadStream(tempFilePath));
@@ -322,7 +669,7 @@ const uploadToHostinger = async (tempFilePath) => {
     const response = await axios.post(
       "https://geniestudio.in/upload.php",
       formData,
-      { headers: formData.getHeaders() }
+      { headers: formData.getHeaders(), timeout: 10000 }
     );
 
     return response.data.url; // full HTTPS URL from Hostinger
@@ -335,14 +682,8 @@ const uploadToHostinger = async (tempFilePath) => {
 };
 
 // ================= HELPER: Upload + register an image =================
-// THE single entry point for getting an image onto Hostinger. Both the standalone
-// Image Library and the Blog Editor's Featured Image go through this, so there is
-// exactly one upload path:
-//
-//   multer temp file → upload.php → public_html/uploads/ → HTTPS url → images row
-//
-// The DB row is a convenience index; if the insert fails the upload itself is
-// still returned so blog creation never breaks because of the library.
+// The single entry point for storing images persistently.
+// Both the standalone Image Library and the Blog Editor's Featured Image go through this.
 const uploadAndRegisterImage = async (file, meta = {}) => {
   // Read the bytes before uploadToHostinger runs — it deletes the temp file.
   let sourceBuffer = null;
@@ -352,7 +693,7 @@ const uploadAndRegisterImage = async (file, meta = {}) => {
     console.error("Could not read temp file for variants:", readErr.message);
   }
 
-  const url = await uploadToHostinger(file.path);
+  const url = await uploadToHostinger(file.path, file.originalname);
   if (!url) throw new Error("Upload service did not return a URL");
 
   const filename = String(url).split("/").pop().split("?")[0];
@@ -563,15 +904,147 @@ app.put("/api/images/:id", verifyToken, async (req, res) => {
   }
 });
 
-// Removes the library entry. The physical file stays on Hostinger (upload.php
-// exposes no delete endpoint), so blogs already pointing at the URL keep working.
+// Removes the library entry and deletes file from persistent storage
 app.delete("/api/images/:id", verifyToken, async (req, res) => {
   try {
+    const [image] = await dbQuery("SELECT * FROM images WHERE id = ?", [req.params.id]);
+    if (!image) {
+      return res.status(404).json({ success: false, message: "Image not found" });
+    }
+
+    // Delete physical file from storage
+    if (image.filename) {
+      await deleteFromStorage(image.filename);
+    }
+
+    // Delete variants if any
+    const variants = parseVariants(image.variants);
+    if (variants) {
+      for (const format of ["webp", "avif"]) {
+        if (variants[format]) {
+          for (const varUrl of Object.values(variants[format])) {
+            const varFilename = String(varUrl).split("/").pop().split("?")[0];
+            if (varFilename && varFilename !== image.filename) {
+              await deleteFromStorage(varFilename);
+            }
+          }
+        }
+      }
+    }
+
     await dbQuery("DELETE FROM images WHERE id = ?", [req.params.id]);
-    res.json({ success: true, message: "Image removed from library" });
+
+    // If assigned to site_sections, clear reference so frontend does not point to deleted image
+    if (image.file_url) {
+      await dbQuery("UPDATE site_sections SET image_url = NULL WHERE image_url = ?", [image.file_url]);
+    }
+
+    res.json({ success: true, message: "Image deleted successfully from storage and library" });
   } catch (err) {
     console.error("DB error deleting image:", err.message);
     res.status(500).json({ success: false, message: "Failed to delete image" });
+  }
+});
+
+// ================= SITE SECTIONS API (CENTRALIZED IMAGE MANAGEMENT) =================
+// Public read: returns all configured section slots with their assigned images
+app.get("/api/site-sections", async (req, res) => {
+  try {
+    const { category } = req.query;
+    const where = category ? "WHERE category = ?" : "";
+    const params = category ? [category] : [];
+
+    const sections = await dbQuery(
+      `SELECT * FROM site_sections ${where} ORDER BY sort_order ASC, id ASC`,
+      params
+    );
+
+    const withVariants = await attachImageVariants(sections, "image_url");
+
+    // Fast key-value dictionary: { [section_key]: { image_url, alt_text, variants, lqip } }
+    const map = {};
+    for (const s of withVariants) {
+      map[s.section_key] = {
+        image_url: s.image_url,
+        alt_text: s.alt_text,
+        variants: s.variants || null,
+        lqip: s.lqip || null,
+        section_name: s.section_name,
+        page_name: s.page_name,
+        category: s.category,
+      };
+    }
+
+    res.json({
+      success: true,
+      sections: withVariants,
+      map,
+    });
+  } catch (err) {
+    console.error("DB error fetching site sections:", err.message);
+    res.status(500).json({ success: false, message: "Failed to fetch site sections" });
+  }
+});
+
+// Admin assign/replace image for a section
+app.put("/api/site-sections/:section_key", verifyToken, async (req, res) => {
+  try {
+    const { section_key } = req.params;
+    const { image_url, alt_text } = req.body;
+
+    if (!image_url || typeof image_url !== "string") {
+      return res.status(400).json({ success: false, message: "Valid image URL is required" });
+    }
+
+    const trimmedUrl = image_url.trim();
+    const now = Date.now();
+
+    const result = await dbQuery(
+      "UPDATE site_sections SET image_url = ?, alt_text = COALESCE(?, alt_text), updated_at = ? WHERE section_key = ?",
+      [trimmedUrl, alt_text || null, now, section_key]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Section key not found" });
+    }
+
+    const [updated] = await dbQuery(
+      "SELECT * FROM site_sections WHERE section_key = ?",
+      [section_key]
+    );
+
+    const [withVariants] = await attachImageVariants([updated], "image_url");
+
+    res.json({
+      success: true,
+      message: `Image assigned to ${updated.section_name}`,
+      section: withVariants,
+    });
+  } catch (err) {
+    console.error("DB error updating site section:", err.message);
+    res.status(500).json({ success: false, message: "Failed to update site section" });
+  }
+});
+
+// Admin clear image assignment from a section
+app.delete("/api/site-sections/:section_key", verifyToken, async (req, res) => {
+  try {
+    const { section_key } = req.params;
+    const now = Date.now();
+
+    const result = await dbQuery(
+      "UPDATE site_sections SET image_url = NULL, updated_at = ? WHERE section_key = ?",
+      [now, section_key]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Section key not found" });
+    }
+
+    res.json({ success: true, message: "Image assignment removed from section" });
+  } catch (err) {
+    console.error("DB error clearing site section:", err.message);
+    res.status(500).json({ success: false, message: "Failed to clear site section" });
   }
 });
 

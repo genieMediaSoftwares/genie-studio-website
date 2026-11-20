@@ -30,6 +30,7 @@
 const sharp = require("sharp");
 const axios = require("axios");
 const FormData = require("form-data");
+const { uploadToStorage } = require("./storageProvider");
 
 /** Ladder chosen to cover 1× phones through 2× desktop without gaps. */
 const VARIANT_WIDTHS = [400, 800, 1200, 1600, 2000];
@@ -55,14 +56,18 @@ const HOSTINGER_UPLOAD_URL = "https://geniestudio.in/upload.php";
 const READ_OPTIONS = { failOn: "none", limitInputPixels: 500_000_000 };
 
 /**
- * Pushes a buffer to Hostinger and returns its public HTTPS URL.
- *
- * upload.php names the stored file `<unixtime>_<the name we send>`, so the
- * final URL cannot be predicted — every caller has to keep what comes back.
- * That is why variants are recorded in a manifest rather than derived from the
- * original URL by string substitution.
+ * Pushes a buffer to storage (Cloudflare R2 or local fallback, with Hostinger fallback).
  */
 async function uploadBufferToHostinger(buffer, filename) {
+  // If storageProvider (R2 or local persistent) is available, use it directly
+  try {
+    const ext = filename.split(".").pop().toLowerCase();
+    const mimeType = ext === "avif" ? "image/avif" : ext === "webp" ? "image/webp" : "image/jpeg";
+    return await uploadToStorage(buffer, filename, mimeType);
+  } catch (storageErr) {
+    console.warn(`Primary storage failed for ${filename}, attempting Hostinger fallback:`, storageErr.message);
+  }
+
   const formData = new FormData();
   formData.append("file", buffer, { filename });
 
@@ -70,7 +75,7 @@ async function uploadBufferToHostinger(buffer, filename) {
     headers: formData.getHeaders(),
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
-    timeout: 120000,
+    timeout: 10000,
   });
 
   const url = response.data?.url;

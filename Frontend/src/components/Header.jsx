@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Phone, ChevronDown } from "lucide-react";
+import { Menu, X, Calendar, ChevronDown } from "lucide-react";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -46,18 +46,28 @@ const Header = () => {
 
   return (
     <header className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? "bg-black shadow-md" : "bg-transparent"}`} >
-      <nav className="max-w-7xl mx-auto px-6">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
 
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-2.5 sm:gap-3">
             {/* 117×264 WebP rather than the 409×921 PNG the favicon still uses —
                 the logo never renders above 44px tall. width/height are set so
                 the header does not reflow while it loads. */}
             {/* alt="" — the adjacent "GenieStudio" wordmark already names the
                 link, so a description here would be read out twice. */}
-            <img src="https://geniestudio.in/Images%20For%20GenieStudio/GenieStudio.png" alt="" width="30" height="93"
-              className="h-10 md:h-11 w-cover" fetchPriority="high" decoding="async" />
-            <span className="text-lg md:text-2xl lg:text-3xl font-semibold text-white">
+            <img
+              src="/GenieStudio.png"
+              alt=""
+              width="30"
+              height="93"
+              className="h-9 sm:h-10 md:h-11 w-auto object-contain flex-shrink-0"
+              fetchPriority="high"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+            <span className="text-base min-[360px]:text-lg md:text-2xl lg:text-3xl font-semibold text-white whitespace-nowrap">
               Genie<span className="text-[var(--accent-color)]">Studio</span>
             </span>
           </Link>
@@ -130,16 +140,13 @@ const Header = () => {
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
-            <a href="tel:+919032845433" className=" mx-6 inline-flex items-center pl-4 pr-1.5 py-1 rounded-full bg-white text-black text-xs sm:text-sm lg:text-base font-medium border border-white shadow-sm hover:shadow-md transition-all" >
-              <span className="mr-2 whitespace-nowrap">
-                +91 9032845433
-              </span>
-
-              <span className=" w-8 h-8 rounded-full bg-[#6b4a2d] flex items-center justify-center text-white" >
-                <Phone size={14} aria-hidden="true" />
-              </span>
-            </a>
-
+            <Link
+              to="/contact"
+              className="mx-6 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--accent-color)] hover:bg-[#eab308] text-black text-sm lg:text-base font-semibold shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+            >
+              <Calendar size={16} aria-hidden="true" />
+              <span>Book Now</span>
+            </Link>
           </div>
 
           {/* p-2 with a matching -mr-2 grows the tap area from the icon's bare
@@ -162,7 +169,7 @@ const Header = () => {
         <div
           id="mobile-menu"
           inert={!menuOpen}
-          className={`lg:hidden transition-all duration-300 ${menuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`} >
+          className={`lg:hidden transition-all duration-300 ${menuOpen ? "max-h-[85vh] overflow-y-auto opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`} >
           <div className="bg-black border-t border-white/10 py-4">
             {navItems.map((item) => {
               if (item.name === "Services") {
@@ -225,6 +232,17 @@ const Header = () => {
                 </Link>
               );
             })}
+
+            <div className="px-6 pt-3 pb-1">
+              <Link
+                to="/contact"
+                onClick={() => setMenuOpen(false)}
+                className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-full bg-[var(--accent-color)] hover:bg-[#eab308] text-black text-sm font-semibold transition-colors"
+              >
+                <Calendar size={16} aria-hidden="true" />
+                <span>Book Now</span>
+              </Link>
+            </div>
 
           </div>
         </div>

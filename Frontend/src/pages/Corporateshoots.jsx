@@ -1,222 +1,468 @@
-import React, { useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { FaBuilding, FaArrowLeft, FaCheckCircle, FaWhatsapp } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  Building2,
+  Calendar,
+  Camera,
+  CheckCircle2,
+  Layers,
+  MessageSquare,
+  PlayCircle,
+  Sliders,
+  Users,
+  Video,
+} from "lucide-react";
+import { FaBuilding, FaWhatsapp } from "react-icons/fa";
 import OptimizedImage from "../components/OptimizedImage";
 import Breadcrumbs from "../components/Breadcrumbs";
 import Seo from "../components/Seo";
+import { SERVICE_SEO, SITE_URL, absolute, serviceSchema } from "../lib/seoConfig";
 
 /*
- * ACCENT COLOURS
- * #4A9FD9 is the page accent and is unchanged wherever it is decorative — the
- * section rules, the icons and the tinted panels all still use it.
- *
- * White text on it only reached 2.90:1, short of the 4.5:1 WCAG AA asks for, so
- * the handful of surfaces that carry white text (the pill, the two CTAs and
- * the numbered step markers) use #3A7CA9 instead: the same hue with the RGB
- * scaled down until white clears 4.5:1.
+ * ACCENT COLOURS (Preserved Corporate Shoots Blue Identity)
+ * #0D1B2A  Dark navy hero & final CTA surface
+ * #4A9FD9  Brand blue decorative rules, icons & highlights
+ * #3A7CA9  Accessible blue for white-text buttons & badges (WCAG AA >= 4.5:1)
+ * #EAF4FC  Light blue tinted card & section surface
  */
-import { SERVICE_SEO, serviceSchema } from "../lib/seoConfig";
 
-/** Declared once, then used by both <Breadcrumbs> and <Seo>. */
 const CRUMBS = [
   { name: "Home", path: "/" },
   { name: "Services", path: "/services" },
   { name: "Corporate Shoots", path: "/services/corporate-shoots" },
 ];
 
-const Corporateshoots = () => {
-  const navigate = useNavigate();
-  const heroRef = useRef(null);
+const HERO_IMAGE =
+  "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png";
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
+const WHATSAPP_URL =
+  "https://wa.me/+919966888428?text=" +
+  encodeURIComponent(
+    "Hello Genie Studio, I would like to enquire about booking a corporate shoot in Visakhapatnam."
+  );
+
+const SERVICE_HIGHLIGHTS = [
+  "Office & workspace coverage",
+  "Leadership & executive portraits",
+  "Team & company culture photography",
+  "Company profile videos & brand visuals",
+];
+
+const DELIVERABLES = [
+  {
+    icon: Camera,
+    title: "Professional Corporate Photos",
+    subtitle: "Office, workplace & brand imagery",
+  },
+  {
+    icon: Video,
+    title: "Corporate Videos (if required)",
+    subtitle: "Company profile & leadership reels",
+  },
+  {
+    icon: Users,
+    title: "Team and Leadership Portraits",
+    subtitle: "Executive headshots & team frames",
+  },
+  {
+    icon: Layers,
+    title: "Brand-Ready Visual Assets",
+    subtitle: "Web, LinkedIn & marketing formats",
+  },
+];
+
+const PROCESS_STEPS = [
+  {
+    number: "01",
+    title: "Consultation",
+    icon: MessageSquare,
+    description:
+      "Understand the business, brand, objectives and shoot requirements.",
+  },
+  {
+    number: "02",
+    title: "Planning & Setup",
+    icon: Sliders,
+    description:
+      "Plan the shoot, locations, lighting and production requirements.",
+  },
+  {
+    number: "03",
+    title: "Shooting",
+    icon: Camera,
+    description:
+      "Capture professional corporate photographs and videos.",
+  },
+  {
+    number: "04",
+    title: "Editing & Delivery",
+    icon: PlayCircle,
+    description:
+      "Refine and deliver the final approved content.",
+  },
+];
+
+const CorporateImageFallback = ({ icon, title }) => {
+  const IconComponent = icon;
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none"
+      style={{
+        background:
+          "radial-gradient(circle at 50% 35%, rgba(74,159,217,0.22) 0%, #0D1B2A 82%)",
+      }}
+    >
+      <div
+        className="w-11 h-11 rounded-2xl flex items-center justify-center mb-2.5"
+        style={{
+          background: "rgba(255,255,255,0.08)",
+          color: "#4A9FD9",
+          border: "1px solid rgba(255,255,255,0.14)",
+        }}
+      >
+        <IconComponent className="w-5 h-5" />
+      </div>
+      <span
+        className="text-[11px] font-semibold uppercase tracking-[0.16em]"
+        style={{ color: "#4A9FD9" }}
+      >
+        Genie Studio
+      </span>
+      <span className="font-semibold text-sm mt-1 text-white/90">{title}</span>
+    </div>
+  );
+};
+
+const Corporateshoots = () => {
+  const [heroFailed, setHeroFailed] = useState(false);
 
   useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
-    // Coalesce to one write per frame. A scroll event can fire many times
-    // between paints, and each `style.transform =` invalidates layout — so the
-    // unbatched version did several times more work than the screen could
-    // show, which is what surfaces as "forced reflow". The motion is
-    // identical; it just no longer runs ahead of the compositor.
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        hero.style.transform = `translateY(${window.scrollY * 0.35}px)`;
-        ticking = false;
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.scrollTo(0, 0);
   }, []);
 
-  const features = [
-    "Corporate office & workspace coverage",
-    "Leadership & executive portraits",
-    "Team & culture storytelling",
-    "Website, LinkedIn & branding-ready visuals",
-  ];
-
-  const deliverables = [
-    {
-      label: "200–400 edited images",
-      img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop&q=80",
-    },
-    {
-      label: "High-resolution RAW files",
-      img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
-    },
-    {
-      label: "Color grading & retouching",
-      img: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&auto=format&fit=crop&q=80",
-    },
-    {
-      label: "Online gallery & download portal",
-      img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80",
-    },
-  ];
+  const pageUrl = absolute(SERVICE_SEO.corporate.path);
 
   return (
     <main className="w-full overflow-x-hidden bg-white">
       <Seo
         {...SERVICE_SEO.corporate}
-        schema={serviceSchema({
-          name: SERVICE_SEO.corporate.name,
-          description: SERVICE_SEO.corporate.description,
-          path: SERVICE_SEO.corporate.path,
-        })}
+        schema={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: SERVICE_SEO.corporate.title,
+            description: SERVICE_SEO.corporate.description,
+            url: pageUrl,
+            isPartOf: { "@id": `${SITE_URL}/#website` },
+            about: { "@id": `${SITE_URL}/#localbusiness` },
+            primaryImageOfPage: {
+              "@type": "ImageObject",
+              url: HERO_IMAGE,
+            },
+          },
+          serviceSchema({
+            name: "Corporate Photography & Video Production in Visakhapatnam",
+            description: SERVICE_SEO.corporate.description,
+            path: SERVICE_SEO.corporate.path,
+            serviceType: "Corporate Photography & Video Production",
+          }),
+        ]}
         breadcrumbs={CRUMBS}
       />
 
-
-      <section className="relative min-h-[75vh] flex items-end overflow-hidden" style={{ background: '#0D1B2A' }}>
-        <div
-          ref={heroRef}
-          className="absolute inset-0 w-full h-[110%] -top-[5%]"
-          style={{
-            backgroundImage: "url('https://i.pinimg.com/1200x/df/f2/c0/dff2c0464e1220f40842f7d051cfbbd9.jpg')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            imageRendering: 'auto',
-            willChange: 'transform',
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            // Same stops as every other service hero (0.85 @ 25%, 0.45 @ 55%).
-            // This page was on 0.8 @ 20% / 0.4 @ 50%, a weaker overlay that
-            // let the background photo through and left the heading with less
-            // contrast than the rest of the set.
-            background:
-              'linear-gradient(to top, rgba(13,27,42,0.85) 25%, rgba(13,27,42,0.45) 55%, transparent 100%)',
-          }}
-        />
-
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-10 pb-12 sm:pb-16">
+      {/* SECTION 1 — HERO */}
+      <section className="bg-[#0D1B2A] text-white pt-20 md:pt-24 pb-12 sm:pb-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
           <Breadcrumbs items={CRUMBS} className="mb-5 text-white/70" />
 
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full mb-5 text-sm font-semibold tracking-widest uppercase" style={{ background: '#1E6FA522', color: '#4A9FD9', border: '1px solid #4A9FD944' }}>
-            <FaBuilding /> Photography & Videography
-          </div>
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white leading-none mb-4 tracking-tight">
-            Corporate<br />Shoots
-          </h1>
-          <p className="text-xl sm:text-2xl font-light italic mb-6" style={{ color: '#4A9FD9' }}>
-            Visual authority for the modern enterprise.
-          </p>
-          <div className="inline-block px-5 py-2 rounded-full text-sm font-bold text-white" style={{ background: '#3A7CA9' }}>
-            Custom Quote
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="w-12 h-1 rounded-full mb-6" style={{ background: '#4A9FD9' }} />
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-6 leading-tight">What's Included</h2>
-            <p className="text-slate-600 text-lg leading-relaxed mb-8">
-              Our Corporate Shoots service provides comprehensive visual documentation of your business operations. From capturing the essence of your workplace culture to creating professional executive portraits, we deliver high-quality imagery that strengthens your brand identity and attracts top talent. Every frame is intentional, every image tells your business story.
-            </p>
-            <Link to="/contact" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-white font-semibold text-base transition-all duration-300 hover:opacity-90 hover:-translate-y-0.5 shadow-lg" style={{ background: '#3A7CA9' }}>
-              <FaWhatsapp className="text-lg" /> Book This Service
-            </Link>
-          </div>
-          <div className="rounded-2xl p-8 sm:p-10" style={{ background: '#EAF4FC' }}>
-            <h3 className="text-xl font-bold text-slate-800 mb-6">Service Highlights</h3>
-            <ul className="space-y-4">
-              {features.map((f, i) => (
-                <li key={i} className="flex items-start gap-3 text-slate-700 text-base">
-                  <FaCheckCircle className="mt-0.5 flex-shrink-0 text-lg" style={{ color: '#4A9FD9' }} />
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-20" style={{ background: '#EAF4FC' }}>
-        <div className="max-w-6xl mx-auto px-6 sm:px-10">
-          <div className="text-center mb-12">
-            <div className="w-12 h-1 rounded-full mx-auto mb-4" style={{ background: '#4A9FD9' }} />
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900">What You'll Receive</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 px-4 sm:px-0">
-            {deliverables.map((item, i) => (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-6 space-y-4 sm:space-y-5">
               <div
-                key={i}
-                data-aos="fade-up"
-                data-aos-delay={i * 100}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 active:scale-95 sm:hover:-translate-y-1 group"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase"
+                style={{
+                  background: "rgba(30, 111, 165, 0.24)",
+                  color: "#7EC4F2",
+                  border: "1px solid rgba(74, 159, 217, 0.36)",
+                }}
               >
-                {/* Image */}
-                <div className="w-full h-40 sm:h-44 overflow-hidden">
-                  <OptimizedImage
-                    src={item.img}
-                    alt={item.label}
-                    className="w-full h-full"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    imgClassName="transition-transform duration-500 group-hover:scale-105"
+                <FaBuilding aria-hidden="true" />
+                <span>Photography &amp; Videography</span>
+              </div>
+
+              <h1 className="hero-sans-heading text-2xl min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-[52px] font-extrabold leading-[1.08] tracking-[-0.025em] text-white">
+                Corporate <span className="text-[#4A9FD9]">Shoots</span>
+              </h1>
+
+              <p
+                className="text-lg sm:text-xl font-medium italic"
+                style={{ color: "#7EC4F2" }}
+              >
+                Visual Authority for the Modern Enterprise.
+              </p>
+
+              <p className="text-white/80 text-[15px] sm:text-base leading-relaxed max-w-xl">
+                Corporate photography and video production in Visakhapatnam
+                designed to showcase your workplace, leadership team, company
+                culture and brand with clarity and professionalism.
+              </p>
+
+              <div className="pt-2 flex flex-wrap items-center gap-3.5">
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full text-white font-semibold text-sm shadow-lg transition-all duration-200 motion-reduce:transition-none hover:opacity-95 hover:-translate-y-0.5"
+                  style={{ background: "#3A7CA9" }}
+                >
+                  <Calendar className="w-4 h-4" aria-hidden="true" />
+                  <span>Book a Corporate Shoot</span>
+                </Link>
+
+                <Link
+                  to="/portfolio"
+                  className="inline-flex items-center gap-2.5 px-6 py-3 rounded-full border border-white/35 hover:border-[#4A9FD9] text-white hover:bg-white/10 font-semibold text-sm transition-all duration-200 motion-reduce:transition-none"
+                >
+                  <PlayCircle className="w-4 h-4" aria-hidden="true" />
+                  <span>View Our Work</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6">
+              <div className="relative rounded-2xl overflow-hidden aspect-[16/10] bg-[#091420] border border-white/15 shadow-2xl">
+                {heroFailed ? (
+                  <CorporateImageFallback
+                    icon={Building2}
+                    title="Corporate Photography & Video Production"
                   />
-                </div>
+                ) : (
+                  <OptimizedImage
+                    src={HERO_IMAGE}
+                    alt="Corporate photography and company profile video production by Genie Studio in Visakhapatnam"
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="w-full h-full"
+                    imgClassName="w-full h-full object-cover text-transparent"
+                    onError={(e) => {
+                      e.currentTarget.style.opacity = "0";
+                      setHeroFailed(true);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-                {/* Card Footer */}
-                <div className="p-4 sm:p-5 flex items-center gap-3">
+      {/* SECTION 2 — WHAT'S INCLUDED */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-5 space-y-4">
+              <div
+                className="w-10 h-1 rounded-full"
+                style={{ background: "#4A9FD9" }}
+                aria-hidden="true"
+              />
+              <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-[#0D1B2A]">
+                What&apos;s Included
+              </h2>
+              <p className="text-slate-600 text-[15px] sm:text-base leading-relaxed">
+                Genie Studio provides corporate photography and video production
+                in Vizag for organisations introducing their team, workspace and
+                capabilities. Every corporate photoshoot is planned around your
+                brand guidelines for websites, LinkedIn profiles and corporate
+                communications.
+              </p>
+              <p className="text-sm text-slate-600">
+                Also need individual portraits or company portfolios? Explore{" "}
+                <Link
+                  to="/services/professional-shoots"
+                  className="font-semibold text-[#0D1B2A] hover:underline"
+                >
+                  executive portrait photography
+                </Link>{" "}
+                or{" "}
+                <Link
+                  to="/services/business-portfolio-shoots"
+                  className="font-semibold text-[#0D1B2A] hover:underline"
+                >
+                  business portfolio shoots
+                </Link>
+                .
+              </p>
+            </div>
+
+            <div className="lg:col-span-7">
+              <div
+                className="rounded-2xl p-6 sm:p-8 border border-[#4A9FD9]/20"
+                style={{ background: "#EAF4FC" }}
+              >
+                <h3 className="hero-sans-heading text-lg font-bold text-[#0D1B2A] mb-5">
+                  Service Highlights
+                </h3>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {SERVICE_HIGHLIGHTS.map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-start gap-3 text-slate-800"
+                    >
+                      <CheckCircle2
+                        className="w-5 h-5 shrink-0 mt-0.5"
+                        style={{ color: "#4A9FD9" }}
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm sm:text-[15px] font-medium leading-snug">
+                        {item}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3 — WHAT YOU'LL RECEIVE */}
+      <section
+        className="py-12 sm:py-16 border-y border-[#4A9FD9]/15"
+        style={{ background: "#EAF4FC" }}
+      >
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <div
+              className="w-10 h-1 rounded-full mx-auto mb-4"
+              style={{ background: "#4A9FD9" }}
+              aria-hidden="true"
+            />
+            <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-[#0D1B2A]">
+              What You&apos;ll Receive
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {DELIVERABLES.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  className="bg-white rounded-2xl border border-[#4A9FD9]/15 p-6 shadow-sm space-y-3"
+                >
                   <div
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs"
-                    style={{ background: '#3A7CA9' }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center"
+                    style={{ background: "#EAF4FC", color: "#4A9FD9" }}
+                    aria-hidden="true"
                   >
-                    {String(i + 1).padStart(2, '0')}
+                    <Icon className="w-5 h-5" />
                   </div>
-
-                  <p className="text-slate-800 font-semibold text-sm sm:text-base leading-snug">
-                    {item.label}
+                  <h3 className="hero-sans-heading text-[15px] font-bold text-[#0D1B2A] leading-snug">
+                    {item.title}
+                  </h3>
+                  <p className="text-slate-600 text-xs sm:text-sm">
+                    {item.subtitle}
                   </p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-20 text-white text-center" style={{ background: '#0D1B2A' }}>
-        <div className="max-w-3xl mx-auto px-6 sm:px-10">
-          <FaBuilding className="text-5xl mx-auto mb-5 opacity-80" style={{ color: '#4A9FD9' }} />
-          <h2 className="text-3xl sm:text-4xl font-black mb-4">
-            Ready for a <span style={{ color: '#4A9FD9' }}>Corporate Shoot?</span>
-          </h2>
-          <p className="text-white/60 text-lg mb-8">Let's create something remarkable together. Reach out for a free consultation and custom quote.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contact" className="px-8 py-3.5 rounded-xl font-bold text-base hover:opacity-90 hover:-translate-y-0.5 transition-all shadow-lg text-white" style={{ background: '#3A7CA9' }}>
-              Get a Free Quote
-            </Link>
-            <button onClick={() => navigate('/services')} className="px-8 py-3.5 rounded-xl font-bold text-base border border-white/20 text-white/80 hover:bg-white/10 transition-all">
-              View All Services
-            </button>
+      {/* SECTION 4 — OUR CORPORATE SHOOTING PROCESS */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 sm:mb-12">
+            <div
+              className="w-10 h-1 rounded-full mb-4"
+              style={{ background: "#4A9FD9" }}
+              aria-hidden="true"
+            />
+            <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold text-[#0D1B2A]">
+              Our Corporate Shooting Process
+            </h2>
+          </div>
+
+          <ol className="relative grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
+            {/* Horizontal connector on desktop */}
+            <div
+              aria-hidden="true"
+              className="hidden md:block absolute top-6 left-[12.5%] right-[12.5%] h-px bg-[#4A9FD9]/25"
+            />
+            {/* Vertical connector on mobile */}
+            <div
+              aria-hidden="true"
+              className="md:hidden absolute top-6 bottom-6 left-6 w-px bg-[#4A9FD9]/25"
+            />
+
+            {PROCESS_STEPS.map((step) => {
+              const Icon = step.icon;
+              return (
+                <li
+                  key={step.number}
+                  className="relative pl-16 md:pl-0 md:text-center flex flex-col md:items-center"
+                >
+                  <div
+                    className="absolute left-0 top-0 md:static w-12 h-12 rounded-full flex items-center justify-center border border-[#4A9FD9]/25 shadow-sm z-10 md:mb-4"
+                    style={{ background: "#EAF4FC", color: "#4A9FD9" }}
+                    aria-hidden="true"
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="hero-sans-heading text-base font-bold text-[#0D1B2A] mb-2">
+                    {step.number}. {step.title}
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed">
+                    {step.description}
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+
+      {/* SECTION 5 — FINAL CALL TO ACTION */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-2xl bg-[#0D1B2A] text-white px-6 py-9 sm:px-10 sm:py-11">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+              <div className="lg:col-span-5">
+                <h2 className="hero-sans-heading text-2xl sm:text-3xl font-extrabold leading-tight">
+                  Plan Your Corporate Shoot in{" "}
+                  <span className="text-[#4A9FD9]">Visakhapatnam</span>
+                </h2>
+              </div>
+
+              <div className="lg:col-span-7 lg:border-l lg:border-white/15 lg:pl-8 space-y-5">
+                <p className="text-white/75 text-sm sm:text-base leading-relaxed max-w-2xl">
+                  Let&apos;s create professional visuals that strengthen your
+                  brand and business presence.
+                </p>
+
+                <div className="flex flex-wrap items-center gap-3.5">
+                  <Link
+                    to="/contact"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold text-sm shadow-lg transition-all duration-200 motion-reduce:transition-none hover:opacity-95 hover:-translate-y-0.5"
+                    style={{ background: "#3A7CA9" }}
+                  >
+                    <span>Get a Free Quote</span>
+                    <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  </Link>
+
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/30 hover:border-[#4A9FD9] text-white hover:bg-white/10 font-semibold text-sm transition-all duration-200 motion-reduce:transition-none"
+                  >
+                    <FaWhatsapp className="w-4 h-4" aria-hidden="true" />
+                    <span>Chat on WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

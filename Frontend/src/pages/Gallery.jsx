@@ -5,7 +5,7 @@ import { SEO } from "../lib/seoConfig";
 
 const Gallery = () => {
   return (
-    <main style={{ width: '100vw', height: '100vh' ,backgroundColor: 'white'}}>
+    <main className="w-full max-w-full h-screen overflow-hidden bg-white">
       <Seo
         {...SEO.gallery}
         breadcrumbs={[

@@ -1,0 +1,645 @@
+import BASE_URL from "../api.js";
+
+const authHeader = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+};
+
+export const SECTION_CATEGORIES = [
+  { id: "all", name: "All Pages & Sections" },
+  { id: "homepage", name: "Home Page" },
+  { id: "about", name: "About Page" },
+  { id: "portfolio", name: "Portfolio Page" },
+  { id: "services_main", name: "Main Services Page" },
+  { id: "services_podcast", name: "Podcast Shoots" },
+  { id: "services_product", name: "Product Shoots" },
+  { id: "services_corporate", name: "Corporate Shoots" },
+  { id: "services_event", name: "Event Shoots" },
+  { id: "services_professional", name: "Professional Shoots" },
+  { id: "services_business", name: "Business Portfolio Shoots" },
+  { id: "blog", name: "Blog Page" },
+];
+
+export const DEFAULT_SITE_SECTIONS = [
+  // ─────────────────────────────────────────────────────────────
+  // A. HOME PAGE
+  // ─────────────────────────────────────────────────────────────
+  {
+    category: "homepage",
+    section_key: "home_hero_slide_1",
+    page_name: "Home Page",
+    section_heading: "Hero Section",
+    section_name: "Hero Slide 1 – Main Podcast Studio",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "Genie Studio podcast recording set in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 1,
+  },
+  {
+    category: "homepage",
+    section_key: "home_hero_slide_2",
+    page_name: "Home Page",
+    section_heading: "Hero Section",
+    section_name: "Hero Slide 2 – 4K Multi-Camera Setup",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Multi-camera 4K podcast production setup in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 2,
+  },
+  {
+    category: "homepage",
+    section_key: "home_hero_slide_3",
+    page_name: "Home Page",
+    section_heading: "Hero Section",
+    section_name: "Hero Slide 3 – Studio Audio Setup",
+    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt_text: "Genie Studio podcast audio recording and studio sound engineering",
+    aspect_ratio: "16:9",
+    sort_order: 3,
+  },
+  {
+    category: "homepage",
+    section_key: "home_service_podcast",
+    page_name: "Home Page",
+    section_heading: "Services Section",
+    section_name: "Podcast Shoots Card Image",
+    image_url: "https://geniestudio.in/uploads/1786530713_1786530711207-616205262.jpg",
+    alt_text: "Podcast Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 4,
+  },
+  {
+    category: "homepage",
+    section_key: "home_service_product",
+    page_name: "Home Page",
+    section_heading: "Services Section",
+    section_name: "Product Shoots Card Image",
+    image_url: "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
+    alt_text: "Product Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 5,
+  },
+  {
+    category: "homepage",
+    section_key: "home_service_corporate",
+    page_name: "Home Page",
+    section_heading: "Services Section",
+    section_name: "Corporate Shoots Card Image",
+    image_url: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
+    alt_text: "Corporate Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 6,
+  },
+  {
+    category: "homepage",
+    section_key: "home_service_event",
+    page_name: "Home Page",
+    section_heading: "Services Section",
+    section_name: "Event Shoots Card Image",
+    image_url: "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
+    alt_text: "Event Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 7,
+  },
+  {
+    category: "homepage",
+    section_key: "home_service_professional",
+    page_name: "Home Page",
+    section_heading: "Services Section",
+    section_name: "Professional Shoots Card Image",
+    image_url: "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
+    alt_text: "Professional Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 8,
+  },
+  {
+    category: "homepage",
+    section_key: "home_service_business",
+    page_name: "Home Page",
+    section_heading: "Services Section",
+    section_name: "Business Portfolio Card Image",
+    image_url: "https://geniestudio.in/uploads/1786519476_1786519476246-824255335.jpg",
+    alt_text: "Business Portfolio Shoots by GenieStudio in Visakhapatnam",
+    aspect_ratio: "4:5",
+    sort_order: 9,
+  },
+  {
+    category: "homepage",
+    section_key: "home_equipment_1",
+    page_name: "Home Page",
+    section_heading: "Portfolio / Equipment Section",
+    section_name: "Equipment 1 – Professional Cameras",
+    image_url: "https://geniestudio.in/uploads/1786531746_1786531746647-991825491.webp",
+    alt_text: "Cinema Cameras at Genie Studio",
+    aspect_ratio: "3:4",
+    sort_order: 10,
+  },
+  {
+    category: "homepage",
+    section_key: "home_equipment_2",
+    page_name: "Home Page",
+    section_heading: "Portfolio / Equipment Section",
+    section_name: "Equipment 2 – Premium Lenses",
+    image_url: "https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp",
+    alt_text: "Premium Lenses and Optical Equipment",
+    aspect_ratio: "3:4",
+    sort_order: 11,
+  },
+  {
+    category: "homepage",
+    section_key: "home_equipment_3",
+    page_name: "Home Page",
+    section_heading: "Portfolio / Equipment Section",
+    section_name: "Equipment 3 – Studio Lighting",
+    image_url: "https://geniestudio.in/uploads/1786531741_1786531740098-646092175.webp",
+    alt_text: "Studio Lighting and Modifiers",
+    aspect_ratio: "3:4",
+    sort_order: 12,
+  },
+  {
+    category: "homepage",
+    section_key: "home_equipment_4",
+    page_name: "Home Page",
+    section_heading: "Portfolio / Equipment Section",
+    section_name: "Equipment 4 – Video Equipment",
+    image_url: "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg",
+    alt_text: "Video and Audio Recording Equipment",
+    aspect_ratio: "3:4",
+    sort_order: 13,
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // B. ABOUT PAGE
+  // ─────────────────────────────────────────────────────────────
+  {
+    category: "about",
+    section_key: "about_hero",
+    page_name: "About Page",
+    section_heading: "Hero & Introduction",
+    section_name: "About Hero Image – Podcast Studio Overview",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "Professional podcast recording studio at Genie Studio with cameras and microphones",
+    aspect_ratio: "16:10",
+    sort_order: 14,
+  },
+  {
+    category: "about",
+    section_key: "about_intro",
+    page_name: "About Page",
+    section_heading: "Hero & Introduction",
+    section_name: "Studio Introduction Image – Creative Setup",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Genie Studio podcast and creative production studio setup",
+    aspect_ratio: "16:10",
+    sort_order: 15,
+  },
+  {
+    category: "about",
+    section_key: "about_story_1",
+    page_name: "About Page",
+    section_heading: "What We Do",
+    section_name: "What We Do 01 – Podcast Studio Rentals",
+    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt_text: "Professional microphone and podcast recording setup at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 16,
+  },
+  {
+    category: "about",
+    section_key: "about_story_2",
+    page_name: "About Page",
+    section_heading: "What We Do",
+    section_name: "What We Do 02 – Production & Visual Content",
+    image_url: "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg",
+    alt_text: "Cinema camera and production setup at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 17,
+  },
+  {
+    category: "about",
+    section_key: "about_story_3",
+    page_name: "About Page",
+    section_heading: "What We Do",
+    section_name: "What We Do 03 – Video Editing & Post-Production",
+    image_url: "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
+    alt_text: "Video editing and post-production workflow at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 18,
+  },
+  {
+    category: "about",
+    section_key: "about_equipment",
+    page_name: "About Page",
+    section_heading: "Equipment Showcase",
+    section_name: "Quality-Driven Production / Equipment Showcase",
+    image_url: "https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp",
+    alt_text: "Professional camera lens and studio production equipment at Genie Studio",
+    aspect_ratio: "16:10",
+    sort_order: 19,
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // C. MAIN SERVICES PAGE
+  // ─────────────────────────────────────────────────────────────
+  {
+    category: "services_main",
+    section_key: "services_page_hero",
+    page_name: "Main Services Page",
+    section_heading: "Hero Header",
+    section_name: "Main Services Page Header Banner",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "GenieStudio professional creative production and studio services in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 20,
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // D. INDIVIDUAL SERVICE PAGES
+  // ─────────────────────────────────────────────────────────────
+  // 1. Podcast Shoots
+  {
+    category: "services_podcast",
+    section_key: "service_hero_podcast",
+    page_name: "Podcast Shoots",
+    section_heading: "Hero Section",
+    section_name: "Podcast Shoots – Hero Banner Image",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Podcast Shoots Hero Setup in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 21,
+  },
+  {
+    category: "services_podcast",
+    section_key: "podcast_deliv_1",
+    page_name: "Podcast Shoots",
+    section_heading: "Deliverables Showcase",
+    section_name: "Deliverable 1 – 4K Multi-Camera Video",
+    image_url: "https://geniestudio.in/uploads/1786531742_1786531741887-833036636.webp",
+    alt_text: "Multi-camera 4K podcast video recording at Genie Studio in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 22,
+  },
+  {
+    category: "services_podcast",
+    section_key: "podcast_deliv_2",
+    page_name: "Podcast Shoots",
+    section_heading: "Deliverables Showcase",
+    section_name: "Deliverable 2 – Studio Audio & Mixed Feeds",
+    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt_text: "Studio podcast microphone and audio recording setup at Genie Studio Vizag",
+    aspect_ratio: "16:9",
+    sort_order: 23,
+  },
+  {
+    category: "services_podcast",
+    section_key: "podcast_preview_1",
+    page_name: "Podcast Shoots",
+    section_heading: "Portfolio Previews",
+    section_name: "Preview 1 – Multi-Camera Podcast Framing",
+    image_url: "https://geniestudio.in/uploads/1786531741_1786531740123-858872067.webp",
+    alt_text: "Podcast episode framing and artwork presentation at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 24,
+  },
+  {
+    category: "services_podcast",
+    section_key: "podcast_preview_2",
+    page_name: "Podcast Shoots",
+    section_heading: "Portfolio Previews",
+    section_name: "Preview 2 – Short-Form Clips & Multi-Platform Exports",
+    image_url: "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
+    alt_text: "Podcast episode exported in multiple formats for YouTube and social channels",
+    aspect_ratio: "16:9",
+    sort_order: 25,
+  },
+
+  // 2. Product Shoots
+  {
+    category: "services_product",
+    section_key: "service_hero_product",
+    page_name: "Product Shoots",
+    section_heading: "Hero Section",
+    section_name: "Product Shoots – Hero Banner Image",
+    image_url: "https://geniestudio.in/uploads/1786531726_1786531724729-939039825.webp",
+    alt_text: "Studio product photography shoot setup at Genie Studio in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 26,
+  },
+  {
+    category: "services_product",
+    section_key: "product_recent_1",
+    page_name: "Product Shoots",
+    section_heading: "Recent Shoots",
+    section_name: "Recent Shoot 1 – Multi-Angle Studio Framing",
+    image_url: "https://geniestudio.in/uploads/1786533208_1786533208088-576412932.webp",
+    alt_text: "Studio product photography showing multiple angles and lighting detail",
+    aspect_ratio: "4:3",
+    sort_order: 27,
+  },
+  {
+    category: "services_product",
+    section_key: "product_recent_2",
+    page_name: "Product Shoots",
+    section_heading: "Recent Shoots",
+    section_name: "Recent Shoot 2 – Lifestyle & Context Styling",
+    image_url: "https://geniestudio.in/uploads/1786533193_1786533192518-337638744.webp",
+    alt_text: "Lifestyle and context product photography created by Genie Studio",
+    aspect_ratio: "4:3",
+    sort_order: 28,
+  },
+  {
+    category: "services_product",
+    section_key: "product_recent_3",
+    page_name: "Product Shoots",
+    section_heading: "Recent Shoots",
+    section_name: "Recent Shoot 3 – Commercial & E-Commerce Presentation",
+    image_url: "https://geniestudio.in/uploads/1786519473_1786519471789-580284373.jpg",
+    alt_text: "Commercial product photography with clean background variations",
+    aspect_ratio: "4:3",
+    sort_order: 29,
+  },
+
+  // 3. Corporate Shoots
+  {
+    category: "services_corporate",
+    section_key: "service_hero_corporate",
+    page_name: "Corporate Shoots",
+    section_heading: "Hero Section",
+    section_name: "Corporate Shoots – Hero Banner Image",
+    image_url: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
+    alt_text: "Corporate and business team photoshoot in Visakhapatnam by GenieStudio",
+    aspect_ratio: "16:9",
+    sort_order: 30,
+  },
+
+  // 4. Event Shoots
+  {
+    category: "services_event",
+    section_key: "service_hero_event",
+    page_name: "Event Shoots",
+    section_heading: "Hero Section",
+    section_name: "Event Shoots – Hero Banner Image",
+    image_url: "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
+    alt_text: "Corporate event photography and stage videography in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 31,
+  },
+
+  // 5. Professional Shoots
+  {
+    category: "services_professional",
+    section_key: "service_hero_professional",
+    page_name: "Professional Shoots",
+    section_heading: "Hero Section",
+    section_name: "Professional Shoots – Hero Banner Image",
+    image_url: "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
+    alt_text: "Professional portrait and personal branding photoshoot at GenieStudio",
+    aspect_ratio: "16:9",
+    sort_order: 32,
+  },
+
+  // 6. Business Portfolio Shoots
+  {
+    category: "services_business",
+    section_key: "service_hero_business",
+    page_name: "Business Portfolio Shoots",
+    section_heading: "Hero Section",
+    section_name: "Business Portfolio – Hero Banner Image",
+    image_url: "https://geniestudio.in/uploads/1786519476_1786519476246-824255335.jpg",
+    alt_text: "Business portfolio and professional branding photoshoot at GenieStudio",
+    aspect_ratio: "16:9",
+    sort_order: 33,
+  },
+  {
+    category: "services_business",
+    section_key: "business_deliv_1",
+    page_name: "Business Portfolio Shoots",
+    section_heading: "Deliverables Showcase",
+    section_name: "Deliverable 1 – Professional Portraits",
+    image_url: "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
+    alt_text: "Executive portrait photography for business portfolios in Visakhapatnam",
+    aspect_ratio: "4:3",
+    sort_order: 34,
+  },
+  {
+    category: "services_business",
+    section_key: "business_deliv_2",
+    page_name: "Business Portfolio Shoots",
+    section_heading: "Deliverables Showcase",
+    section_name: "Deliverable 2 – Team & Culture Photos",
+    image_url: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
+    alt_text: "Corporate team photography and office workplace session in Vizag",
+    aspect_ratio: "4:3",
+    sort_order: 35,
+  },
+  {
+    category: "services_business",
+    section_key: "business_deliv_3",
+    page_name: "Business Portfolio Shoots",
+    section_heading: "Deliverables Showcase",
+    section_name: "Deliverable 3 – Retouched & Edited Images",
+    image_url: "https://geniestudio.in/uploads/1786602496_1786602495549-844717374.jpg",
+    alt_text: "Edited business portfolio photographs and post-production by GenieStudio",
+    aspect_ratio: "4:3",
+    sort_order: 36,
+  },
+  {
+    category: "services_business",
+    section_key: "business_deliv_4",
+    page_name: "Business Portfolio Shoots",
+    section_heading: "Deliverables Showcase",
+    section_name: "Deliverable 4 – Digital & Print-Ready Files",
+    image_url: "https://geniestudio.in/uploads/1786520942_1786520939441-392375551.webp",
+    alt_text: "Business headshot photography ready for LinkedIn, websites and company profiles",
+    aspect_ratio: "4:3",
+    sort_order: 37,
+  },
+  {
+    category: "services_business",
+    section_key: "business_cta",
+    page_name: "Business Portfolio Shoots",
+    section_heading: "Bottom CTA Banner",
+    section_name: "Business Portfolio – Bottom CTA Banner",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "Book business portfolio shoot at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 38,
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // E. PORTFOLIO PAGE
+  // ─────────────────────────────────────────────────────────────
+  {
+    category: "portfolio",
+    section_key: "portfolio_hero",
+    page_name: "Portfolio Page",
+    section_heading: "Hero Section",
+    section_name: "Portfolio Hero – Creative Showcase Banner",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Portfolio showcase banner at Genie Studio in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 39,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cat_podcast",
+    page_name: "Portfolio Page",
+    section_heading: "Production Categories",
+    section_name: "Category 1 – Podcast Videos",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Multi-camera podcast video recording session at Genie Studio in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 40,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cat_shorts",
+    page_name: "Portfolio Page",
+    section_heading: "Production Categories",
+    section_name: "Category 2 – Podcast Shorts & Highlights",
+    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
+    alt_text: "Podcast audio recording and short-form highlight clip production",
+    aspect_ratio: "16:9",
+    sort_order: 41,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cat_interviews",
+    page_name: "Portfolio Page",
+    section_heading: "Production Categories",
+    section_name: "Category 3 – Interviews & Expert Conversations",
+    image_url: "https://geniestudio.in/uploads/1786520957_1786520953868-540240767.webp",
+    alt_text: "Professional interview and expert conversation framing at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 42,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cat_promotional",
+    page_name: "Portfolio Page",
+    section_heading: "Production Categories",
+    section_name: "Category 4 – Promotional Videos",
+    image_url: "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
+    alt_text: "Product and promotional video shoot setup at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 43,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cat_reels",
+    page_name: "Portfolio Page",
+    section_heading: "Production Categories",
+    section_name: "Category 5 – Social Media Reels & Short-Form",
+    image_url: "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
+    alt_text: "Creator filming social media reels and short-form content at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 44,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cat_corporate",
+    page_name: "Portfolio Page",
+    section_heading: "Production Categories",
+    section_name: "Category 6 – Corporate & Brand Videos",
+    image_url: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
+    alt_text: "Corporate and brand video production by Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 45,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cat_editing",
+    page_name: "Portfolio Page",
+    section_heading: "Production Categories",
+    section_name: "Category 7 – Video Editing & Post-Production",
+    image_url: "https://geniestudio.in/uploads/1786602496_1786602495549-844717374.jpg",
+    alt_text: "Video editing and post-production workstation and creative studio work",
+    aspect_ratio: "16:9",
+    sort_order: 46,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_story_callout",
+    page_name: "Portfolio Page",
+    section_heading: "Spotlight & CTA",
+    section_name: "Production Spotlight – Studio Workstation",
+    image_url: "https://geniestudio.in/uploads/1786601936_1786601934919-89162093.jpg",
+    alt_text: "Genie Studio creative production environment in Visakhapatnam",
+    aspect_ratio: "16:10",
+    sort_order: 47,
+  },
+  {
+    category: "portfolio",
+    section_key: "portfolio_cta_banner",
+    page_name: "Portfolio Page",
+    section_heading: "Spotlight & CTA",
+    section_name: "Bottom CTA Banner – Book Your Studio",
+    image_url: "https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp",
+    alt_text: "Professional cinema camera lens at Genie Studio",
+    aspect_ratio: "16:10",
+    sort_order: 48,
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // F. BLOG PAGE
+  // ─────────────────────────────────────────────────────────────
+  {
+    category: "blog",
+    section_key: "blog_hero",
+    page_name: "Blog Page",
+    section_heading: "Hero Header",
+    section_name: "Blog Page Header Banner",
+    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
+    alt_text: "Genie Studio blog stories and creative production insights in Visakhapatnam",
+    aspect_ratio: "16:9",
+    sort_order: 49,
+  },
+  {
+    category: "blog",
+    section_key: "blog_featured_default",
+    page_name: "Blog Page",
+    section_heading: "Default Fallbacks",
+    section_name: "Published Blog Default Featured Image",
+    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
+    alt_text: "Featured blog article photography at Genie Studio",
+    aspect_ratio: "16:9",
+    sort_order: 50,
+  },
+];
+
+export async function fetchSiteSections(category = "all") {
+  const query = category && category !== "all" ? `?category=${category}` : "";
+  const res = await fetch(`${BASE_URL}/api/site-sections${query}`);
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({}));
+    throw new Error(errorBody.message || `Failed to fetch site sections (HTTP ${res.status})`);
+  }
+  const data = await res.json();
+  return Array.isArray(data.sections) ? data.sections : [];
+}
+
+export async function assignSectionImage(section_key, imageUrl, altText = "") {
+  const res = await fetch(`${BASE_URL}/api/site-sections/${section_key}`, {
+    method: "PUT",
+    headers: authHeader(),
+    body: JSON.stringify({ image_url: imageUrl, alt_text: altText }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Failed to assign image (HTTP ${res.status})`);
+  }
+  const data = await res.json();
+  return data.section;
+}
+
+export async function clearSectionImage(section_key) {
+  const res = await fetch(`${BASE_URL}/api/site-sections/${section_key}`, {
+    method: "DELETE",
+    headers: authHeader(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Failed to reset image (HTTP ${res.status})`);
+  }
+  return true;
+}

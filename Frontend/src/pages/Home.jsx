@@ -1,266 +1,84 @@
-import React, { useState, useEffect } from "react";
-import { Users, Camera, Globe, Award, ArrowRight, Briefcase, Calendar, Package, Mic, User, TrendingUp, CheckCircle, Star, Play, Aperture, Film, Lightbulb, Monitor } from "lucide-react";
-import VideoHero from "../components/VideoHero";
+import React from "react";
+import {
+  Users,
+  Camera,
+  Award,
+  ArrowRight,
+  CheckCircle,
+  Play,
+  Aperture,
+  Film,
+  Lightbulb,
+  Mic,
+  Sliders,
+} from "lucide-react";
+import PodcastHero from "../components/PodcastHero";
+import ServicesSection from "../components/ServicesSection";
 import OptimizedImage from "../components/OptimizedImage";
-import { useTargetWidth } from "../lib/useResponsiveImage";
-import { bestVariantUrl } from "../lib/imageManifest";
 import { useNavigate, Link } from "react-router-dom";
 import Seo from "../components/Seo";
 import { SEO } from "../lib/seoConfig";
 const Home = () => {
-  const [active, setActive] = useState(0);
-  const [hoveredIndex, setHoveredIndex] = useState(null);
   const navigate = useNavigate();
-  /*
-   * `activeIndex` / `handleSlideChange` used to live here. handleSlideChange
-   * was never called by anything, so activeIndex was stuck at 0 — and the hero
-   * CTA read its label from slides[activeIndex] while navigating to
-   * slides[active].route. Now that the button takes both from the slide it
-   * belongs to, the pair is dead and gone. `active` is the real slide index.
-   */
-
-  // The hero and parallax sections paint through CSS background-image, which
-  // cannot carry a srcSet — so pick the right pre-generated file for this
-  // viewport instead. Phones end up on the 800px file rather than the 7008px
-  // original.
-  const targetWidth = useTargetWidth();
-
-
-  const slides = [
-    {
-      id: 1,
-      title: "Elevate Your Brand",
-      subtitle: "with Professional Photography",
-      tag: "Corporate Excellence",
-      description: "Transform your corporate identity with stunning visuals that speak volumes about your business.",
-      buttonText: "Explore Services",
-      route: "/services",
-      image: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
-    },
-    {
-      id: 2,
-      title: "Capture Every Moment",
-      subtitle: "That Matters",
-      tag: "Event Shoots",
-      description: "From conferences to celebrations, we immortalize the energy and emotion of your special events.",
-      buttonText: "View Gallery",
-      route: "/gallery",
-      image: "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
-    },
-    {
-      id: 3,
-      title: "Showcase Your Products",
-      subtitle: "in Their Best Light",
-      tag: "Product Photography",
-      description: "High-end product photography that drives engagement and elevates your e-commerce success.",
-      buttonText: "See Portfolio",
-      route: "/portfolio",
-      image: "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
-    },
-  ];
-  const services = [
-    {
-      icon: Mic,
-      title: "Podcast Shoots",
-      link: "/services/podcast-shoots",
-      description: "Multi-camera podcast video and studio-grade audio, edited end to end.",
-      features: ["Studio Setup", "Multi-Camera", "Thumbnail Creation", "Behind-the-Scenes"],
-      color: "from-green-500 to-teal-500",
-    },
-    {
-      icon: Package,
-      title: "Product Shoots",
-      link: "/services/product-shoots",
-      description: "E-commerce, catalogue and lifestyle product photography built to sell.",
-      features: ["E-commerce Photos", "Catalog Shots", "Lifestyle Products", "360° Photography"],
-      color: "from-orange-500 to-red-500",
-    },
-    {
-      icon: Briefcase,
-      title: "Corporate Shoots",
-      link: "/services/corporate-shoots",
-      description: "Executive headshots, team portraits and office culture photography.",
-      features: ["Executive Portraits", "Team Photography", "Office Culture", "Annual Reports"],
-      color: "from-blue-500 to-cyan-500",
-    },
-    {
-      icon: Calendar,
-      title: "Event Shoots",
-      link: "/services/event-shoots",
-      description: "Full coverage of conferences, launches and awards, delivered fast.",
-      features: ["Conferences", "Galas & Awards", "Product Launches", "Networking Events"],
-      color: "from-purple-500 to-pink-500",
-    },
-    {
-      icon: User,
-      title: "Professional Shoots",
-      link: "/services/professional-shoots",
-      description: "Personal branding portraits and headshots for founders and leaders.",
-      features: ["Personal Branding", "LinkedIn Profiles", "Speaker Photos", "Author Headshots"],
-      color: "from-indigo-500 to-purple-500",
-    },
-    {
-      icon: TrendingUp,
-      title: "Business Portfolio",
-      link: "/services/business-portfolio-shoots",
-      description: "Complete visual storytelling for your brand, team and product range.",
-      features: ["Brand Story", "Process Documentation", "Testimonial Videos", "Social Media Content"],
-      color: "from-pink-500 to-rose-500",
-    },
-  ];
 
   const equipment = [
     {
       icon: Camera,
-      title: "Professional Cameras",
-      description: "Canon EOS R5, Sony A7R IV, Nikon Z9 for stunning 45MP+ resolution",
+      category: "Cameras",
+      title: "Sony A7M4 & Sony A7M3",
+      description: "Full-frame Sony A7M4 and Sony A7M3 cameras for ultra-sharp 4K video recording and high-resolution photography",
       image: "https://geniestudio.in/uploads/1786531746_1786531746647-991825491.webp"
     },
     {
-      icon: Aperture,
-      title: "Premium Lenses",
-      description: "Professional-grade L-series and G Master lenses for every scenario",
+      icon: Mic,
+      category: "Microphones",
+      title: "Rode PodMics & Audio Interface",
+      description: "Broadcast-quality Rode PodMics with dedicated audio interface for rich, noise-free studio sound",
       image: "https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp"
     },
     {
       icon: Lightbulb,
-      title: "Studio Lighting",
-      description: "Profoto and Godox strobe systems with modifiers for perfect illumination",
+      category: "Lighting Setup",
+      title: "Digitek & Godox LC500R",
+      description: "Professional Digitek studio lighting paired with Godox LC500R handheld light sticks for versatile creative illumination",
       image: "https://geniestudio.in/uploads/1786531741_1786531740098-646092175.webp"
     },
     {
-      icon: Film,
-      title: "Video Equipment",
-      description: "4K/8K cinema cameras, gimbals, and professional audio gear",
+      icon: Sliders,
+      category: "Wireless Audio",
+      title: "Hollyland Lark M2 (Backup)",
+      description: "Hollyland Lark M2 wireless microphone system ensuring seamless, interference-free backup and mobile audio recording",
       image: "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg"
     }
   ];
 
 
-  const processSteps = [
-    {
-      step: "01",
-      title: "Discovery Call",
-      description: "We understand your vision, goals, and creative requirements through detailed consultation.",
-    },
-    {
-      step: "02",
-      title: "Creative Planning",
-      description: "Our team develops a comprehensive shoot plan, including concepts, timelines, and logistics.",
-    },
-    {
-      step: "03",
-      title: "Production Day",
-      description: "Professional execution with state-of-the-art equipment and experienced creative team.",
-    },
-    {
-      step: "04",
-      title: "Post-Production",
-      description: "Meticulous editing and retouching to deliver stunning, publication-ready visuals.",
-    },
-    {
-      step: "05",
-      title: "Final Delivery",
-      description: "High-resolution files delivered in your preferred format with full usage rights.",
-    },
-  ];
-
   const whyChooseUs = [
     {
       icon: Award,
-      title: "Award-Winning Team",
-      description: "Industry-recognized photographers with proven expertise",
+      title: "Experienced Creative Team",
+      description:
+        "Skilled photographers and creative professionals delivering quality visual storytelling.",
     },
     {
       icon: Camera,
-      title: "Premium Equipment",
-      description: "Latest professional-grade cameras and lighting setup",
+      title: "Professional Studio Equipment",
+      description:
+        "Professional cameras, lighting and production equipment for polished results.",
     },
     {
       icon: CheckCircle,
-      title: "On-Time Delivery",
-      description: "Consistent track record of meeting deadlines",
+      title: "Reliable Project Delivery",
+      description:
+        "Organized shoot planning and dependable delivery timelines.",
     },
     {
       icon: Users,
-      title: "Client-Centric",
-      description: "Personalized approach tailored to your unique needs",
+      title: "Personalized Client Support",
+      description:
+        "Customized photography and production solutions based on your business goals.",
     },
   ];
-  const portfolioItems = [
-    {
-      title: "Podcast Studio Production",
-      category: "Podcast / Studio",
-      image: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG"
-    },
-    {
-      title: "Product Photography",
-      category: "Commercial / Products",
-      image: "https://geniestudio.in/uploads/1786524727_1786524727071-219313124.JPG"
-    },
-    {
-      title: "Corporate Branding Shoot",
-      category: "Corporate / Branding",
-      image: "https://geniestudio.in/uploads/1786533202_1786533201910-902353578.webp"
-    },
-    {
-      title: "Corporate Event Coverage",
-      category: "Events / Conferences",
-      image: "https://geniestudio.in/uploads/1786522543_1786522543152-698768911.webp"
-    },
-    {
-      title: "Professional Portraits",
-      category: "Personal Branding",
-      image: "https://geniestudio.in/uploads/1786520957_1786520953868-540240767.webp"
-    },
-    {
-      title: "Business Portfolio Shoot",
-      category: "Brand Storytelling",
-      image: "https://geniestudio.in/uploads/1786519472_1786519472788-977568825.jpg"
-    }
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActive((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [slides.length]);
-
-  /**
-   * Which hero slides may paint their background image yet.
-   *
-   * All three slides are in the DOM at once (they cross-fade via opacity), so
-   * setting backgroundImage on all of them made the browser download every
-   * slide during initial load — 218 KB on desktop, of which 162 KB was for two
-   * pictures nobody sees for the next 6 and 12 seconds. That was the single
-   * largest item in PageSpeed's "improve image delivery".
-   *
-   * Slide 0 is the LCP element and loads immediately. The others are fetched
-   * one step ahead of the rotation, which at a 6s interval is far more lead
-   * time than they need, so the cross-fade looks exactly as it did before.
-   *
-   * Slide 0 is the LCP element and paints immediately. The rest are released
-   * a moment after the page has finished loading — the rotation does not reach
-   * slide 1 for 6 seconds, so they are always ready well before they are shown
-   * and the cross-fade is unchanged.
-   */
-  const [restOfSlidesReady, setRestOfSlidesReady] = useState(false);
-
-  useEffect(() => {
-    let timer;
-    // setState fires from a timer callback, not synchronously in the effect
-    // body, so this does not cascade renders during mount.
-    const release = () => { timer = setTimeout(() => setRestOfSlidesReady(true), 1500); };
-
-    if (document.readyState === "complete") release();
-    else window.addEventListener("load", release, { once: true });
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("load", release);
-    };
-  }, []);
 
   /*
    * REMOVED: an IntersectionObserver that watched all 10 [data-animate]
@@ -284,565 +102,83 @@ const Home = () => {
         breadcrumbs={[{ name: "Home", path: "/" }]}
       />
 
-      {/* The one H1 for the homepage. The hero slider cannot supply it — its
-          copy rotates and all three slides are in the DOM together — so the
-          page states what GenieStudio actually does, once, in a stable string
-          that names the five services. sr-only keeps the design untouched. */}
+      {/* The one H1 for the homepage. */}
       <h1 className="sr-only">
         Genie Studio — Photography, Podcast Shoots, Product Shoots, Corporate
         Shoots, Event Shoots, Professional Shoots and Business Portfolio
         Photography in Yendada, Visakhapatnam
       </h1>
 
-      <section className="relative h-[70vh] sm:h-[80vh] lg:h-screen overflow-hidden">
-        {slides.map((slide, index) => (
-          // All three slides sit in the DOM at once and cross-fade on opacity,
-          // so the two hidden ones kept their CTA in the tab order — a keyboard
-          // user tabbed into buttons that were not on screen. `inert` takes the
-          // inactive slides out of the tab order and off the accessibility
-          // tree; the visual cross-fade is untouched.
-          <div
-            key={slide.id}
-            inert={active !== index}
-            className={`absolute inset-0 transition-opacity duration-1000 ${active === index ? "opacity-100" : "opacity-0"
-              }`}
-          >
-            <div className="absolute inset-0 overflow-hidden">
-              <div
-                className={`w-full h-full bg-cover bg-center ${active === index ? "animate-ken-burns" : ""
-                  }`}
-                style={{
-                  backgroundImage: index === 0 || restOfSlidesReady
-                    ? `url(${bestVariantUrl(slide.image, targetWidth)})`
-                    : undefined,
-                }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
-              </div>
-            </div>
-
-            <div className="relative h-full flex items-center justify-start">
-
-              <div className="w-full pl-6 sm:pl-10 lg:pl-48">
-
-                <div className="max-w-3xl">
-                  <div
-                    className={`transform transition-all duration-1000 delay-300 ${active === index
-                      ? "translate-y-0 opacity-100"
-                      : "translate-y-10 opacity-0"
-                      }`}
-                  >
-                    <span className=" inline-block px-3 py-1.5 bg-white/10 backdrop-blur-md text-white rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6 border border-white/20">
-                      {slide.tag}
-                    </span>
-                    {/* h2, not h1: all three slides are in the DOM at once
-                        (the inactive ones just sit at opacity-0), so an h1 here
-                        gave the homepage three competing H1s with rotating
-                        marketing copy. The page's single H1 is the sr-only one
-                        below. Tailwind's preflight makes headings inherit their
-                        size and weight, so h1 → h2 renders identically. */}
-                    <h2 className=" text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-3 sm:mb-4 leading-tight sm:leading-snug">
-                      {slide.title}
-                      <br />
-                      <span className=" bg-[#ffffff] bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl lg:text-7xl">
-                        {slide.subtitle}
-                      </span>
-                    </h2>
-                    <p className=" text-base sm:text-lg lg:text-xl text-gray-200 mb-6 sm:mb-8 leading-relaxed">
-                      {slide.description}
-                    </p>
-                    {/* Label and destination now come from the same slide.
-                        They did not: the text read slides[activeIndex] (an
-                        index that never changes, so always "Explore Services")
-                        while the click went to slides[active].route — so on
-                        slides 2 and 3 the button's accessible name described
-                        somewhere other than where it went. */}
-                    <button
-                      type="button"
-                      className="group px-6 sm:px-8 py-3 sm:py-4 bg-white text-sm sm:text-base text-gray-900 rounded-full font-semibold hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white transition-all duration-300 flex items-center gap-2 sm:gap-3 shadow-xl hover:shadow-2xl hover:scale-105"
-                      onClick={() => navigate(slide.route)}
-                    >
-                      {slide.buttonText}
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-                    </button>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {/* The bars were 4px-tall unnamed buttons. Wrapping each bar in a
-            24px-tall button gives it a real name and a WCAG-sized tap target;
-            -mb-2.5 cancels the extra height so the bars stay on exactly the
-            same line as before. Widths and colours are unchanged. */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex gap-3 z-10 -mb-[10px]">
-          {slides.map((slide, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setActive(index)}
-              aria-current={active === index ? "true" : undefined}
-              aria-label={`Show slide ${index + 1} of ${slides.length}: ${slide.title}`}
-              className="h-[24px] flex items-center"
-            >
-              <span
-                aria-hidden="true"
-                className={`h-1 rounded-full transition-all duration-300 ${active === index ? "w-12 bg-white" : "w-8 bg-white/50"
-                  }`}
-              />
-            </button>
-          ))}
-        </div>
-      </section>
+      <PodcastHero />
       {/* <Headings /> — disabled. Re-enable by restoring the import:
           import Headings from "../components/Headings" */}
       <section
         id="about"
-        className="py-10 sm:py-14 md:py-16 lg:py-20 bg-white overflow-hidden"
+        className="py-10 sm:py-14 md:py-16 bg-white"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="w-full px-4 sm:px-0 sm:w-[92%] lg:w-[90%] max-w-[1280px] mx-auto text-center">
+          <p className="inline-block text-xs font-semibold uppercase tracking-[0.18em] text-[#6B4A2D] mb-3.5">
+            GENIE STUDIO | ABOUT OUR CREATIVE STUDIO
+          </p>
 
-            <div className="space-y-5 order-2 lg:order-1">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full shadow-lg">
-                <span className="w-2 h-2 bg-orange-400 rounded-full animate-pulse" />
-                <span className="text-black text-xs font-bold uppercase tracking-widest">
-                  Genie Studio
-                </span>
-              </div>
+          <h2 className="text-2xl sm:text-4xl md:text-[46px] font-bold text-slate-900 leading-[1.15] tracking-tight max-w-4xl mx-auto mb-6">
+            Your Creative Photography &amp; Production Partner{" "}
+            <span className="text-[#B45309]">in Visakhapatnam</span>
+          </h2>
 
-              <h3 className="text-2xl sm:text-3xl md:text-5xl xl:text-6xl font-black text-gray-900 leading-tight">
-                CREATING STORIES FOR
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#6B4A2D] to-orange-600">
-                  MODERN BRANDS
-                </span>
-              </h3>
-
-
-              <p className="text-gray-700 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl">
-                Genie Studio is a full-service creative studio
-                <br className="block md:hidden" />specializing in Corporate Shoots, Event Coverage
-                <br className="block md:hidden" />, Product, Photography, Podcast Shoots,
-                <br className="block md:hidden" />Professional Portraits, and Business
-                <br className="block md:hidden" /> Portfolio Shoots. We help brands,
-                professionals,
-                <br className="block md:hidden" /> and businesses visually communicate
-                <br className="block md:hidden" /> their story with creativity, clarity,
-                and impact.
-              </p>
-
-              <Link to="/about" className="inline-flex items-center gap-2 sm:gap-3 px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-[#6B4A2D] to-[#8B5E3C] text-white rounded-full font-semibold sm:font-bold hover:scale-105 hover:shadow-xl transition-all duration-300 ">
-                About GenieStudio
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor" >
-                  <path
-                    fillRule="evenodd"
-                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </Link>
-
-            </div>
-
-            <div className="order-1 lg:order-2">
-              <div className="overflow-hidden rounded-2xl shadow-2xl">
-                <div className="carousel-track flex gap-5">
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG"
-                      alt="Podcast Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Podcast
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Podcast Shoots
-                      </h3>
-                    </div>
-                  </div>
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786519473_1786519471789-580284373.jpg"
-                      alt="Product Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Product
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Product Shoots
-                      </h3>
-                    </div>
-                  </div>
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786520942_1786520939441-392375551.webp"
-                      alt="Corporate Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Corporate
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Corporate Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786522543_1786522542765-76055353.webp"
-                      alt="Event Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Events
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Event Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786520942_1786520939442-30465918.webp"
-                      alt="Professional Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Professional
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Professional Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786533204_1786533201915-325514601.webp"
-                      alt="Business Portfolio"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Portfolio
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Business Portfolio
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786519473_1786519473117-884148224.jpg"
-                      alt="Corporate Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Corporate
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Corporate Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786522545_1786522545182-756687474.webp"
-                      alt="Event Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Events
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Event Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80"
-                      alt="Product Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Product
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Product Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&q=80"
-                      alt="Podcast Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Podcast
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Podcast Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80"
-                      alt="Professional Shoots"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Professional
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Professional Shoots
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="carousel-item flex-shrink-0 w-[300px] sm:w-[340px] h-[280px] sm:h-[320px] relative rounded-2xl overflow-hidden cursor-pointer group">
-                    <OptimizedImage
-                      src="https://images.unsplash.com/photo-1664575602276-acd073f104c1?w=800&q=80"
-                      alt="Business Portfolio"
-                      className="w-full h-full"
-                      sizes="(max-width: 640px) 300px, 340px"
-                      imgClassName="transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-6 flex flex-col justify-end pointer-events-none">
-                      <span className="bg-orange-700 text-white text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full w-fit mb-2">
-                        Portfolio
-                      </span>
-                      <h3 className="text-white text-lg font-extrabold uppercase leading-tight">
-                        Business Portfolio
-                      </h3>
-                    </div>
-                  </div>
-
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <style>{`
-    @keyframes scroll-carousel {
-      0% {
-        transform: translateX(0);
-      }
-      100% {
-        transform: translateX(calc(-50%));
-      }
-    }
-
-    .carousel-track {
-      animation: scroll-carousel 24s linear infinite;
-      width: max-content;
-    }
-
-    .carousel-track:hover {
-      animation-play-state: paused;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .carousel-track {
-        animation-duration: 60s;
-      }
-    }
-  `}</style>
-      </section>
-
-
-
-      <VideoHero />
-
-      <section className="py-12 sm:py-6 md:py-20 lg:py-12 bg-[#F7F6F3]" data-animate id="services">
-        <div className="page-container">
-
-          <div className="text-left sm:text-center mb-10 sm:mb-16">
-            <span className="font-semibold text-sm uppercase tracking-wider">
-              Our Services
-            </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mt-4 mb-6">
-              Comprehensive Photography Solutions
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              From corporate headshots to large-scale events, we offer a full spectrum of
-              professional photography services tailored to your needs.
+          <div
+            className="w-full space-y-4 text-slate-600 text-base sm:text-[17px] lg:text-[18px] leading-[1.7] mb-7"
+            style={{
+              textAlign: "justify",
+              textJustify: "inter-word",
+              textAlignLast: "center",
+            }}
+          >
+            <p>
+              GenieStudio is a creative photography and production studio based
+              in Visakhapatnam (Vizag), Andhra Pradesh. We help businesses,
+              entrepreneurs, professionals and brands transform their ideas into
+              powerful visual stories through professional photography,
+              videography and creative content production.
+            </p>
+            <p>
+              Our creative approach combines thoughtful planning, visual
+              storytelling and professional production techniques to create
+              content that reflects each client&apos;s unique identity. From
+              corporate and product photography to event coverage, podcast
+              production, professional portraits and business portfolio shoots,
+              we focus on delivering visuals that communicate clearly and leave
+              a lasting impression.
+            </p>
+            <p>
+              At GenieStudio, we believe every brand has a story worth telling.
+              Our goal is to help businesses and individuals build a stronger
+              visual presence through creativity, collaboration and attention
+              to detail. Discover our approach, learn more about our studio and
+              explore the people and ideas behind GenieStudio.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-stretch">
-            {services.map((service, i) => {
-              const Icon = service.icon;
+          <div className="flex flex-wrap items-center justify-center gap-3.5">
+            <Link
+              to="/about"
+              className="inline-flex items-center gap-2.5 px-7 py-3.5 text-sm sm:text-base bg-[#6B4A2D] hover:bg-[#563B23] text-white rounded-full font-semibold transition-colors duration-200"
+            >
+              <span>Discover GenieStudio</span>
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
 
-              const colorSchemes = [
-                {
-                  hoverBg: 'group-hover:from-purple-500 group-hover:via-purple-400 group-hover:to-pink-400',
-                  icon: 'bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white',
-                  circle: 'bg-purple-400',
-                  text: 'text-purple-600',
-                  overlay: 'group-hover:bg-purple-500/90'
-                },
-                {
-                  hoverBg: 'group-hover:from-blue-500 group-hover:via-blue-400 group-hover:to-cyan-300',
-                  icon: 'bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white',
-                  circle: 'bg-blue-400',
-                  text: 'text-blue-600',
-                  overlay: 'group-hover:bg-blue-500/90'
-                },
-                {
-                  hoverBg: 'group-hover:from-green-500 group-hover:via-green-400 group-hover:to-emerald-300',
-                  icon: 'bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white',
-                  circle: 'bg-green-400',
-                  text: 'text-green-700',
-                  overlay: 'group-hover:bg-green-500/90'
-                },
-                {
-                  hoverBg: 'group-hover:from-blue-600 group-hover:via-blue-500 group-hover:to-blue-400',
-                  icon: 'bg-blue-100 text-blue-700 group-hover:bg-blue-700 group-hover:text-white',
-                  circle: 'bg-blue-500',
-                  text: 'text-blue-700',
-                  overlay: 'group-hover:bg-blue-600/90'
-                },
-                {
-                  hoverBg: 'group-hover:from-orange-600 group-hover:via-orange-500 group-hover:to-amber-400',
-                  icon: 'bg-orange-100 text-orange-600 group-hover:bg-orange-700 group-hover:text-white',
-                  circle: 'bg-orange-500',
-                  text: 'text-orange-700',
-                  overlay: 'group-hover:bg-orange-600/90'
-                }
-              ];
-
-              const scheme = colorSchemes[i % colorSchemes.length];
-
-              return (
-                <div key={i} className={` group relative overflow-hidden bg-white bg-gradient-to-br ${scheme.hoverBg} rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 shadow-md sm:shadow-lg lg:hover:shadow-2xl transition-all duration-500
-               lg:hover:-translate-y-2 border border-gray-100 h-full flex flex-col`} data-animate id={`service-${i}`}>
-                  <div className={` absolute inset-0 bg-white ${scheme.overlay} transition-all duration-500 rounded-xl sm:rounded-2xl `} />
-                  <div className={`  absolute -right-16 -top-16 sm:-right-20 sm:-top-20  w-32 h-32 sm:w-40 sm:h-40 ${scheme.circle}  rounded-full  opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-[1] `} />
-
-                  <div className={` absolute -right-20 -bottom-20 sm:-right-24 sm:-bottom-24 w-40 h-40 sm:w-48 sm:h-48 ${scheme.circle} rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 z-[1] `} />
-
-                  <div className={` relative z-10 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl ${scheme.icon} flex items-center justify-center  mb-4 sm:mb-5 lg:mb-6 lg:group-hover:scale-110 transition-all duration-300 `}>
-                    <Icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
-                  </div>
-
-                  <h3 className="relative z-10 text-base sm:text-lg lg:text-2xl font-bold text-gray-800 group-hover:text-white mb-2 sm:mb-3 lg:mb-4 transition-colors duration-300">
-                    {service.title}
-                  </h3>
-
-                  <p className="relative z-10 text-xs sm:text-sm lg:text-base text-gray-600 group-hover:text-white mb-4 sm:mb-6 leading-snug sm:leading-relaxed transition-colors duration-300">
-                    {service.description}
-                  </p>
-
-                  <ul className="relative z-10 space-y-1.5 sm:space-y-2.5 mb-auto hidden sm:block">
-                    {service.features.map((feature, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700 group-hover:text-white transition-colors duration-300"
-                      >
-                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 group-hover:text-white flex-shrink-0 transition-colors duration-300" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-
-                  <Link
-                    to={service.link}
-                    className={` relative z-10 mt-auto sm:mt-6 flex text-xs sm:text-sm ${scheme.text} group-hover:text-white font-semibold items-center gap-1.5 sm:gap-2 lg:group-hover:gap-3 transition-all duration-300 `}
-                  >
-                    Explore {service.title}
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </Link>
-
-                </div>
-              );
-            })}
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 px-7 py-3.5 text-sm sm:text-base border border-slate-300 hover:border-[#6B4A2D] text-slate-900 hover:text-[#6B4A2D] rounded-full font-semibold transition-colors duration-200"
+            >
+              <span>Get in Touch</span>
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="bg-gradient-to-b from-white via-slate-50 to-white">
-        <div className="py-8 sm:py-20 text-center px-4 relative overflow-hidden">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-            We are a professional photography{" "}
-            <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900">
-              house
-            </span>
-          </h2>
-
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 w-full ">
-          {/* "photo-0" told a screen-reader user nothing. Each tile now says
-              what the photograph actually shows. */}
-          {[
-            { src: "https://geniestudio.in/uploads/1786522543_1786522542888-63592060.webp", alt: "Corporate event coverage by Genie Studio" },
-            { src: "https://geniestudio.in/uploads/1786520942_1786520939456-72574430.webp", alt: "Professional portrait session in the Genie Studio space" },
-            { src: "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg", alt: "Cinema camera and video rig on a Genie Studio production" },
-            { src: "https://geniestudio.in/uploads/1786519472_1786519472788-977568825.jpg", alt: "Business portfolio shoot for a Genie Studio client" },
-            { src: "https://geniestudio.in/uploads/1786522544_1786522544183-789140313.webp", alt: "Conference photography by Genie Studio" },
-            { src: "https://geniestudio.in/uploads/1786522551_1786522551131-390094297.webp", alt: "Product launch event captured by Genie Studio" },
-          ].map(({ src, alt }, i) => (
-            <div key={i} className="aspect-square w-full overflow-hidden group relative" onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)} >
-              <OptimizedImage src={src} alt={alt}
-                className="w-full h-full"
-                sizes="(max-width: 640px) 50vw, 33vw"
-                imgClassName={`transition-all duration-700 ${hoveredIndex === i ? 'scale-110 brightness-75' : 'scale-100 brightness-100'}`} />
-              <div className={`absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent transition-opacity duration-500 ${hoveredIndex === i ? 'opacity-100' : 'opacity-0'
-                }`}></div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ServicesSection />
 
       <section className="py-8 sm:py-24 bg-white" data-animate id="equipment">
         <div className="page-container">
@@ -858,17 +194,17 @@ const Home = () => {
             </h2>
 
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-              We invest in the finest professional equipment to ensure every shot is perfect
+              Equipped with Sony full-frame cameras, Rode PodMics, and professional Digitek &amp; Godox lighting
             </p>
           </div>
 
           {/* GRID */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {equipment.map((item, i) => {
               const Icon = item.icon;
 
               return (
-                <div key={i} className=" group relative overflow-hidden rounded-2xl  bg-white  shadow-lg hover:shadow-2xl transition-all duration-500" data-animate id={`equipment-${i}`} >
+                <div key={i} className=" group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl transition-all duration-500" data-animate id={`equipment-${i}`} >
                   <div className="aspect-[3/4] sm:aspect-[4/5] lg:aspect-[3/4] overflow-hidden">
                     <OptimizedImage src={item.image} alt={item.title}
                       className="w-full h-full"
@@ -876,14 +212,20 @@ const Home = () => {
                       imgClassName="transition-transform duration-700 group-hover:scale-110" />
                   </div>
 
-                  <div className=" absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-4 sm:p-6 " >
-                    <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-white/90 mb-2 sm:mb-3" />
+                  <div className=" absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent flex flex-col justify-end p-4 sm:p-6 " >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-[#FFC107]">
+                        {item.category}
+                      </span>
+                    </div>
 
-                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-1">
+                    <Icon className="w-7 h-7 sm:w-9 sm:h-9 text-white/95 mb-1.5 sm:mb-2" />
+
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-1 leading-snug">
                       {item.title}
                     </h3>
 
-                    <p className=" text-xs sm:text-sm text-gray-100 opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-24 transition-all duration-300 leading-relaxed " >
+                    <p className=" text-xs sm:text-sm text-gray-200 opacity-95 sm:opacity-0 sm:max-h-0 sm:group-hover:opacity-100 sm:group-hover:max-h-24 transition-all duration-300 leading-relaxed " >
                       {item.description}
                     </p>
                   </div>
@@ -891,257 +233,190 @@ const Home = () => {
               );
             })}
           </div>
+
+          {/* Detailed Studio Gear Spec Highlights */}
+          <div className="mt-10 sm:mt-14 bg-[#F8FAFC] border border-slate-200/80 rounded-2xl sm:rounded-3xl p-5 sm:p-7 lg:p-8 shadow-xs">
+            <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#6B4A2D]">
+                Studio Gear Inventory
+              </span>
+              <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mt-1">
+                Equipment Present at GenieStudio
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                Professional tools ready for podcast production, corporate headshots, and creative shoots.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
+              <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#FAF6E8] text-[#6B4A2D] flex items-center justify-center">
+                    <Camera className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm">Cameras</h4>
+                </div>
+                <ul className="text-xs text-gray-700 space-y-1.5">
+                  <li className="flex items-center gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
+                    Sony A7M4
+                  </li>
+                  <li className="flex items-center gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
+                    Sony A7M3
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#FAF6E8] text-[#6B4A2D] flex items-center justify-center">
+                    <Mic className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm">Microphones &amp; Audio</h4>
+                </div>
+                <ul className="text-xs text-gray-700 space-y-1.5">
+                  <li className="flex items-center gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
+                    Rode PodMics
+                  </li>
+                  <li className="flex items-center gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
+                    Audio Interface
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#FAF6E8] text-[#6B4A2D] flex items-center justify-center">
+                    <Lightbulb className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm">Lighting Setup</h4>
+                </div>
+                <ul className="text-xs text-gray-700 space-y-1.5">
+                  <li className="flex items-center gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
+                    Lighting – Digitek
+                  </li>
+                  <li className="flex items-center gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
+                    Godox LC500R Light Stick
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col">
+                <div className="flex items-center gap-2.5 mb-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#FAF6E8] text-[#6B4A2D] flex items-center justify-center">
+                    <Sliders className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-gray-900 text-sm">Backup Microphone</h4>
+                </div>
+                <ul className="text-xs text-gray-700 space-y-1.5">
+                  <li className="flex items-center gap-2 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B45309]" />
+                    Hollyland Lark M2
+                  </li>
+                  <li className="text-[11px] text-gray-500 pl-3.5">
+                    Wireless backup microphone
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
 
 
-      <section className="py-12 sm:py-16 lg:py-24 bg-[#F7F6F3]" data-animate id="why-choose">
-        <div className="page-container">
-
-          <div className="text-left sm:text-center mb-8 sm:mb-16">
-            <span className="text-[#6B4A2D] font-semibold text-sm uppercase tracking-wider">
-              Why Choose Genie Studio
-            </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mt-4">
-              Excellence in Every Frame
+      <section className="py-12 sm:py-16 bg-[#F7F6F3]" data-animate id="why-choose">
+        <div className="w-full px-4 sm:px-0 sm:w-[92%] lg:w-[90%] max-w-[1280px] mx-auto">
+          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+            <p className="text-[#6B4A2D] font-semibold text-xs uppercase tracking-[0.18em] mb-3">
+              WHY BUSINESSES CHOOSE GENIESTUDIO
+            </p>
+            <h2 className="text-2xl sm:text-4xl lg:text-[44px] font-bold text-slate-900 leading-tight mb-4">
+              Creative Excellence.{" "}
+              <span className="text-[#B45309]">Professional Results.</span>
             </h2>
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+              From professional photography and podcast production to corporate
+              and brand shoots, GenieStudio brings creative expertise,
+              professional equipment and reliable service together in
+              Visakhapatnam.
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 items-stretch">
-            {whyChooseUs.map((item, i) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 items-stretch">
+            {whyChooseUs.map((item) => {
               const Icon = item.icon;
-
-              const colorSchemes = [
-                {
-                  hoverBg: 'group-hover:from-purple-500 group-hover:via-purple-400 group-hover:to-pink-400',
-                  icon: 'bg-purple-600 group-hover:bg-white group-hover:text-purple-600',
-                  circle: 'bg-purple-400',
-                  overlay: 'group-hover:bg-purple-500/90'
-                },
-                {
-                  hoverBg: 'group-hover:from-blue-500 group-hover:via-blue-400 group-hover:to-cyan-300',
-                  icon: 'bg-blue-600 group-hover:bg-white group-hover:text-blue-600',
-                  circle: 'bg-blue-400',
-                  overlay: 'group-hover:bg-blue-500/90'
-                },
-                {
-                  hoverBg: 'group-hover:from-green-500 group-hover:via-green-400 group-hover:to-emerald-300',
-                  icon: 'bg-green-600 group-hover:bg-white group-hover:text-green-600',
-                  circle: 'bg-green-400',
-                  overlay: 'group-hover:bg-green-500/90'
-                },
-                {
-                  hoverBg: 'group-hover:from-orange-600 group-hover:via-orange-500 group-hover:to-amber-400',
-                  icon: 'bg-orange-600 group-hover:bg-white group-hover:text-orange-600',
-                  circle: 'bg-orange-500',
-                  overlay: 'group-hover:bg-orange-600/90'
-                }
-              ];
-
-              const scheme = colorSchemes[i % colorSchemes.length];
-
               return (
-                <div
-                  key={i}
-                  className={` text-center group relative overflow-hidden p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl bg-white bg-gradient-to-br ${scheme.hoverBg} shadow-md lg:hover:shadow-2xl transition-all duration-500 lg:hover:-translate-y-2 h-full flex flex-col `}>
-                  <div className={`  absolute inset-0 bg-white ${scheme.overlay} transition-all duration-500 rounded-xl sm:rounded-2xl `} />
-
-                  <div className={` absolute -right-12 -top-12 sm:-right-16 sm:-top-16 w-24 h-24 sm:w-32 sm:h-32 ${scheme.circle} rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-[1] `} />
-
-                  <div className={` absolute -left-16 -bottom-16 sm:-left-20 sm:-bottom-20 w-32 h-32 sm:w-40 sm:h-40 ${scheme.circle} rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 z-[1] `} />
-
-                  <div className={` relative z-10 w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto mb-3 sm:mb-5 lg:mb-6 rounded-full ${scheme.icon} text-white flex items-center justify-center lg:group-hover:scale-110 transition-all duration-300 `}>
-                    <Icon className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10" />
+                <article
+                  key={item.title}
+                  className="bg-white rounded-2xl p-6 sm:p-7 border border-[#6B4A2D]/12 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full flex flex-col items-start text-left"
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 flex-shrink-0"
+                    style={{
+                      background: "#FAF6E8",
+                      color: "#6B4A2D",
+                      border: "1px solid rgba(107, 74, 45, 0.16)",
+                    }}
+                  >
+                    <Icon className="w-5 h-5" aria-hidden="true" />
                   </div>
 
-                  <h3 className="relative z-10 text-base sm:text-lg lg:text-2xl font-bold text-gray-800 group-hover:text-white mb-2 sm:mb-3 lg:mb-4 transition-colors duration-300">
+                  <h3 className="text-lg font-bold text-slate-900 leading-snug mb-2">
                     {item.title}
                   </h3>
 
-                  <p className="relative z-10 text-xs sm:text-sm lg:text-base text-gray-600 group-hover:text-white leading-snug sm:leading-relaxed transition-colors duration-300">
+                  <p className="text-sm text-slate-600 leading-relaxed">
                     {item.description}
                   </p>
-                </div>
+                </article>
               );
             })}
           </div>
         </div>
       </section>
 
-
-      <section className="py-8 bg-white" data-animate id="process">
-        <div className="page-container">
-
-          <div className="text-left sm:text-center mb-8 sm:mb-16">
-            <span className="text-[#6B4A2D] font-semibold text-sm uppercase tracking-wider">
-              Our Process
-            </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mt-4">
-              How We Work
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8 items-stretch">
-            {processSteps.map((step, i) => {
-              const colorSchemes = [
-                {
-                  hoverBg: 'group-hover:from-purple-500 group-hover:via-purple-400 group-hover:to-pink-400',
-                  stepColor: 'bg-gradient-to-br from-purple-600 to-pink-500',
-                  circle: 'bg-purple-400',
-                  overlay: 'group-hover:bg-purple-500/90',
-                  line: 'bg-purple-600'
-                },
-                {
-                  hoverBg: 'group-hover:from-blue-500 group-hover:via-blue-400 group-hover:to-cyan-300',
-                  stepColor: 'bg-gradient-to-br from-blue-600 to-cyan-500',
-                  circle: 'bg-blue-400',
-                  overlay: 'group-hover:bg-blue-500/90',
-                  line: 'bg-blue-600'
-                },
-                {
-                  hoverBg: 'group-hover:from-green-500 group-hover:via-green-400 group-hover:to-emerald-300',
-                  stepColor: 'bg-gradient-to-br from-green-600 to-emerald-500',
-                  circle: 'bg-green-400',
-                  overlay: 'group-hover:bg-green-500/90',
-                  line: 'bg-green-600'
-                },
-                {
-                  hoverBg: 'group-hover:from-orange-600 group-hover:via-orange-500 group-hover:to-amber-400',
-                  stepColor: 'bg-gradient-to-br from-orange-600 to-amber-500',
-                  circle: 'bg-orange-500',
-                  overlay: 'group-hover:bg-orange-600/90',
-                  line: 'bg-orange-600'
-                },
-                {
-                  hoverBg: 'group-hover:from-indigo-500 group-hover:via-indigo-400 group-hover:to-purple-400',
-                  stepColor: 'bg-gradient-to-br from-indigo-600 to-purple-500',
-                  circle: 'bg-indigo-400',
-                  overlay: 'group-hover:bg-indigo-500/90',
-                  line: 'bg-indigo-600'
-                }
-              ];
-
-              const scheme = colorSchemes[i % colorSchemes.length];
-
-              return (
-                <div
-                  key={i}
-                  className="relative group"
-                  data-animate
-                  id={`process-${i}`}
-                >
-                  {i < processSteps.length - 1 && (
-                    <div className={` hidden lg:block  absolute top-16 left-full w-full h-0.5 bg-gray-300 group-hover:${scheme.line} opacity-30 group-hover:opacity-100 transition-all duration-300 z-0 `} />)}
-
-                  <div
-                    className={` relative overflow-hidden bg-white bg-gradient-to-br ${scheme.hoverBg} rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-md sm:shadow-lg lg:hover:shadow-2xl transition-all duration-500 lg:hover:-translate-y-2 border border-gray-100 h-full flex flex-col`} >
-                    <div className={` absolute inset-0 bg-white ${scheme.overlay} transition-all duration-500 rounded-xl sm:rounded-2xl `} />
-
-                    <div className={` absolute -right-10 -top-10 sm:-right-12 sm:-top-12 w-20 h-20 sm:w-24 sm:h-24 ${scheme.circle} rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-500 z-[1] `} />
-
-                    <div className={` absolute -left-12 -bottom-12 sm:-left-16 sm:-bottom-16 w-24 h-24 sm:w-32 sm:h-32 ${scheme.circle} rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-500 z-[1] `} />
-
-                    <div className={` relative z-10 text-2xl sm:text-3xl lg:text-5xl  font-bold ${scheme.stepColor} bg-clip-text text-transparent group-hover:text-white mb-2 sm:mb-3 lg:mb-4 transition-all duration-300 `}>
-                      {step.step}
-                    </div>
-
-                    <h3 className="relative z-10 text-base sm:text-lg lg:text-2xl font-bold text-gray-800 group-hover:text-white mb-2 sm:mb-3 lg:mb-4 transition-colors duration-300">
-                      {step.title}
-                    </h3>
-
-                    <p className=" relative z-10 text-[12px] sm:text-sm lg:text-base text-gray-600 group-hover:text-white leading-snug sm:leading-relaxed transition-colors duration-300 mt-auto">
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative h-[50vh] lg:h-[70vh] overflow-hidden" data-animate id="parallax">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-fixed"
-          style={{
-            backgroundImage: `url('${bestVariantUrl(
-              "https://geniestudio.in/uploads/1786601936_1786601934919-89162093.jpg",
-              targetWidth
-            )}')`
-          }}
-        >
-          <div className="absolute inset-0 bg-[#6B4A2D]/80" />
-        </div>
-
-        <div className="relative h-full flex items-center justify-center text-center px-6">
-          <div className="max-w-4xl">
-            <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-white mb-6">
-              Your Vision, Our Expertise
-            </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-200 mb-8 leading-relaxed">
-              We transform ideas into captivating visuals that tell your unique story and elevate your brand presence
+      <section
+        className="relative w-full py-14 sm:py-20 lg:py-[100px] bg-white text-slate-900 overflow-hidden"
+        data-animate
+        id="parallax"
+      >
+        <div className="relative z-10 w-full px-4 sm:px-0 sm:w-[92%] lg:w-[90%] max-w-[1160px] mx-auto text-center">
+          <div className="inline-flex items-center justify-center gap-3 mb-4">
+            <span
+              aria-hidden="true"
+              className="w-6 h-[1px] bg-[#6B4A2D]/50"
+            />
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6B4A2D]">
+              LET&apos;S CREATE SOMETHING MEANINGFUL
             </p>
-            <button onClick={() => navigate("/contact")} className="px-4 py-2 sm:px-6 sm:py-3 lg:px-8 lg:py-4 text-sm sm:text-base bg-white text-[#6B4A2D] rounded-full font-semibold inline-flex items-center gap-1 sm:gap-2 hover:shadow-2xl transition-all duration-300 hover:scale-100 sm:hover:scale-105">
-              Start Your Project
-              <ArrowRight className="w-5 h-5" />
-            </button>
+            <span
+              aria-hidden="true"
+              className="w-6 h-[1px] bg-[#6B4A2D]/50"
+            />
           </div>
-        </div>
-      </section>
 
-      <section className="py-10 bg-[#F7F6F3]" data-animate id="portfolio">
-        <div className="page-container">
-
-          <div className="text-left sm:text-center mb-8 sm:mb-16">
-            <span className="text-[#6B4A2D] font-semibold text-sm uppercase tracking-wider">
-              Our Work
+          <h2 className="text-2xl sm:text-4xl lg:text-[48px] font-bold text-slate-900 leading-[1.15] tracking-tight max-w-4xl mx-auto mb-5">
+            Have a Creative Project in Mind?{" "}
+            <span className="text-[#B45309]">
+              Let&apos;s Bring It to Life.
             </span>
-            <h2 className="text-4xl lg:text-5xl font-bold text-gray-900 mt-4">
-              Recent Projects
-            </h2>
-          </div>
+          </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
-            {portfolioItems.map((item, i) => (
-              <div
-                key={i}
-                className=" group relative overflow-hidden rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg lg:hover:shadow-2xl transition-all duration-300 aspect-[4/3] ">
-                <OptimizedImage
-                  src={item.image}
-                  alt={item.title}
-                  className="w-full h-full"
-                  sizes="(max-width: 768px) 50vw, 33vw"
-                  imgClassName="lg:group-hover:scale-110 transition-transform duration-500"
-                />
-
-                <div
-                  className=" absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 sm:p-4 lg:p-6 " >
-                  <div
-                    className=" text-white transform translate-y-2 lg:group-hover:translate-y-0 transition-transform duration-300 " >
-                    <h3 className="text-sm sm:text-base lg:text-xl font-bold mb-0.5">
-                      {item.title}
-                    </h3>
-                    <p className="text-[11px] sm:text-xs lg:text-sm text-gray-300">
-                      {item.category}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-
-
-          <div className="text-left sm:text-center mt-8 sm:mt-12">
-            <button
-              className=" px-5 sm:px-8 py-3 sm:py-4 bg-[#6B4A2D] text-white text-sm sm:text-base rounded-full font-semibold inline-flex items-center gap-1.5 sm:gap-2 transition-all duration-300 sm:hover:shadow-xl"
-              onClick={() => navigate("/portfolio")}   >
-              View Full Portfolio
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
-
+          <p className="text-base sm:text-[17px] lg:text-[18px] text-slate-600 leading-[1.7] max-w-4xl mx-auto">
+            Looking for professional photography or creative production services
+            in Visakhapatnam (Vizag)? GenieStudio works with businesses, brands,
+            entrepreneurs and individuals to create impactful visual content.
+            Whether you need corporate photography, product shoots, event
+            coverage, professional portraits, business portfolio photography or
+            podcast production, our team is ready to understand your
+            requirements and help bring your vision to life.
+          </p>
         </div>
       </section>
 

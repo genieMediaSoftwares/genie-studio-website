@@ -1,33 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowRight, Calendar, Tag } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Calendar, FileText } from "lucide-react";
 import BASE_URL from "../api";
 import OptimizedImage from "../components/OptimizedImage";
-import { useTargetWidth } from "../lib/useResponsiveImage";
-import { bestVariantUrl } from "../lib/imageManifest";
 import Seo from "../components/Seo";
 import { SEO } from "../lib/seoConfig";
 
+const SectionEyebrow = ({ label, light = false }) => (
+  <div className="inline-flex items-center justify-center gap-3 mb-3">
+    <span
+      aria-hidden="true"
+      className={`h-px w-8 sm:w-10 ${light ? "bg-white/35" : "bg-[#D5C6B3]"}`}
+    />
+    <span
+      className={`text-[11px] sm:text-xs font-semibold tracking-[0.22em] uppercase ${
+        light ? "text-[#EBD9C3]" : "text-[#7A5738]"
+      }`}
+    >
+      {label}
+    </span>
+    <span
+      aria-hidden="true"
+      className={`h-px w-8 sm:w-10 ${light ? "bg-white/35" : "bg-[#D5C6B3]"}`}
+    />
+  </div>
+);
+
 export default function Blogs() {
-  // Hero paints via CSS background-image, which cannot carry a srcSet.
-  const targetWidth = useTargetWidth();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [lightbox, setLightbox] = useState(null); // { src, alt }
-
-  const navigate = useNavigate();
+  const [failedImages, setFailedImages] = useState({});
+  const [lightbox, setLightbox] = useState(null);
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
         const res = await fetch(`${BASE_URL}/api/blogs`);
         const data = await res.json();
-        // Backend already filters published only, but guard anyway
         const formatted = Array.isArray(data)
           ? data
-            .filter((b) => b.status === "published")
-            .sort((a, b) => b.createdAt - a.createdAt)
+              .filter((b) => b.status === "published")
+              .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))
           : [];
         setBlogs(formatted);
       } catch (err) {
@@ -53,7 +67,9 @@ export default function Blogs() {
   }, [blogs]);
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") setLightbox(null); };
+    const onKey = (e) => {
+      if (e.key === "Escape") setLightbox(null);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
@@ -68,25 +84,36 @@ export default function Blogs() {
   const formatDate = (ts) =>
     ts
       ? new Date(Number(ts)).toLocaleDateString("en-US", {
-        year: "numeric", month: "short", day: "numeric",
-      })
-      : "Just now";
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })
+      : "";
 
-  const handleReadMore = (blog) => {
-    if (!blog.permalink) { console.error("Missing permalink", blog); return; }
-    navigate(`/blog/${blog.permalink}`);
+  const getExcerpt = (blog) => {
+    if (blog.metaDescription) return blog.metaDescription;
+    if (blog.description) return blog.description;
+    if (typeof blog.content === "string") {
+      return blog.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    }
+    return "";
   };
 
   const openLightbox = (e, src, alt) => {
+    e.preventDefault();
     e.stopPropagation();
     setLightbox({ src, alt });
   };
 
-  const FALLBACK =
-    "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80";
+  const gridClassName =
+    filteredBlogs.length === 1
+      ? "flex justify-center"
+      : filteredBlogs.length === 2
+      ? "grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-7 max-w-4xl mx-auto"
+      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-7";
 
   return (
-    <main className="w-full overflow-x-hidden">
+    <main className="w-full overflow-x-hidden bg-[#FAF8F5] text-[#1A1512]">
       <Seo
         {...SEO.blogs}
         breadcrumbs={[
@@ -95,198 +122,222 @@ export default function Blogs() {
         ]}
       />
 
+      {/* Hero Section */}
+      <section className="w-full bg-[#523723] text-white py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 border-b border-[#6A4A32]">
+        <div className="max-w-4xl mx-auto text-center">
+          <SectionEyebrow label="GENIE STUDIO | BLOG" light />
 
-      <section className="relative min-h-[45vh] sm:min-h-[50vh] md:min-h-[60vh] lg:min-h-[55vh] flex items-center text-white overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('${bestVariantUrl(
-              "https://geniestudio.in/uploads/1786602495_1786602495551-770257142.jpg",
-              targetWidth
-            )}')`,
-          }}
-        />
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full py-12 sm:py-16 " data-aos="fade-up">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 drop-shadow-lg">
+          <h1 className="text-2xl min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-[3.35rem] font-bold leading-[1.15] tracking-tight text-white mb-5">
             Our Blog
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-slate-200 max-w-2xl sm:max-w-3xl mx-auto drop-shadow-md">
-            Insights and creative stories from Genie Studio
+
+          <p className="text-sm sm:text-base md:text-[17px] text-[#EFE6DC] max-w-3xl mx-auto leading-relaxed">
+            Explore photography insights, creative ideas, production tips and updates from
+            GenieStudio. Discover useful information about professional photography, podcast
+            production, corporate shoots, product photography and visual storytelling in
+            Visakhapatnam.
           </p>
         </div>
       </section>
 
-      <section className="py-10 sm:py-14 md:py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
+      {/* Blog Listing Section */}
+      <section className="w-full py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           {categories.length > 1 && (
-            <div className="mb-10 sm:mb-12 md:mb-14 lg:mb-16">
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                {categories.map((cat) => (
+            <div className="mb-10 sm:mb-12 flex flex-wrap justify-center gap-2.5 sm:gap-3">
+              {categories.map((cat) => {
+                const isActive = selectedCategory === cat;
+                return (
                   <button
                     key={cat}
+                    type="button"
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg font-semibold text-xs sm:text-sm md:text-base transition-all duration-300 ${selectedCategory === cat
-                        ? "bg-[#6B4A2D] text-white shadow-lg scale-105"
-                        : "bg-[#F7F6F3] text-slate-700 hover:bg-slate-200"
-                      }`}
+                    className={`px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-[#5B3E28] text-white shadow-sm"
+                        : "bg-white text-[#4A4038] border border-[#EAE2D6] hover:border-[#CBBBA6]"
+                    }`}
                   >
                     {cat}
                   </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 sm:py-20 md:py-24">
-              <div className="animate-spin">
-                <svg className="w-12 h-12 sm:w-14 sm:h-14 text-[#6B4A2D]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <circle cx="12" cy="12" r="10" strokeWidth="2" fill="none" opacity="0.3" />
-                  <path d="M12 2a10 10 0 0 1 10 10" strokeWidth="2" />
-                </svg>
-              </div>
-              <p className="mt-4 text-slate-600 font-medium text-sm sm:text-base">
-                Loading amazing content…
-              </p>
-            </div>
-
-          ) : filteredBlogs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 sm:py-20 md:py-24">
-              <svg className="w-14 h-14 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-slate-600 font-medium text-sm sm:text-base md:text-lg">
-                No blogs found in this category
-              </p>
-              <p className="text-slate-600 text-xs sm:text-sm mt-2">
-                Check back soon for new content!
-              </p>
-            </div>
-
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-              {filteredBlogs.map((blog, index) => {
-                const imgSrc = blog.image || FALLBACK;
-
-                return (
-                  <article
-                    key={blog.id}
-                    data-aos={index % 2 === 0 ? "fade-right" : "fade-left"}
-                    data-aos-delay={index * 100}
-                    onClick={() => handleReadMore(blog)}
-                    className="group relative flex flex-col overflow-hidden rounded-xl sm:rounded-2xl bg-white shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer"
-                  >
-
-                    <div
-                      className="relative w-full overflow-hidden bg-[#f5f0eb]"
-                      style={{ aspectRatio: "4/3" }}
-                    >
-                      <OptimizedImage
-                        src={imgSrc}
-                        variants={blog.variants}
-                        lqip={blog.lqip}
-                        alt={blog.title || "Blog cover"}
-                        imgClassName="group-hover:scale-105 transition-transform duration-500"
-                        objectFit="contain"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 380px"
-                        className="w-full h-full"
-                        onError={(e) => { e.currentTarget.src = FALLBACK; }}
-                      />
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                      <button
-                        type="button"
-                        aria-label="View full image"
-                        onClick={(e) => openLightbox(e, imgSrc, blog.title)}
-                        className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/90 backdrop-blur-sm text-[#6B4A2D] text-[11px] sm:text-xs font-semibold shadow-md opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 hover:bg-white"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                        </svg>
-                        Full image
-                      </button>
-
-                      {blog.category && (
-                        <div className="absolute top-2.5 left-2.5 z-10">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#6B4A2D] text-white text-[10px] sm:text-xs font-semibold rounded-full shadow">
-                            <Tag className="w-3 h-3" strokeWidth={2} />
-                            {blog.category}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col flex-1 p-4 sm:p-5 lg:p-6">
-                      {blog.createdAt && (
-                        <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-500 mb-2 sm:mb-3">
-                          <Calendar className="w-3.5 h-3.5" strokeWidth={2} />
-                          <time>{formatDate(blog.createdAt)}</time>
-                        </div>
-                      )}
-
-                      <h2 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 group-hover:text-[#6B4A2D] mb-2 sm:mb-3 line-clamp-3 transition-colors duration-300 leading-snug">
-                        {blog.title}
-                      </h2>
-
-                      <p className="text-[11px] sm:text-xs md:text-sm text-slate-600 line-clamp-3 leading-relaxed mb-4 flex-1">
-                        {blog.metaDescription || blog.description}
-                      </p>
-
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleReadMore(blog); }}
-                        className="self-start flex items-center gap-1.5 text-[#6B4A2D] font-semibold text-xs sm:text-sm group-hover:gap-2.5 transition-all duration-300 hover:text-slate-900"
-                      >
-                        <span>Read More</span>
-                        <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-300" strokeWidth={2.5} />
-                      </button>
-                    </div>
-
-                    {/* Corner shimmer */}
-                    <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-bl from-[#6B4A2D]/0 group-hover:from-[#6B4A2D]/8 to-transparent rounded-bl-full transition-all duration-500 pointer-events-none" />
-                  </article>
                 );
               })}
             </div>
           )}
 
-          {!loading && filteredBlogs.length > 0 && (
-            <div className="mt-10 sm:mt-12 text-center">
-              <p className="text-slate-600 text-xs sm:text-sm md:text-base">
-                Showing{" "}
-                <span className="font-semibold text-slate-900">{filteredBlogs.length}</span>
-                {" "}of{" "}
-                <span className="font-semibold text-slate-900">{blogs.length}</span>{" "}
-                articles
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 sm:py-20">
+              <div
+                className="w-10 h-10 rounded-full border-2 border-[#E5D9C8] border-t-[#5B3E28] animate-spin"
+                aria-hidden="true"
+              />
+              <p className="mt-4 text-sm sm:text-base text-[#5A5149] font-medium">
+                Loading articles...
               </p>
+            </div>
+          ) : filteredBlogs.length === 0 ? (
+            <div className="max-w-lg mx-auto bg-white rounded-2xl border border-[#EAE2D6] p-8 sm:p-10 text-center shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-[#F5EFE6] border border-[#EAE2D6] flex items-center justify-center text-[#6B4A2D] mx-auto mb-4">
+                <FileText className="w-5 h-5" aria-hidden="true" />
+              </div>
+              <h2 className="text-2xl font-bold text-[#1A1512] mb-2">
+                No Published Articles Yet
+              </h2>
+              <p className="text-sm text-[#5A5149] leading-relaxed mb-6">
+                {selectedCategory !== "All"
+                  ? "No published articles were found in this category."
+                  : "New stories and production insights from GenieStudio will appear here once published."}
+              </p>
+              {selectedCategory !== "All" ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("All")}
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-[#5B3E28] text-white text-sm font-semibold hover:bg-[#462F1E] transition-colors"
+                >
+                  View All Articles
+                </button>
+              ) : (
+                <Link
+                  to="/contact"
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-[#5B3E28] text-white text-sm font-semibold hover:bg-[#462F1E] transition-colors"
+                >
+                  Contact Our Studio
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className={gridClassName}>
+              {filteredBlogs.map((blog) => {
+                const key = blog.id || blog._id || blog.permalink || blog.title;
+                const hasImage = Boolean(blog.image) && !failedImages[key];
+                const excerpt = getExcerpt(blog);
+                const detailUrl = blog.permalink ? `/blog/${blog.permalink}` : null;
+
+                return (
+                  <article
+                    key={key}
+                    className={`bg-white rounded-2xl border border-[#EAE2D6] shadow-sm hover:shadow-md hover:border-[#D6C6B2] transition-all duration-300 overflow-hidden flex flex-col ${
+                      filteredBlogs.length === 1 ? "w-full max-w-[420px]" : ""
+                    }`}
+                  >
+                    {hasImage && (
+                      <div className="relative w-full aspect-[16/10] bg-[#F5EFE6] overflow-hidden border-b border-[#EFE8DE] group">
+                        <OptimizedImage
+                          src={blog.image}
+                          variants={blog.variants}
+                          lqip={blog.lqip}
+                          alt={blog.title || "GenieStudio blog article"}
+                          className="w-full h-full"
+                          imgClassName="w-full h-full object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 420px"
+                          onError={() =>
+                            setFailedImages((prev) => ({ ...prev, [key]: true }))
+                          }
+                        />
+                        <button
+                          type="button"
+                          aria-label="View full image"
+                          onClick={(e) => openLightbox(e, blog.image, blog.title)}
+                          className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-white/90 text-[#5B3E28] text-xs font-semibold shadow-sm opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity hover:bg-white"
+                        >
+                          Full image
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="p-6 flex flex-col flex-1">
+                      {blog.category && (
+                        <div className="mb-3.5">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#F5EFE6] border border-[#EAE2D6] text-[#6B4A2D] text-xs font-medium">
+                            {blog.category}
+                          </span>
+                        </div>
+                      )}
+
+                      <h2 className="text-xl sm:text-2xl font-bold text-[#1A1512] leading-snug mb-2.5">
+                        {detailUrl ? (
+                          <Link
+                            to={detailUrl}
+                            className="hover:text-[#5B3E28] transition-colors"
+                          >
+                            {blog.title}
+                          </Link>
+                        ) : (
+                          blog.title
+                        )}
+                      </h2>
+
+                      {excerpt && (
+                        <p className="text-sm text-[#5A5149] leading-relaxed line-clamp-3 mb-5 flex-1">
+                          {excerpt}
+                        </p>
+                      )}
+
+                      <div className="mt-auto pt-4 border-t border-[#EFE8DE] flex items-center justify-between gap-3">
+                        {blog.createdAt ? (
+                          <div className="inline-flex items-center gap-1.5 text-xs text-[#6E6359]">
+                            <Calendar className="w-3.5 h-3.5 text-[#7A5738]" aria-hidden="true" />
+                            <time dateTime={new Date(Number(blog.createdAt)).toISOString()}>
+                              {formatDate(blog.createdAt)}
+                            </time>
+                          </div>
+                        ) : (
+                          <span />
+                        )}
+
+                        {detailUrl && (
+                          <Link
+                            to={detailUrl}
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#5B3E28] hover:text-[#3A2515] transition-colors group"
+                          >
+                            <span>Read More</span>
+                            <ArrowRight
+                              className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                              aria-hidden="true"
+                            />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>
       </section>
 
-      {!loading && blogs.length > 0 && (
-        <section className="py-10 sm:py-14 md:py-16 lg:py-20 bg-[#F7F6F3]">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-4 sm:mb-5 md:mb-6 tracking-tight">
-              Want to Share Your Story?
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed font-light">
-              Get in touch with us to discuss your project, book a shoot, or collaborate with Genie Studio.
-            </p>
-            <button
-              onClick={() => navigate("/contact")}
-              className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 py-3 sm:py-4 bg-[#6B4A2D] text-white font-semibold text-sm sm:text-base rounded-lg hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl group"
-            >
-              Get Started
-              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-300" strokeWidth={2} />
-            </button>
-          </div>
-        </section>
-      )}
+      {/* Bottom CTA Section */}
+      <section className="w-full pb-14 sm:pb-16 lg:pb-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-[#523723] text-white rounded-2xl px-6 py-8 sm:px-10 sm:py-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="lg:max-w-xs shrink-0">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+                Have a Story to Share?
+              </h2>
+            </div>
 
+            <div className="lg:border-l lg:border-white/20 lg:pl-8 lg:max-w-md">
+              <p className="text-sm text-[#EFE6DC] leading-relaxed">
+                Get in touch with GenieStudio to discuss your photography, production or creative
+                project.
+              </p>
+            </div>
+
+            <div className="shrink-0">
+              <Link
+                to="/contact"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white text-[#3F2919] text-sm font-semibold hover:bg-[#F5EFE6] transition-colors"
+              >
+                <span>Get in Touch</span>
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Full Image Lightbox */}
       {lightbox && (
         <div
           role="dialog"
@@ -297,14 +348,14 @@ export default function Blogs() {
         >
           <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" />
           <div
-            className="relative z-10 w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl xl:max-w-5xl"
+            className="relative z-10 w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               aria-label="Close image preview"
               onClick={() => setLightbox(null)}
-              className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-20 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white text-slate-800 shadow-xl hover:bg-[#6B4A2D] hover:text-white transition-all duration-200"
+              className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 z-20 flex items-center justify-center w-9 h-9 rounded-full bg-white text-[#1A1512] shadow-lg hover:bg-[#5B3E28] hover:text-white transition-colors"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path d="M18 6L6 18M6 6l12 12" />
@@ -313,18 +364,17 @@ export default function Blogs() {
             <img
               src={lightbox.src}
               alt={lightbox.alt || "Full image"}
-              className="w-full h-auto max-h-[80vh] sm:max-h-[85vh] object-contain rounded-xl sm:rounded-2xl shadow-2xl select-none"
+              className="w-full h-auto max-h-[82vh] object-contain rounded-2xl shadow-2xl select-none"
               draggable={false}
             />
             {lightbox.alt && (
-              <p className="mt-3 text-center text-white/80 text-xs sm:text-sm font-medium px-4 line-clamp-2">
+              <p className="mt-3 text-center text-white/85 text-xs sm:text-sm font-medium px-4 line-clamp-2">
                 {lightbox.alt}
               </p>
             )}
           </div>
         </div>
       )}
-
     </main>
   );
 }
