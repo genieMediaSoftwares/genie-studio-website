@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    // These queue into dataLayer now and are replayed when gtag.js arrives,
+    // so no hit is lost by loading the library later.
+    gtag('js', new Date());
+    gtag('config', 'G-WCR1MCHLMK');
+    (function () {
+      var loaded = false;
+      function loadGtag() {
+        if (loaded) return;
+        loaded = true;
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-WCR1MCHLMK';
+        document.head.appendChild(s);
+      }
+      // Whichever comes first: the page finishing load, or the visitor doing
+      // something — the latter matters so a fast bounce is still recorded.
+      if (document.readyState === 'complete') loadGtag();
+      else window.addEventListener('load', loadGtag, { once: true });
+      ['pointerdown', 'keydown', 'touchstart'].forEach(function (evt) {
+        window.addEventListener(evt, loadGtag, { once: true, passive: true });
+      });
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="geo.region" content="IN-AP" />
+  <meta name="geo.placename" content="Visakhapatnam" />
+  <meta name="author" content="Genie Studio" />
+  <meta name="theme-color" content="#6B4A2D" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
+  <link rel="stylesheet" media="print" onload="this.media='all'"
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
+  </noscript>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /
+# Release builds generate this file from the confirmed domain and indexing setting.
