@@ -1292,22 +1292,31 @@ app.locals.ready = async () => {
 return app;
 }
 
-if (require.main === module) {
+if (require.main === module || process.env.NODE_ENV === "production") {
   try {
     const config = loadConfig();
     const app = createApp({ config });
+
+    const server = app.listen(config.port, () => {
+      console.log(`Backend listening on port ${config.port}`);
+    });
+
+    server.requestTimeout = 30000;
+    server.headersTimeout = 15000;
+
     app.locals.ready().then(() => {
-      const server = app.listen(config.port, () => console.log(`Backend listening on port ${config.port}`));
-      server.requestTimeout = 30000;
-      server.headersTimeout = 15000;
-    }).catch(() => {
-      console.error('Backend database initialization failed. Check connectivity, TLS, and schema privileges.');
+      console.log("Backend database initialization completed");
+    }).catch((err) => {
+      console.error("Backend database initialization failed:", err.message);
+      server.close();
       app.locals.db.end();
       process.exitCode = 1;
     });
+
   } catch (err) {
     console.error(`Backend configuration error: ${err.message}`);
     process.exitCode = 1;
   }
 }
+
 module.exports = { createApp };
