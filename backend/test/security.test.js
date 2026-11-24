@@ -7,7 +7,7 @@ const path = require('node:path');
 const sharp = require('sharp');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { createApp } = require('../server');
+const { createApp } = require('../app');
 const { loadConfig } = require('../lib/config');
 const { createStorage } = require('../lib/storageProvider');
 const { validateImage } = require('../lib/imageValidation');
@@ -18,7 +18,7 @@ function configuration(overrides = {}) {
     DB_PASSWORD: crypto.randomUUID(), JWT_SECRET: crypto.randomBytes(32).toString('hex'), ...overrides });
 }
 
-async function harness(t, { respond = () => [], storage, getConnection, config = configuration() } = {}) {
+async function harness(t, { respond = () => [], storage, getConnection, config = configuration(), initializeDatabase = false } = {}) {
   const queries = [];
   const db = { query(sql, params, callback) {
     queries.push(sql);
@@ -31,7 +31,7 @@ async function harness(t, { respond = () => [], storage, getConnection, config =
     uploadToStorage: async (buffer, filename) => { uploaded.push({ buffer, filename }); return `http://localhost:5000/uploads/${filename}`; },
     deleteFromStorage: async () => true,
   };
-  const app = createApp({ config, db, storage: media, initializeDatabase: false,
+  const app = createApp({ config, db, storage: media, initializeDatabase,
     transport: { post: async () => { throw new Error('Unexpected outbound request'); } },
     variantGenerator: async () => null });
   const server = app.listen(0, '127.0.0.1');
@@ -40,7 +40,7 @@ async function harness(t, { respond = () => [], storage, getConnection, config =
   const url = `http://127.0.0.1:${server.address().port}`;
   const token = jwt.sign({ id: 1, email: 'audit@example.invalid' }, config.jwtSecret);
   const request = (route, options = {}) => fetch(url + route, { ...options, headers: { Authorization: `Bearer ${token}`, ...options.headers } });
-  return { request, url, queries, uploaded, config };
+  return { request, url, queries, uploaded, config, app };
 }
 function authenticatedRows(sql) {
   return sql.startsWith('SELECT id FROM admins') ? [{ id: 1 }] : [];
@@ -53,6 +53,85 @@ test('configuration fails closed and never includes credential values in errors'
   assert.throws(() => configuration({ R2_ACCOUNT_ID: 'partial' }), /R2 storage requires/);
   assert.throws(() => configuration({ CORS_ORIGINS: 'http://localhost:5173/path' }), /without paths/);
   assert.throws(() => configuration({ TRUST_PROXY_HOPS: 'true' }), /TRUST_PROXY_HOPS/);
+});
+
+test('development CORS defaults to the configured site and explicit origins take precedence', () => {
+  assert.deepEqual(configuration().corsOrigins, ['http://localhost:5173']);
+  assert.deepEqual(configuration({ SITE_URL: 'https://studio.geniemedia.in/' }).corsOrigins,
+    ['https://studio.geniemedia.in']);
+  assert.deepEqual(configuration({ SITE_URL: 'https://studio.geniemedia.in', CORS_ORIGINS: 'http://localhost:5173' }).corsOrigins,
+    ['http://localhost:5173']);
+});
+
+test('production login and upload preflights allow the studio without authentication or database access', async t => {
+  const origin = 'https://studio.geniemedia.in';
+  const config = configuration({ NODE_ENV: 'production', SITE_URL: origin,
+    BASE_URL: 'https://api-studio.geniemedia.in', CORS_ORIGINS: origin, TRUST_PROXY_HOPS: '1' });
+  const h = await harness(t, { config });
+  for (const route of ['/api/login', '/api/images']) {
+    const response = await fetch(h.url + route, { method: 'OPTIONS', headers: {
+      Origin: origin, 'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'authorization,content-type',
+    } });
+    assert.equal(response.status, 204);
+    assert.equal(response.headers.get('access-control-allow-origin'), origin);
+    assert.equal(response.headers.get('access-control-allow-credentials'), 'true');
+    assert.match(response.headers.get('access-control-allow-methods'), /POST/);
+    assert.match(response.headers.get('access-control-allow-headers'), /Authorization/i);
+    assert.match(response.headers.get('access-control-allow-headers'), /Content-Type/i);
+    assert.match(response.headers.get('vary'), /Origin/);
+  }
+  assert.equal(h.queries.length, 0);
+  const login = await fetch(h.url + '/api/login', { method: 'POST', headers: {
+    Origin: origin, 'Content-Type': 'application/json', 'X-Forwarded-Proto': 'https',
+  }, body: JSON.stringify({ email: 'audit@example.invalid', password: 'invalid-password' }) });
+  assert.equal(login.status, 401);
+  assert.equal(login.headers.get('access-control-allow-origin'), origin);
+  const denied = await fetch(h.url + '/api/login', { method: 'OPTIONS', headers: {
+    Origin: 'https://studio.geniemedia.in.unapproved.example.invalid',
+    'Access-Control-Request-Method': 'POST',
+  } });
+  assert.equal(denied.status, 403);
+  assert.equal(denied.headers.get('access-control-allow-origin'), null);
+});
+
+test('slow database initialization serves CORS preflights and temporary errors before becoming ready', async t => {
+  let releaseDatabase;
+  const pendingDatabase = new Promise(resolve => { releaseDatabase = resolve; });
+  t.after(() => releaseDatabase());
+  const h = await harness(t, { initializeDatabase: true, respond: async sql => {
+    if (sql === 'SELECT 1') await pendingDatabase;
+    return /COUNT\(\*\)/.test(sql) ? [{ n: 1 }] : [];
+  } });
+  const headers = { Origin: 'http://localhost:5173' };
+  const preflight = await fetch(h.url + '/api/login', { method: 'OPTIONS', headers: {
+    ...headers, 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type',
+  } });
+  assert.equal(preflight.status, 204);
+  const response = await fetch(h.url + '/api/login', { method: 'POST', headers });
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('access-control-allow-origin'), headers.Origin);
+  assert.equal(response.headers.get('retry-after'), '3');
+  assert.deepEqual(await (await fetch(h.url + '/health')).json(), { status: 'starting' });
+  releaseDatabase();
+  await h.app.locals.ready();
+  assert.equal((await fetch(h.url + '/')).status, 200);
+  const healthy = await fetch(h.url + '/health');
+  assert.equal(healthy.status, 200);
+  assert.deepEqual(await healthy.json(), { status: 'ready' });
+});
+
+test('failed database initialization keeps API routes unavailable with CORS headers', async t => {
+  const h = await harness(t, { initializeDatabase: true, respond: () => { throw new Error('private database error'); } });
+  await assert.rejects(h.app.locals.ready(), /Database initialization failed/);
+  const response = await fetch(h.url + '/api/login', { method: 'POST', headers: { Origin: 'http://localhost:5173' } });
+  assert.equal(response.status, 503);
+  assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+  assert(!(await response.text()).includes('private database error'));
+  assert.equal(h.queries.length, 1);
+  const health = await fetch(h.url + '/health');
+  assert.equal(health.status, 503);
+  assert.deepEqual(await health.json(), { status: 'failed' });
 });
 
 test('admin APIs reject missing, forged, expired, and removed-account tokens', async t => {
@@ -230,7 +309,7 @@ test('configured R2 upload failure does not silently send media to another provi
   assert.equal(unexpectedFallback, false);
 });
 
-test('startup waits for queued schema checks without parallel DDL or real database access', async () => {
+test('readiness waits for queued schema checks without parallel DDL or real database access', async () => {
   let active = 0, maximum = 0, total = 0;
   const db = { query(sql, params, callback) {
     active++; total++; maximum = Math.max(maximum, active);

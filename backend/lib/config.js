@@ -43,7 +43,7 @@ function loadConfig(env = process.env) {
   const baseUrl = httpUrl(env.BASE_URL || `http://localhost:${port}`, "BASE_URL", { production });
   if ([siteUrl, baseUrl].some(value => new URL(value).origin !== value)) throw new Error("SITE_URL and BASE_URL must be origins without paths or queries");
   const db = loadDatabaseConfig(env);
-  const corsOrigins = (env.CORS_ORIGINS || "http://localhost:5173").split(',').map(v => {
+  const corsOrigins = (env.CORS_ORIGINS || siteUrl).split(',').map(v => {
     const value = httpUrl(v.trim(), "CORS_ORIGINS", { production });
     if (new URL(value).origin !== value) throw new Error("CORS_ORIGINS entries must be origins without paths");
     return value;

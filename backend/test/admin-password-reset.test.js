@@ -9,7 +9,7 @@ const jwt = require('jsonwebtoken');
 const { AdminResetError, validateResetInput, resetAdminPassword } = require('../lib/adminPasswordReset');
 const { parseArguments, passwordPrompt } = require('../scripts/reset-admin-password');
 const { loadConfig, loadDatabaseConfig } = require('../lib/config');
-const { createApp } = require('../server');
+const { createApp } = require('../app');
 
 const secret = () => crypto.randomBytes(24).toString('base64url');
 const input = (overrides = {}) => {

@@ -6,7 +6,32 @@ For local development, keep private values in `backend/.env`; this file stays lo
 
 Additional backend variables are `NODE_ENV`, `PORT`, `JWT_TTL`, and `TRUST_PROXY_HOPS`. Set `STORAGE_PROVIDER` to `local`, `r2`, or `hostinger`. R2 uses `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, and `R2_PUBLIC_DOMAIN`. Optional Hostinger integration uses `HOSTINGER_UPLOAD_URL` and `HOSTINGER_UPLOAD_TOKEN`; optional contact delivery uses `CONTACT_WEBHOOK_URL` and `CONTACT_WEBHOOK_TOKEN`. The maintenance backfill uses `BACKFILL_ALLOWED_ORIGINS`. Keep all private credentials and tokens in backend variables without a `VITE_` prefix.
 
-`npm start` starts the server. `npm test` runs isolated tests. Importing `createApp` does not open database connections when tests supply an isolated database and disable initialization. No default admin account is provisioned. Administrator passwords must be bcrypt hashes; plaintext records cannot authenticate.
+`npm start` starts the server. `npm test` runs isolated tests. Import `createApp` from `app.js` for tests; it does not open database connections when tests supply an isolated database and disable initialization. `server.js` is the hosting entry point and always starts a listener, including when imported by Hostinger's launcher. No default admin account is provisioned. Administrator passwords must be bcrypt hashes; plaintext records cannot authenticate.
+
+## Studio login deployment settings
+
+For the backend serving `api-studio.geniemedia.in`, set these public values in the hosting application's environment settings:
+
+```dotenv
+NODE_ENV=production
+SITE_URL=https://studio.geniemedia.in
+BASE_URL=https://api-studio.geniemedia.in
+CORS_ORIGINS=https://studio.geniemedia.in
+```
+
+Keep the existing private database/storage settings and use a private, randomly generated `JWT_SECRET` of at least 32 characters. A weak key prevents the backend from starting. For remote MySQL, configure `DB_SSL=true` with a trusted certificate. Configure `TRUST_PROXY_HOPS` for the actual number of trusted hosting proxies so HTTPS forwarded by the host is recognized. Provider environment variables override `.env`, so changing a local file alone cannot fix the deployed application. Restart/redeploy the backend after changing host variables. The entry point is `server.js` in the `backend` directory with its dependencies installed. Include the new `app.js` alongside it when deploying; uploading only `server.js` is insufficient.
+
+In development, an omitted `CORS_ORIGINS` defaults to `SITE_URL` (or localhost if neither is configured). Production still requires an explicit `CORS_ORIGINS`; separate additional approved origins with commas. The application-level CORS middleware already handles `OPTIONS` before authentication.
+
+On 2026-11-24, both the deployed API root and the login preflight returned a Hostinger HTML **503 Service Unavailable**, without CORS headers. Hostinger logs reported that the app did not call `listen()` within three seconds and identified the unsupported `require.main === module` guard or blocking startup as possible causes. The entry point now listens immediately without that guard and initializes the database asynchronously. API requests receive a temporary JSON 503 with CORS headers until initialization completes; database failure keeps those routes unavailable. `GET /health` returns HTTP 200 with `status: ready` after initialization, or HTTP 503 with `status: starting` / `status: failed`. Configuration validation still happens before listening, so check the startup logs if the host continues returning its own HTML error page.
+
+After restoring the backend, verify without submitting any credentials:
+
+```sh
+curl -i -X OPTIONS https://api-studio.geniemedia.in/api/login -H "Origin: https://studio.geniemedia.in" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type"
+```
+
+Expected: HTTP 204 and `Access-Control-Allow-Origin: https://studio.geniemedia.in`. Use `curl.exe` on Windows PowerShell. The deployed frontend's `VITE_API_URL` must be `https://api-studio.geniemedia.in` at build time.
 
 ## Reset an existing administrator password
 

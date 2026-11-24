@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { AdminCreationError, validateCreationInput, inspectAdminDatabase, createAdmin } = require('../lib/adminCreation');
 const { parseArguments, confirmationText, verifyLiveLogin } = require('../scripts/create-admin');
-const { createApp } = require('../server');
+const { createApp } = require('../app');
 const { loadConfig } = require('../lib/config');
 
 const secret = () => `Aa1!${crypto.randomBytes(24).toString('base64url')}`;

@@ -14,6 +14,8 @@ The JWT signing key must be a privately generated random value of at least 32 ch
 
 Run `npm start` in `backend` and `npm run dev` in `Frontend`. The backend development port is 5000 and the frontend development port is 5173. Configure `CORS_ORIGINS` explicitly if those origins change.
 
+The backend hosting entry point is `backend/server.js`; deploy `backend/app.js` alongside it. It binds the HTTP port before database initialization so Hostinger's launcher can detect the listener. API routes return a temporary 503 until initialization succeeds. `/health` reports database readiness. See [backend deployment settings](backend/README.md#studio-login-deployment-settings) for the studio subdomains and required host variables.
+
 ## Checks
 
 - `backend`: `npm test` runs isolated security/API/storage tests with database and remote storage stubs. It never connects to the production database.
