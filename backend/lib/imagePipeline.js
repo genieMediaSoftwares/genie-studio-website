@@ -52,7 +52,7 @@ async function uploadBufferToHostinger(buffer, filename, storageUpload = uploadT
   return storageUpload(buffer, filename, mimeType);
 }
 
-/** `example.jpg` → `example` */
+/** `1786519468_1786519468526-962658427.jpg` → `1786519468_1786519468526-962658427` */
 function baseNameOf(filenameOrUrl) {
   const file = String(filenameOrUrl).split("/").pop().split("?")[0];
   return file.replace(/\.[^.]+$/, "");

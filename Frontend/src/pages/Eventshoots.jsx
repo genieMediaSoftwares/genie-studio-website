@@ -33,7 +33,7 @@ const CRUMBS = [
 ];
 
 const HERO_IMAGE =
-  "/media-placeholder.png?asset=42";
+  "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png";
 
 const WHATSAPP_URL =
   "https://wa.me/+919966888428?text=" +

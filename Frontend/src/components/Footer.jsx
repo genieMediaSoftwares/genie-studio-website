@@ -55,12 +55,24 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
           {/* Column 1: Company Branding */}
           <div className="space-y-4 min-w-0">
-            {/* Text brand */}
+            {/* Brand row: GenieStudio logo (same as header) + typography */}
             <Link
               to="/"
               className="inline-flex items-center gap-3 sm:gap-3.5 group"
               aria-label="GenieStudio Home"
             >
+              <img
+                src="/GenieStudio.png"
+                alt=""
+                width="30"
+                height="93"
+                className="h-9 sm:h-10 md:h-11 w-auto object-contain flex-shrink-0"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
               <span className="text-xl min-[360px]:text-2xl sm:text-[1.75rem] font-bold tracking-tight text-[#1A1512] leading-none">
                 Genie
                 <span className="text-[var(--accent-color-on-light)]">

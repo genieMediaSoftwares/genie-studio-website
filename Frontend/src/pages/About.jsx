@@ -27,7 +27,7 @@ const WHAT_WE_DO_ITEMS = [
       "With production team assistance, Hollyland Lark M2 wireless backup audio, and full studio support, we help make your recording experience comfortable and hassle-free.",
     ],
     image:
-      "/media-placeholder.png?asset=27",
+      "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
     alt: "Professional microphone and podcast recording setup at Genie Studio",
   },
   {
@@ -40,7 +40,7 @@ const WHAT_WE_DO_ITEMS = [
       "From planning and capturing footage to delivering the final output, we focus on quality, clarity and attention to detail.",
     ],
     image:
-      "/media-placeholder.png?asset=24",
+      "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg",
     alt: "Cinema camera and production setup at Genie Studio",
   },
   {
@@ -52,7 +52,7 @@ const WHAT_WE_DO_ITEMS = [
       "Our video editing and post-production services help transform raw footage into polished, engaging content. From basic editing and visual refinement to final video output, we focus on delivering content that communicates your ideas effectively and maintains professional standards.",
     ],
     image:
-      "/media-placeholder.png?asset=28",
+      "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
     alt: "Video editing and post-production workflow at Genie Studio",
   },
 ];
@@ -179,7 +179,7 @@ const About = () => {
                 ) : (
                   <OptimizedImage
                     sectionKey="about_hero"
-                    src="/media-placeholder.png?asset=21"
+                    src="https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG"
                     alt="Professional podcast recording studio at Genie Studio with cameras, microphones and studio lighting"
                     priority
                     sizes="(max-width: 1024px) 100vw, 50vw"
@@ -212,7 +212,7 @@ const About = () => {
                 ) : (
                   <OptimizedImage
                     sectionKey="about_intro"
-                    src="/media-placeholder.png?asset=33"
+                    src="https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp"
                     alt="Genie Studio podcast and creative production studio setup"
                     loading="eager"
                     sizes="(max-width: 1024px) 100vw, 50vw"
@@ -417,7 +417,7 @@ const About = () => {
                 ) : (
                   <OptimizedImage
                     sectionKey="about_equipment"
-                    src="/media-placeholder.png?asset=35"
+                    src="https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp"
                     alt="Professional camera lens and studio production equipment at Genie Studio"
                     loading="eager"
                     sizes="(max-width: 1024px) 100vw, 42vw"

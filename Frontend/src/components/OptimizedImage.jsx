@@ -85,7 +85,6 @@ export default function OptimizedImage({
   variants = assigned?.variants || (assigned ? undefined : variants);
   lqip = assigned?.lqip || (assigned ? undefined : lqip);
   alt = assigned?.alt_text || alt;
-  if (typeof src === 'string' && src.startsWith('/media-placeholder.png')) alt = 'Media placeholder';
   const [loaded, setLoaded] = useState(() => seen.has(src));
 
   // Anything the caller passes wins; the manifest is the fallback. This is what

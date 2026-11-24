@@ -233,7 +233,7 @@ export default function BulkUrlManager({
   const L = {
     cardTitle: "Bulk Image URLs",
     cardSubtitle: "One URL per line — preview, then update",
-    placeholder: "https://media.example.invalid/uploads/image1.jpg\nhttps://media.example.invalid/uploads/image2.webp",
+    placeholder: "https://geniestudio.in/uploads/image1.jpg\nhttps://geniestudio.in/uploads/image2.webp",
     updateButton: "Update",
     replaceButton: "Replace All",
     replaceTitle: "Replace everything?",

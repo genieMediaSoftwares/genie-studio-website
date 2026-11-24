@@ -71,7 +71,7 @@ function PublishModal({ blog, onConfirm, onCancel, loading }) {
   );
 }
 
-const FALLBACK = "/media-placeholder.png";
+const FALLBACK = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80";
 
 function BlogCard({ blog, onEdit, onDelete, onPublish, onUnpublish, formatDate }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -745,7 +745,7 @@ export default function AdminBlogs() {
       />
 
       <header className="relative min-h-[40vh] sm:min-h-[55vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/media-placeholder.png')" }} />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1400&q=80')" }} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
         <div className="relative z-10 text-center px-4">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight mb-2 sm:mb-3">Blog Management</h1>

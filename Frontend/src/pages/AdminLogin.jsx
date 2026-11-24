@@ -1,6 +1,6 @@
 import { getToken, setToken } from "../lib/auth";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import BASE_URL from "../api";
 
@@ -11,11 +11,15 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const token = getToken();
-    if (token) navigate("/admin/blogs");
-  }, [navigate]);
+    if (token) {
+      const destination = location.state?.from?.pathname || "/admin/blogs";
+      navigate(destination, { replace: true });
+    }
+  }, [navigate, location]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -49,7 +53,8 @@ export default function AdminLogin() {
 
       if (data.success) {
         setToken(data.token);
-        navigate("/admin/blogs");
+        const destination = location.state?.from?.pathname || "/admin/blogs";
+        navigate(destination, { replace: true });
       } else {
         setError(data.message || "Invalid credentials.");
       }
@@ -75,7 +80,7 @@ export default function AdminLogin() {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
-              "url('/media-placeholder.png')",
+              "url('https://images.unsplash.com/39/lIZrwvbeRuuzqOoWJUEn_Photoaday_CSD%20%281%20of%201%29-5.jpg?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
           }}
         />
         <div className="absolute inset-0 bg-black/60" />

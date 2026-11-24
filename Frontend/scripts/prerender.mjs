@@ -83,5 +83,6 @@ try {
       ? '<?xml version="1.0"?><rss version="2.0"><channel><title>Genie Studio</title><description>See the website blog for published articles.</description></channel></rss>'
       : '<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>');
   }
+  await writeFile(resolve(root, 'dist/seo-checks.json'), JSON.stringify({ publicRoutes: paths, indexable, blogSnapshot: fetchData, checks: ['unique titles', 'unique descriptions', 'one H1', 'Open Graph', 'static HTML'] }, null, 2));
   console.log(`Prerendered ${paths.length} public routes and private/error pages. Indexing ${indexable ? 'enabled' : 'disabled (unconfirmed release)'}.`);
 } finally { await server.close(); }

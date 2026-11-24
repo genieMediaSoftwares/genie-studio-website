@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getToken, getAuthHeader, clearToken } from "./auth";
 /**
  * The ONE image API service used by every screen.
  *
@@ -12,10 +12,7 @@ import { getToken } from "./auth";
 import BASE_URL from "../api";
 import { IMAGE_MESSAGES } from "./imageSpec";
 
-const authHeader = () => {
-  const token = getToken();
-  return token ? { Authorization: token } : {};
-};
+const authHeader = () => getAuthHeader();
 
 const parseJson = async (res) => {
   try {
@@ -30,14 +27,20 @@ const parseJson = async (res) => {
  * misconfigured endpoint never surfaces as a vague "upload failed".
  */
 const describeHttpError = (res, data, action) => {
+  if (
+    res.status === 401 ||
+    res.status === 403 ||
+    /no token|token expired|invalid.*token/i.test(data?.message || "")
+  ) {
+    clearToken();
+    return "Your admin session has expired or you are not logged in. Please log in again.";
+  }
+
   if (data?.message) return data.message;
 
   switch (res.status) {
     case 400:
       return `The server rejected the image. Please check the file and try again.`;
-    case 401:
-    case 403:
-      return "Your admin session has expired. Please log in again.";
     case 404:
       return `Image API not found at ${BASE_URL}/api/images — the backend running there does not expose this route yet. Deploy the latest backend/server.js, or point VITE_API_URL at a backend that has it.`;
     case 413:
@@ -80,6 +83,17 @@ export function uploadImage(file, meta = {}, { onProgress, signal } = {}) {
       return;
     }
 
+    const token = getToken();
+    if (!token) {
+      clearToken();
+      reject(
+        new Error(
+          "Your admin session has expired or you are not logged in. Please log in again to upload images."
+        )
+      );
+      return;
+    }
+
     const formData = new FormData();
     formData.append("image", file);
     if (meta.width) formData.append("width", String(meta.width));
@@ -106,6 +120,20 @@ export function uploadImage(file, meta = {}, { onProgress, signal } = {}) {
         data = JSON.parse(xhr.responseText);
       } catch {
         data = null;
+      }
+
+      if (
+        xhr.status === 401 ||
+        xhr.status === 403 ||
+        /no token|token expired|invalid.*token/i.test(data?.message || "")
+      ) {
+        clearToken();
+        reject(
+          new Error(
+            "Your admin session has expired or you are not logged in. Please log in again to upload images."
+          )
+        );
+        return;
       }
 
       if (xhr.status < 200 || xhr.status >= 300) {

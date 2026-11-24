@@ -11,6 +11,19 @@ function httpUrl(value, name, { optional = false, production = false } = {}) {
   return url.href.replace(/\/$/, "");
 }
 
+function loadDatabaseConfig(env = process.env) {
+  const missing = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'].filter(key => !env[key]?.trim());
+  if (missing.length) throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  const dbTls = env.DB_SSL === 'true';
+  if (env.NODE_ENV === 'production' && !['localhost', '127.0.0.1', '::1'].includes(env.DB_HOST) && !dbTls) {
+    throw new Error('Remote production MySQL connections require DB_SSL=true and a trusted server certificate');
+  }
+  return {
+    host: env.DB_HOST, user: env.DB_USER, password: env.DB_PASSWORD, database: env.DB_NAME,
+    ...(dbTls ? { ssl: { rejectUnauthorized: true, ...(env.DB_SSL_CA ? { ca: env.DB_SSL_CA } : {}) } } : {}),
+  };
+}
+
 function loadConfig(env = process.env) {
   const production = env.NODE_ENV === "production";
   const missing = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME", "JWT_SECRET"]
@@ -29,10 +42,7 @@ function loadConfig(env = process.env) {
   const siteUrl = httpUrl(env.SITE_URL || "http://localhost:5173", "SITE_URL", { production });
   const baseUrl = httpUrl(env.BASE_URL || `http://localhost:${port}`, "BASE_URL", { production });
   if ([siteUrl, baseUrl].some(value => new URL(value).origin !== value)) throw new Error("SITE_URL and BASE_URL must be origins without paths or queries");
-  const dbTls = env.DB_SSL === 'true';
-  if (production && !['localhost', '127.0.0.1', '::1'].includes(env.DB_HOST) && !dbTls) {
-    throw new Error("Remote production MySQL connections require DB_SSL=true and a trusted server certificate");
-  }
+  const db = loadDatabaseConfig(env);
   const corsOrigins = (env.CORS_ORIGINS || "http://localhost:5173").split(',').map(v => {
     const value = httpUrl(v.trim(), "CORS_ORIGINS", { production });
     if (new URL(value).origin !== value) throw new Error("CORS_ORIGINS entries must be origins without paths");
@@ -44,11 +54,11 @@ function loadConfig(env = process.env) {
   if (storageProvider === 'r2' && r2Fields.some(k => !env[k])) throw new Error(`R2 storage requires ${r2Fields.join(', ')}`);
   if (production && storageProvider === 'hostinger' && !env.HOSTINGER_UPLOAD_TOKEN) throw new Error('Production Hostinger uploads require HOSTINGER_UPLOAD_TOKEN and a handler that verifies it');
   if (storageProvider === 'hostinger' && !env.HOSTINGER_UPLOAD_URL) throw new Error("Hostinger storage requires HOSTINGER_UPLOAD_URL");
-  const jwtTtl = env.JWT_TTL || '1h';
+  const jwtTtl = env.JWT_TTL || '7d';
   if (!/^\d+[smhd]$/.test(jwtTtl)) throw new Error("JWT_TTL must be a duration such as 1h");
   return {
     production, port, trustProxy, siteUrl, baseUrl, corsOrigins, jwtSecret: env.JWT_SECRET, jwtTtl,
-    db: { host: env.DB_HOST, user: env.DB_USER, password: env.DB_PASSWORD, database: env.DB_NAME, ...(dbTls ? { ssl: { rejectUnauthorized: true, ...(env.DB_SSL_CA ? { ca: env.DB_SSL_CA } : {}) } } : {}) },
+    db,
     storageProvider,
     uploadDir: path.resolve(__dirname, '../public/uploads'),
     r2: {
@@ -63,4 +73,4 @@ function loadConfig(env = process.env) {
   };
 }
 
-module.exports = { loadConfig, httpUrl };
+module.exports = { loadConfig, loadDatabaseConfig, httpUrl };

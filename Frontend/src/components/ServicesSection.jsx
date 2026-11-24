@@ -19,7 +19,7 @@ const SERVICES = [
     title: "Podcast Shoots",
     link: "/services/podcast-shoots",
     image:
-      "/media-placeholder.png?asset=21",
+      "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
     imageAlt:
       "Genie Studio soundproof podcast studio setup with cameras and studio microphones",
     description:
@@ -38,7 +38,7 @@ const SERVICES = [
     title: "Product Shoots",
     link: "/services/product-shoots",
     image:
-      "/media-placeholder.png?asset=43",
+      "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
     imageAlt:
       "Commercial and e-commerce product photography at Genie Studio",
     description:
@@ -57,7 +57,7 @@ const SERVICES = [
     title: "Corporate Shoots",
     link: "/services/corporate-shoots",
     image:
-      "/media-placeholder.png?asset=41",
+      "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
     imageAlt:
       "Executive portraits and corporate workspace photography by Genie Studio",
     description:
@@ -76,7 +76,7 @@ const SERVICES = [
     title: "Event Shoots",
     link: "/services/event-shoots",
     image:
-      "/media-placeholder.png?asset=42",
+      "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
     imageAlt:
       "Corporate event, conference, and launch photography by Genie Studio",
     description:
@@ -95,7 +95,7 @@ const SERVICES = [
     title: "Professional Shoots",
     link: "/services/professional-shoots",
     image:
-      "/media-placeholder.png?asset=54",
+      "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
     imageAlt:
       "Personal branding portrait session at Genie Studio Visakhapatnam",
     description:
@@ -114,7 +114,7 @@ const SERVICES = [
     title: "Business Portfolio",
     link: "/services/business-portfolio-shoots",
     image:
-      "/media-placeholder.png?asset=47",
+      "https://geniestudio.in/uploads/1786602496_1786602495549-844717374.jpg",
     imageAlt:
       "Business portfolio and brand storytelling photography by Genie Studio",
     description:

@@ -32,7 +32,7 @@ export function PublicImagesProvider({ children }) {
   return <PublicImages.Provider value={images}>{children}</PublicImages.Provider>;
 }
 
-// Local placeholders stay visible until approved images are assigned. Explicit keys disambiguate reused slots.
+// Existing layouts keep their approved fallback images. Explicit keys disambiguate reused images.
 // eslint-disable-next-line react-refresh/only-export-components -- This hook reads the provider defined in this module.
 export function useAssignedImage(src, sectionKey) {
   const images = useContext(PublicImages);

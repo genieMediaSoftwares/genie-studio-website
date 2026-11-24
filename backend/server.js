@@ -1223,7 +1223,7 @@ app.use("/share/", (req, res) => {
       const blog        = result[0];
       const title       = escapeHtml(blog.title || "GenieStudio Blog");
       const description = escapeHtml(blog.metaDescription || "Read this article on GenieStudio");
-      const image       = escapeHtml(blog.image || `${config.siteUrl}/media-placeholder.png`);
+      const image       = escapeHtml(blog.image || `${config.siteUrl}/GenieStudio.png`);
       const pageUrl = `${config.siteUrl}/blog/${blog.permalink.split('/').map(encodeURIComponent).join('/')}`;
       const escapedPageUrl = escapeHtml(pageUrl);
 
@@ -1292,31 +1292,22 @@ app.locals.ready = async () => {
 return app;
 }
 
-if (require.main === module || process.env.NODE_ENV === "production") {
+if (require.main === module) {
   try {
     const config = loadConfig();
     const app = createApp({ config });
-
-    const server = app.listen(config.port, () => {
-      console.log(`Backend listening on port ${config.port}`);
-    });
-
-    server.requestTimeout = 30000;
-    server.headersTimeout = 15000;
-
     app.locals.ready().then(() => {
-      console.log("Backend database initialization completed");
-    }).catch((err) => {
-      console.error("Backend database initialization failed:", err.message);
-      server.close();
+      const server = app.listen(config.port, () => console.log(`Backend listening on port ${config.port}`));
+      server.requestTimeout = 30000;
+      server.headersTimeout = 15000;
+    }).catch(() => {
+      console.error('Backend database initialization failed. Check connectivity, TLS, and schema privileges.');
       app.locals.db.end();
       process.exitCode = 1;
     });
-
   } catch (err) {
     console.error(`Backend configuration error: ${err.message}`);
     process.exitCode = 1;
   }
 }
-
 module.exports = { createApp };

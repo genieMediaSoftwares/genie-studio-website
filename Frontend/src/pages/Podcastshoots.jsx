@@ -28,7 +28,7 @@ const CRUMBS = [
 ];
 
 const HERO_IMAGE =
-  "/media-placeholder.png?asset=33";
+  "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp";
 
 const WHATSAPP_URL =
   "https://wa.me/+919966888428?text=" +
@@ -84,11 +84,11 @@ const DELIVERABLES = [
 
 const DELIVERABLE_IMAGES = [
   {
-    src: "/media-placeholder.png?asset=32",
+    src: "https://geniestudio.in/uploads/1786531742_1786531741887-833036636.webp",
     alt: "Multi-camera 4K podcast video recording at Genie Studio in Visakhapatnam",
   },
   {
-    src: "/media-placeholder.png?asset=27",
+    src: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
     alt: "Studio podcast microphone and audio recording setup at Genie Studio Vizag",
   },
 ];
@@ -127,7 +127,7 @@ const PORTFOLIO_PREVIEWS = [
     description:
       "Two-person interviews and founder conversations filmed with studio lighting, clear framing and synchronized multi-track audio in Yendada, Vizag.",
     image:
-      "/media-placeholder.png?asset=31",
+      "https://geniestudio.in/uploads/1786531741_1786531740123-858872067.webp",
     alt: "Podcast episode framing and artwork presentation at Genie Studio",
   },
   {
@@ -136,7 +136,7 @@ const PORTFOLIO_PREVIEWS = [
     description:
       "Recorded sessions edited into full-length YouTube episodes, clean audio feeds and vertical highlight clips prepared for social channels.",
     image:
-      "/media-placeholder.png?asset=28",
+      "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
     alt: "Podcast episode exported in multiple formats for YouTube and social channels",
   },
 ];

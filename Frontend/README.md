@@ -12,6 +12,6 @@ Preview builds are noindex with a blocking robots.txt and empty sitemap. Enable 
 
 For Vercel: root directory `Frontend`, build command `npm run build`, output directory `dist`. `vercel.json` uses clean URLs and static routing; unknown paths use the custom 404 document. It does not deploy the Express backend. Set the documented frontend/build variables in the appropriate Vercel environment. Do not set backend secrets in Vercel frontend build variables.
 
-Image assignments load through the shared public image provider. This source copy uses local neutral placeholders until approved media is assigned; the original source-image manifest is empty. Gallery/blog empty states do not invent replacement records. Tokens are stored per browser tab and expire; the backend verifies every protected operation.
+Image assignments load through the shared public image provider. Existing approved images remain the fallback when the backend is unavailable. Gallery/blog empty states do not invent replacement records. Tokens are stored per browser tab and expire; the backend verifies every protected operation.
 
-Before a production release, verify mobile and desktop layouts, keyboard navigation, login, uploads, published articles, media assignments, and contact delivery against the configured backend. Keep preview deployments non-indexable until the production settings and content snapshot are confirmed.
+Browser/mobile visual verification is still required before release because the browser-control host was unavailable during the local review. See `../PRODUCTION_REVIEW.md`.

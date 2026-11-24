@@ -146,8 +146,18 @@ export default function ImageUploader({
       {/* ── Validation error ─────────────────────────────────────────────── */}
       {error && (
         <div className="mt-2.5 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3.5 py-2.5">
-          <AlertCircle size={13} className="text-red-500 shrink-0 mt-0.5" />
-          <p className="text-xs font-semibold text-red-700">{error}</p>
+          <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-red-700">{error}</p>
+            {/session|log\s*in|token/i.test(error) && (
+              <a
+                href="/admin"
+                className="inline-block mt-1.5 text-xs font-bold text-[#6B4A2D] underline hover:text-[#533821]"
+              >
+                Go to Admin Login &rarr;
+              </a>
+            )}
+          </div>
         </div>
       )}
 

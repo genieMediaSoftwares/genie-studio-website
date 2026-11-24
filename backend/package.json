@@ -5,7 +5,11 @@
   "main": "server.js",
   "scripts": {
     "test": "node --test",
-    "start": "node server.js"
+    "start": "node server.js",
+    "admin:reset-password": "node scripts/reset-admin-password.js",
+    "admin:create": "node scripts/create-admin.js --create",
+    "admin:check": "node scripts/create-admin.js --check",
+    "admin:verify-login": "node scripts/create-admin.js --verify-login"
   },
   "keywords": [],
   "author": "",

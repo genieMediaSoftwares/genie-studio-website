@@ -47,6 +47,23 @@ const Header = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
 
           <Link to="/" className="flex items-center gap-2.5 sm:gap-3">
+            {/* 117×264 WebP rather than the 409×921 PNG the favicon still uses —
+                the logo never renders above 44px tall. width/height are set so
+                the header does not reflow while it loads. */}
+            {/* alt="" — the adjacent "GenieStudio" wordmark already names the
+                link, so a description here would be read out twice. */}
+            <img
+              src="/GenieStudio.png"
+              alt=""
+              width="409"
+              height="921"
+              className="h-9 sm:h-10 md:h-11 w-auto object-contain flex-shrink-0"
+              fetchPriority="high"
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
             <span className="text-base min-[360px]:text-lg md:text-2xl lg:text-3xl font-semibold text-white whitespace-nowrap">
               Genie<span className="text-[var(--accent-color)]">Studio</span>
             </span>

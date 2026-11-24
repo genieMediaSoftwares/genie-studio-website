@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getToken, getAuthHeader, clearToken } from "./auth";
 import BASE_URL from "../api";
 
 /**
@@ -6,10 +6,7 @@ import BASE_URL from "../api";
  * manager writes. One flat ordered list, no categories.
  */
 
-const authHeader = () => {
-  const token = getToken();
-  return token ? { Authorization: token } : {};
-};
+const authHeader = () => getAuthHeader();
 
 const parseJson = async (res) => {
   try {

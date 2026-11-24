@@ -32,7 +32,7 @@ const CRUMBS = [
 ];
 
 const HERO_IMAGE =
-  "/media-placeholder.png?asset=26";
+  "https://geniestudio.in/uploads/1786531726_1786531724729-939039825.webp";
 
 const WHATSAPP_URL =
   "https://wa.me/+919966888428?text=" +
@@ -112,19 +112,19 @@ const PROCESS_STEPS = [
 const RECENT_PRODUCT_SHOOTS = [
   {
     id: "angles",
-    src: "/media-placeholder.png?asset=40",
+    src: "https://geniestudio.in/uploads/1786533208_1786533208088-576412932.webp",
     alt: "Studio product photography showing multiple angles and lighting detail at Genie Studio in Visakhapatnam",
     caption: "Multi-Angle Studio Framing",
   },
   {
     id: "lifestyle",
-    src: "/media-placeholder.png?asset=36",
+    src: "https://geniestudio.in/uploads/1786533193_1786533192518-337638744.webp",
     alt: "Lifestyle and context product photography created by Genie Studio in Vizag",
     caption: "Lifestyle & Context Styling",
   },
   {
     id: "background",
-    src: "/media-placeholder.png?asset=3",
+    src: "https://geniestudio.in/uploads/1786519473_1786519471789-580284373.jpg",
     alt: "Commercial product photography with clean background variations at Genie Studio",
     caption: "Commercial & E-Commerce Presentation",
   },

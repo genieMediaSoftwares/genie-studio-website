@@ -27,28 +27,28 @@ const Home = () => {
       category: "Cameras",
       title: "Sony A7M4 & Sony A7M3",
       description: "Full-frame Sony A7M4 and Sony A7M3 cameras for ultra-sharp 4K video recording and high-resolution photography",
-      image: "/media-placeholder.png?asset=34"
+      image: "https://geniestudio.in/uploads/1786531746_1786531746647-991825491.webp"
     },
     {
       icon: Mic,
       category: "Microphones",
       title: "Rode PodMics & Audio Interface",
       description: "Broadcast-quality Rode PodMics with dedicated audio interface for rich, noise-free studio sound",
-      image: "/media-placeholder.png?asset=35"
+      image: "https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp"
     },
     {
       icon: Lightbulb,
       category: "Lighting Setup",
       title: "Digitek & Godox LC500R",
       description: "Professional Digitek studio lighting paired with Godox LC500R handheld light sticks for versatile creative illumination",
-      image: "/media-placeholder.png?asset=30"
+      image: "https://geniestudio.in/uploads/1786531741_1786531740098-646092175.webp"
     },
     {
       icon: Sliders,
       category: "Wireless Audio",
       title: "Hollyland Lark M2 (Backup)",
       description: "Hollyland Lark M2 wireless microphone system ensuring seamless, interference-free backup and mobile audio recording",
-      image: "/media-placeholder.png?asset=24"
+      image: "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg"
     }
   ];
 
@@ -110,6 +110,8 @@ const Home = () => {
       </h1>
 
       <PodcastHero />
+      {/* <Headings /> — disabled. Re-enable by restoring the import:
+          import Headings from "../components/Headings" */}
       <section
         id="about"
         className="py-10 sm:py-14 md:py-16 bg-white"

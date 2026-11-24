@@ -36,10 +36,10 @@ const CRUMBS = [
 ];
 
 const HERO_IMAGE =
-  "/media-placeholder.png?asset=5";
+  "https://geniestudio.in/uploads/1786519476_1786519476246-824255335.jpg";
 
 const CTA_IMAGE =
-  "/media-placeholder.png?asset=21";
+  "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG";
 
 const WHATSAPP_URL =
   "https://wa.me/+919966888428?text=" +
@@ -61,21 +61,21 @@ const DELIVERABLES = [
     icon: Camera,
     title: "Professional Portraits",
     description: "High-quality individual and executive portraits.",
-    img: "/media-placeholder.png?asset=54",
+    img: "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
     alt: "Executive portrait photography for business portfolios in Visakhapatnam by GenieStudio",
   },
   {
     icon: Users,
     title: "Team & Culture Photos",
     description: "Professional team photographs and workplace culture images.",
-    img: "/media-placeholder.png?asset=41",
+    img: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
     alt: "Corporate team photography and office workplace session in Vizag by GenieStudio",
   },
   {
     icon: Sparkles,
     title: "Edited Images",
     description: "Carefully selected and professionally retouched photographs.",
-    img: "/media-placeholder.png?asset=47",
+    img: "https://geniestudio.in/uploads/1786602496_1786602495549-844717374.jpg",
     alt: "Edited business portfolio photographs and post-production by GenieStudio",
   },
   {
@@ -83,7 +83,7 @@ const DELIVERABLES = [
     title: "Digital & Print-Ready Files",
     description:
       "High-resolution images suitable for websites, presentations and marketing.",
-    img: "/media-placeholder.png?asset=6",
+    img: "https://geniestudio.in/uploads/1786520942_1786520939441-392375551.webp",
     alt: "Business headshot photography ready for LinkedIn, websites and company profiles",
   },
 ];

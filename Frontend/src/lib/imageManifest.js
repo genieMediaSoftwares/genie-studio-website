@@ -5,7 +5,7 @@
  * The manifest is keyed by the ORIGINAL image URL, which is the only thing the
  * pages know about:
  *
- *   "/media-placeholder.png?asset=481": {
+ *   "https://geniestudio.in/uploads/1786…-962658427.jpg": {
  *     width, height, lqip,
  *     variants: { webp: { 400: url, … }, avif: { 400: url, … } }
  *   }

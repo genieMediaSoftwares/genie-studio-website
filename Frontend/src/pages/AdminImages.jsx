@@ -121,11 +121,18 @@ export default function AdminImages() {
   // Nav badge counts
   useEffect(() => {
     let cancelled = false;
+    const curToken = getToken();
+    if (!curToken) return;
+
     (async () => {
       try {
         const res = await fetch(`${BASE_URL}/api/admin/blogs`, {
-          headers: { Authorization: token },
+          headers: { Authorization: `Bearer ${curToken}` },
         });
+        if (res.status === 401 || res.status === 403) {
+          clearToken();
+          return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled || !Array.isArray(data)) return;
@@ -140,7 +147,7 @@ export default function AdminImages() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, []);
 
   const handleUploaded = (image) => {
     library.addImage(image);
@@ -170,7 +177,12 @@ export default function AdminImages() {
       showToast("✅ Image successfully assigned to section!");
       setAssigningSlot(null);
     } catch (err) {
-      showToast(err.message || "Could not assign image.", "error");
+      if (/session|log\s*in|token/i.test(err.message)) {
+        showToast("Admin session expired. Please log in again.", "error");
+        setTimeout(() => navigate("/admin"), 1500);
+      } else {
+        showToast(err.message || "Could not assign image.", "error");
+      }
     } finally {
       setAssigningLoading(false);
     }
@@ -491,7 +503,7 @@ export default function AdminImages() {
                                             onError={(e) => {
                                               e.currentTarget.onerror = null;
                                               e.currentTarget.src =
-                                                "/media-placeholder.png";
+                                                "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80";
                                             }}
                                           />
                                           {/* Hover Overlay with Quick Preview & Copy */}
@@ -798,17 +810,38 @@ export default function AdminImages() {
                 </div>
               ) : (
                 <div className="py-4">
-                  <ImageUploader
-                    autoUpload
-                    showPreview={true}
-                    inputId="slot-modal-upload"
-                    onUpload={handleUploaded}
-                    onError={(msg) => showToast(msg, "error")}
-                  />
-                  <p className="text-xs text-[#7A6E63] text-center mt-3">
-                    Supported formats: JPG, PNG, WebP (max 5MB). Once uploaded, it will be automatically assigned to{" "}
-                    <strong>{assigningSlot.section_name}</strong>.
-                  </p>
+                  {!getToken() ? (
+                    <div className="text-center py-8 px-4 bg-amber-50 border border-amber-200 rounded-xl my-2">
+                      <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-2">
+                        <AlertCircle size={20} />
+                      </div>
+                      <h4 className="text-sm font-bold text-[#1A1512]">Admin Session Expired</h4>
+                      <p className="text-xs text-[#7A6E63] mt-1 mb-4 max-w-sm mx-auto">
+                        Your admin login token has expired or is missing. Please log in again to upload and manage section images.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/admin")}
+                        className="px-5 py-2.5 rounded-xl bg-[#5B3E28] text-white text-xs font-bold hover:bg-[#432C1B] transition shadow"
+                      >
+                        Log In Again &rarr;
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <ImageUploader
+                        autoUpload
+                        showPreview={true}
+                        inputId="slot-modal-upload"
+                        onUpload={handleUploaded}
+                        onError={(msg) => showToast(msg, "error")}
+                      />
+                      <p className="text-xs text-[#7A6E63] text-center mt-3">
+                        Supported formats: JPG, PNG, WebP (max 5MB). Once uploaded, it will be automatically assigned to{" "}
+                        <strong>{assigningSlot.section_name}</strong>.
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>

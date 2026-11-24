@@ -67,7 +67,7 @@ const PRODUCTION_CATEGORIES = [
     description:
       "We have worked on podcast productions featuring professionals, business owners, entrepreneurs and individuals sharing their knowledge, experiences and perspectives. From recording complete podcast episodes to producing visually engaging multi-camera conversations, we focus on capturing authentic discussions with professional audio and video quality.",
     image:
-      "/media-placeholder.png?asset=33",
+      "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
     alt: "Multi-camera podcast video recording session at Genie Studio in Visakhapatnam",
     servicePath: "/services/podcast-shoots",
     serviceLabel: "Explore Podcast Shoots services",
@@ -79,7 +79,7 @@ const PRODUCTION_CATEGORIES = [
     description:
       "A podcast conversation often holds several valuable moments worth sharing independently. We transform selected portions of longer podcast recordings into short-form videos, highlighting important discussions, insights and memorable moments. These videos are prepared for platforms such as Instagram, YouTube Shorts and other digital channels.",
     image:
-      "/media-placeholder.png?asset=27",
+      "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
     alt: "Podcast audio recording and short-form highlight clip production at Genie Studio",
     servicePath: "/services/podcast-shoots",
     serviceLabel: "Learn about Podcast Shoots production",
@@ -91,7 +91,7 @@ const PRODUCTION_CATEGORIES = [
     description:
       "We have produced interview-style videos featuring professionals, industry experts, business representatives and special guests. Our work focuses on presenting conversations naturally while maintaining clear audio, professional framing and a comfortable recording environment.",
     image:
-      "/media-placeholder.png?asset=12",
+      "https://geniestudio.in/uploads/1786520957_1786520953868-540240767.webp",
     alt: "Professional interview and expert conversation framing at Genie Studio",
     servicePath: "/services/professional-shoots",
     serviceLabel: "View Professional Shoots services",
@@ -103,7 +103,7 @@ const PRODUCTION_CATEGORIES = [
     description:
       "We work on promotional video productions that help businesses showcase their services, products, facilities and brand identity. From concept-based promotional shoots to business presentations, we focus on communicating the message through compelling visuals and structured storytelling.",
     image:
-      "/media-placeholder.png?asset=43",
+      "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
     alt: "Product and promotional video shoot setup at Genie Studio",
     servicePath: "/services/product-shoots",
     serviceLabel: "Explore Product Shoots services",
@@ -115,7 +115,7 @@ const PRODUCTION_CATEGORIES = [
     description:
       "We create short-form video content for businesses, brands and individual creators. This includes informational reels, talking-head videos, promotional clips, educational content and creative social media videos. Our production approach focuses on presenting ideas clearly while maintaining visual consistency and audience engagement.",
     image:
-      "/media-placeholder.png?asset=54",
+      "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
     alt: "Creator filming social media reels and short-form content at Genie Studio",
     servicePath: "/services/business-portfolio-shoots",
     serviceLabel: "Explore Business Portfolio Shoots",
@@ -127,7 +127,7 @@ const PRODUCTION_CATEGORIES = [
     description:
       "We produce corporate and brand-focused videos that help businesses introduce their organisation, communicate their capabilities and present their work professionally. These productions are designed to give audiences a better understanding of the people, services and ideas behind a business.",
     image:
-      "/media-placeholder.png?asset=41",
+      "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
     alt: "Corporate and brand video production by Genie Studio",
     servicePath: "/services/corporate-shoots",
     serviceLabel: "View Corporate Shoots services",
@@ -139,7 +139,7 @@ const PRODUCTION_CATEGORIES = [
     description:
       "Beyond recording, we also handle video editing and post-production requirements. From assembling raw footage and refining conversations to creating short clips, adding visual elements and preparing final video outputs, we help turn recorded material into polished content ready for publication.",
     image:
-      "/media-placeholder.png?asset=47",
+      "https://geniestudio.in/uploads/1786602496_1786602495549-844717374.jpg",
     alt: "Video editing and post-production workstation and creative studio work at Genie Studio",
     servicePath: "/services",
     serviceLabel: "Browse all Genie Studio services",
@@ -563,7 +563,7 @@ const Portfolio = () => {
                   ) : (
                     <OptimizedImage
                       sectionKey="portfolio_story_callout"
-                    src="/media-placeholder.png?asset=44"
+                    src="https://geniestudio.in/uploads/1786601936_1786601934919-89162093.jpg"
                       alt="Genie Studio creative production environment in Visakhapatnam"
                       sizes="(max-width: 1024px) 100vw, 42vw"
                       className="w-full h-full"
@@ -627,7 +627,7 @@ const Portfolio = () => {
                 ) : (
                   <OptimizedImage
                     sectionKey="portfolio_cta_banner"
-                    src="/media-placeholder.png?asset=35"
+                    src="https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp"
                     alt="Professional cinema camera lens at Genie Studio"
                     sizes="(max-width: 1024px) 100vw, 25vw"
                     className="w-full h-full"

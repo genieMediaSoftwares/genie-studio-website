@@ -11,6 +11,10 @@
         "Genie Studio Visakhapatnam"
       ],
       "url": "https://geniestudio.in/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://geniestudio.in/GenieStudio.png"
+      },
       "description": "Genie Media and Studio, operating as Genie Studio, is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
       "sameAs": [
         "https://www.instagram.com/itsgeniestudio_official/"
@@ -26,6 +30,8 @@
         "Genie Studio Visakhapatnam"
       ],
       "url": "https://geniestudio.in/",
+      "image": "https://geniestudio.in/GenieStudio.png",
+      "logo": "https://geniestudio.in/GenieStudio.png",
       "description": "Genie Studio is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
       "telephone": "+91 9032845433",
       "email": "admin@geniestudio.in",

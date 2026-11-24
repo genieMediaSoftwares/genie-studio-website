@@ -5,7 +5,7 @@ import { copyToClipboard } from "../lib/imageApi";
 import { formatBytes, formatUploadDate } from "../lib/imageSpec";
 import { bestVariantUrl } from "../lib/imageManifest";
 
-const FALLBACK = "/media-placeholder.png";
+const FALLBACK = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80";
 
 function ImageCard({ image, onSelect, onRename, onDelete, selected }) {
   const [copied, setCopied] = useState(false);

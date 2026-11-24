@@ -1,9 +1,9 @@
-import { getToken } from "./auth";
+import { getToken, getAuthHeader, clearToken } from "./auth";
 import BASE_URL from "../api.js";
 
 const authHeader = () => {
-  const token = getToken();
-  return token ? { Authorization: token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+  const headers = getAuthHeader();
+  return { ...headers, "Content-Type": "application/json" };
 };
 
 export const SECTION_CATEGORIES = [
@@ -33,11 +33,20 @@ export async function fetchSiteSections(category = "all") {
 }
 
 export async function assignSectionImage(section_key, imageUrl, altText = "") {
+  const token = getToken();
+  if (!token) {
+    clearToken();
+    throw new Error("Your admin session has expired. Please log in again.");
+  }
   const res = await fetch(`${BASE_URL}/api/site-sections/${section_key}`, {
     method: "PUT",
     headers: authHeader(),
     body: JSON.stringify({ image_url: imageUrl, alt_text: altText }),
   });
+  if (res.status === 401 || res.status === 403) {
+    clearToken();
+    throw new Error("Your admin session has expired. Please log in again.");
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `Failed to assign image (HTTP ${res.status})`);
@@ -48,10 +57,19 @@ export async function assignSectionImage(section_key, imageUrl, altText = "") {
 }
 
 export async function clearSectionImage(section_key) {
+  const token = getToken();
+  if (!token) {
+    clearToken();
+    throw new Error("Your admin session has expired. Please log in again.");
+  }
   const res = await fetch(`${BASE_URL}/api/site-sections/${section_key}`, {
     method: "DELETE",
     headers: authHeader(),
   });
+  if (res.status === 401 || res.status === 403) {
+    clearToken();
+    throw new Error("Your admin session has expired. Please log in again.");
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `Failed to reset image (HTTP ${res.status})`);

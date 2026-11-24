@@ -21,7 +21,7 @@ const PODCAST_SLIDES = [
   {
     id: 1,
     image:
-      "/media-placeholder.png?asset=21",
+      "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
     title: "Genie Studio Podcast Setup",
     caption:
       "Soundproof podcast studio in Yendada, Visakhapatnam with studio microphones and multi-camera 4K lighting.",
@@ -30,7 +30,7 @@ const PODCAST_SLIDES = [
   {
     id: 2,
     image:
-      "/media-placeholder.png?asset=33",
+      "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
     title: "Multi-Camera 4K Production",
     caption:
       "Capture crisp 4K video podcasts ready for YouTube, reels, and branded series.",
@@ -39,7 +39,7 @@ const PODCAST_SLIDES = [
   {
     id: 3,
     image:
-      "/media-placeholder.png?asset=27",
+      "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
     title: "Crystal Clear Studio Audio",
     caption:
       "Acoustic-treated recording environment with professional audio engineering and mastering.",

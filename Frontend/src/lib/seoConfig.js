@@ -22,11 +22,11 @@ const env = import.meta.env || {};
 const configuredSite = env.VITE_SITE_URL?.trim();
 export const SITE_URL = (configuredSite || "http://localhost:5173").replace(/\/+$/, "");
 export const SITE_INDEXABLE = Boolean(configuredSite && env.VITE_SITE_INDEXABLE === 'true');
-export const MEDIA_URL = (env.VITE_MEDIA_URL || SITE_URL).replace(/\/+$/, "");
+export const MEDIA_URL = (env.VITE_MEDIA_URL || "https://geniestudio.in").replace(/\/+$/, "");
 export const BUSINESS_SCHEMA = JSON.parse(JSON.stringify(businessData).replaceAll('https://geniestudio.in', SITE_URL));
 BUSINESS_SCHEMA['@graph'].push({ '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: 'Genie Studio' });
 export const SITE_NAME = BRAND;
-export const DEFAULT_IMAGE = `${SITE_URL}/media-placeholder.png?asset=41`;
+export const DEFAULT_IMAGE = `${MEDIA_URL}/uploads/1786601041_1786601041120-705832864.png`;
 
 /** Absolute URLs only — crawlers ignore relative canonicals and og:url. */
 export const absolute = (path = "/") => {
@@ -87,7 +87,7 @@ export const SERVICES = [
     title: "Podcast Studio in Visakhapatnam | Genie Studio",
     description:
       "Book a podcast studio in Visakhapatnam (Yendada, Vizag). Genie Studio offers multi-camera video & audio podcast shoots, editing and delivery.",
-    image: `${SITE_URL}/media-placeholder.png?asset=33`,
+    image: `${MEDIA_URL}/uploads/1786531745_1786531742798-721756481.webp`,
     keywords: {
       primary: "Podcast Studio in Visakhapatnam",
       secondary: [
@@ -108,7 +108,7 @@ export const SERVICES = [
     title: "Product Photography in Vizag | Genie Studio",
     description:
       "Create product images for e-commerce, advertising and brand campaigns with Genie Studio in Visakhapatnam. Explore our product photography services.",
-    image: `${SITE_URL}/media-placeholder.png?asset=26`,
+    image: `${MEDIA_URL}/uploads/1786531726_1786531724729-939039825.webp`,
     keywords: {
       primary: "Product Photography in Visakhapatnam",
       secondary: [
@@ -129,7 +129,7 @@ export const SERVICES = [
     title: "Corporate Photography & Video in Vizag | Genie Studio",
     description:
       "Professional corporate photography and video production in Visakhapatnam. Showcase your workplace, team and brand with Genie Studio.",
-    image: `${SITE_URL}/media-placeholder.png?asset=41`,
+    image: `${MEDIA_URL}/uploads/1786601041_1786601041120-705832864.png`,
     keywords: {
       primary: "Corporate Photography and Video Production in Visakhapatnam",
       secondary: [
@@ -151,7 +151,7 @@ export const SERVICES = [
     title: "Event Photography in Visakhapatnam | GenieStudio",
     description:
       "Capture conferences, launches and celebrations with event photography and videography from Genie Studio in Visakhapatnam. Contact us to plan coverage.",
-    image: `${SITE_URL}/media-placeholder.png?asset=42`,
+    image: `${MEDIA_URL}/uploads/1786601438_1786601436150-15515106.png`,
     keywords: {
       primary: "Event Photography in Visakhapatnam",
       secondary: [
@@ -172,7 +172,7 @@ export const SERVICES = [
     title: "Professional Photography in Visakhapatnam | GenieStudio",
     description:
       "Book professional headshots, portraits and personal branding photography at Genie Studio in Vizag. Plan a studio shoot for your professional profile.",
-    image: `${SITE_URL}/media-placeholder.png?asset=54`,
+    image: `${MEDIA_URL}/uploads/1786608030_1786608028512-709035430.png`,
     keywords: {
       primary: "Professional Photography in Visakhapatnam",
       secondary: [
@@ -221,7 +221,7 @@ export const SEO = {
     title: "Podcast & Video Production Portfolio | Genie Studio",
     description:
       "Explore Genie Studio's podcast videos, podcast shorts, interviews, promotional videos, social media reels, corporate films and professional video editing work.",
-    image: `${SITE_URL}/media-placeholder.png?asset=21`,
+    image: `${MEDIA_URL}/uploads/1786524726_1786524725461-113127996.JPG`,
   },
   gallery: {
     path: "/gallery",
@@ -246,7 +246,7 @@ export const SEO = {
     title: `Business Portfolio Photography in Vizag | ${BRAND}`,
     description:
       "Business portfolio photography in Visakhapatnam by GenieStudio — executive portraits, corporate team photos, workplace photography and brand visuals in Vizag.",
-    image: `${SITE_URL}/media-placeholder.png?asset=5`,
+    image: `${MEDIA_URL}/uploads/1786519476_1786519476246-824255335.jpg`,
   },
 };
 

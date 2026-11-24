@@ -89,7 +89,7 @@ export default function AdminPortfolio() {
 
       <header className="relative min-h-[30vh] sm:min-h-[38vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/media-placeholder.png')" }} />
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1615567250006-de1875d0c61c?q=80&w=1331&auto=format&fit=crop')" }} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/80" />
         <div className="relative z-10 text-center px-4">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight mb-2 sm:mb-3">
