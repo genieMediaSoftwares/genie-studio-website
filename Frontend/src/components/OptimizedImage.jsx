@@ -1,3 +1,4 @@
+import { useAssignedImage } from "../context/PublicImages";
 import React, { useCallback, useMemo, useState } from "react";
 import { lookupImage } from "../lib/imageManifest";
 
@@ -61,7 +62,8 @@ function buildSrcSet(byWidth) {
 }
 
 export default function OptimizedImage({
-  src,
+  src: originalSrc,
+  sectionKey,
   alt = "",
   width,
   height,
@@ -78,6 +80,11 @@ export default function OptimizedImage({
   style,
   ...rest
 }) {
+  const assigned = useAssignedImage(originalSrc, sectionKey);
+  const src = assigned?.image_url || originalSrc;
+  variants = assigned?.variants || (assigned ? undefined : variants);
+  lqip = assigned?.lqip || (assigned ? undefined : lqip);
+  alt = assigned?.alt_text || alt;
   const [loaded, setLoaded] = useState(() => seen.has(src));
 
   // Anything the caller passes wins; the manifest is the fallback. This is what

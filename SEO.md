@@ -1,142 +1,15 @@
-# SEO
+# Genie Studio SEO
 
-## Where the site actually runs
+Public page metadata is centralized in `Frontend/src/lib/seoConfig.js`. `Seo.jsx` emits a unique title/description, canonical, robots directive, Open Graph, Twitter cards, existing business identity, page schema, and breadcrumbs. Service and article pages add their specific schema. No ratings, reviews, search action, awards, or new business details are invented.
 
-Worth stating up front, because it changes what config matters:
+`npm run build` prerenders the actual application into static HTML, so crawlers that do not run JavaScript can read page content and metadata. React hydrates this markup in the browser. An isolated script checks unique metadata, one H1 per public route, image alt attributes, valid JSON-LD, internal links, and dynamic article rendering.
 
-`https://geniestudio.in/` is served by **Hostinger Apache** (`platform: hostinger`,
-`panel: hpanel`, `Server: hcdn`) — **not Vercel**. Verified: assets come back with
-Hostinger's default `Cache-Control: public, max-age=604800`, not the `immutable`
-policy in `Frontend/vercel.json`.
+The final production domain is unconfirmed. Previews default to `http://localhost:5173` canonical configuration, noindex metadata, blocking robots.txt, and an empty sitemap. Do not submit preview URLs to search engines. The fallback is a local preview address, not an invented production domain.
 
-**`Frontend/vercel.json` is therefore inert.** It is harmless to keep for a future
-Vercel deploy, but nothing in it is applied today. Anything that must take effect
-has to go in `public_html/.htaccess` — see the snippet at the bottom.
+An indexable release requires confirmed HTTPS `VITE_SITE_URL`, HTTPS `VITE_API_URL`, `VITE_SITE_INDEXABLE=true`, and `SEO_FETCH_PUBLIC_DATA=true`. Published blog posts, gallery entries, and public image assignments are read from the configured API at build time. A failed content snapshot fails an indexable build. Sitemap entries include the 13 public routes and only published posts with safe permalinks. Admin/auth/draft/error routes are excluded.
 
-Brotli compression is already active, so that needs nothing.
+Rebuild immediately after editing, publishing, unpublishing, or deleting public content. Static blog HTML and social metadata remain stale until replaced; unpublishing is not complete until the old static deployment/cache is invalidated. New blog URLs are not represented in static output until rebuilt. No automatic deployment was added.
 
-## How per-route metadata works
+Service pages use Service and BreadcrumbList schema; appropriate FAQ markup is retained from visible FAQs. About uses AboutPage, contact uses ContactPage, blogs use Blog/BlogPosting, portfolio retains CollectionPage, and home retains the existing Organization/LocalBusiness details. The provider identity consistently uses #business. There is no fabricated aggregate rating or non-existent site-search action.
 
-The site is a client-rendered SPA served as one static `index.html`, so:
-
-- **`index.html`** carries the full default set — title, description, canonical,
-  Open Graph, Twitter, favicon, and the `WebSite` + `Organization` +
-  `LocalBusiness` JSON-LD graph. This is what non-JS crawlers see.
-- **`src/components/Seo.jsx`** renders per-route overrides. React 19 hoists
-  `<title>`, `<meta>` and `<link>` into `<head>` from anywhere in the tree and
-  removes them on unmount, so this needs no `react-helmet` and no manual DOM work.
-- **`src/lib/seoConfig.js`** holds every route's title and description in one
-  place, so duplicates are visible at a glance and the sitemap reads the same list.
-
-### The one real limitation
-
-Googlebot renders JavaScript, so it sees the per-route tags and indexes each page
-correctly. **Crawlers that do not render JS — Facebook, LinkedIn, WhatsApp, Slack —
-only ever see `index.html`.** Link previews for deep routes will show the homepage
-card.
-
-Fixing that properly needs prerendering or SSR (`vite-plugin-prerender`,
-`react-snap`, or moving to a framework that renders on the server). Nothing else
-in this setup can work around it. Blog posts already have a partial workaround: the
-backend serves a real OG-tagged HTML page for share crawlers.
-
-## What each page gets
-
-| Route | Title | Extra schema |
-| --- | --- | --- |
-| `/` | Set verbatim from the brief | WebSite, Organization, LocalBusiness (static) + BreadcrumbList |
-| `/services` + 5 service pages | `<Service> in Visakhapatnam \| GenieStudio` | `Service` + `BreadcrumbList` |
-| `/services/business-portfolio-shoots` | Business Portfolio Shoots | `Service` + `BreadcrumbList` |
-| `/about` `/portfolio` `/gallery` `/blogs` `/contact` | Unique per page | `BreadcrumbList` |
-| `/blog/:slug` | `<post title> \| GenieStudio` | `BlogPosting` + `BreadcrumbList` |
-| unmatched | Page Not Found | `noindex, follow` |
-
-All 13 static titles and descriptions are unique — verified, no duplicates.
-
-> **Note on the homepage title and description:** both are used exactly as
-> specified in the brief. The title is 77 characters and the description 159, so
-> Google will likely truncate them in results (it typically cuts around 60 and
-> 155). They were left verbatim because they were given as exact copy — shortening
-> them is a content decision, not a technical one.
-
-## Fixes applied beyond the brief
-
-- **`robots.txt` pointed at the wrong domain.** It listed
-  `Sitemap: https://geinestudio.in/sitemap.xml` — `geinestudio`, not `geniestudio`.
-  Google could never fetch the sitemap from it.
-- **Soft 404s.** Apache rewrites every unmatched path to `index.html`, so typo'd
-  URLs returned HTTP 200 with a blank page. `NotFound` now renders with `noindex`.
-- **Three competing H1s on the homepage.** All hero slides sit in the DOM at once,
-  so each rotating headline was an `<h1>`. They are now `<h2>` (visually identical
-  — Tailwind preflight makes headings inherit size and weight) and the page has one
-  stable `sr-only` H1 naming the five services.
-- **Gallery had no H1 at all.** Added an `sr-only` one.
-- **Placeholder copy was live.** The homepage service cards rendered
-  `"Professional video..."`, `"Stunning product photography..."` and four more
-  ellipsis stubs as visible text. Replaced with real descriptions, all within a few
-  characters of each other so the equal-height cards keep their layout.
-- **Inconsistent service naming.** The carousel said "Podcast Production" and
-  "Event Photography" while the service pages said "Podcast Shoots" and "Event
-  Shoots". Aligned to the service names.
-- **Five partial sitemaps.** `sitemap.xml`, `pages.xml`, `services.xml`,
-  `categories.xml` and `tags.xml` between them still missed every service detail
-  page, the gallery and all blog posts.
-
-## Sitemap
-
-```bash
-cd Frontend
-npm run sitemap     # regenerate on demand
-npm run build       # regenerates automatically, then builds
-```
-
-`scripts/generate-sitemap.mjs` reads static routes from `seoConfig.js` and pulls
-published posts from the API, so it cannot drift from the pages' own canonicals.
-If the API is unreachable it still writes the static routes rather than failing
-the build.
-
-The old `pages.xml` / `services.xml` / `categories.xml` / `tags.xml` are now
-superseded by the single `sitemap.xml`. They are left in place in case anything
-links to them; nothing references them and they can be deleted.
-
-## `.htaccess` for `public_html`
-
-`vercel.json` does nothing here, so these belong in Apache. **Back up the existing
-`.htaccess` first** — it contains the SPA rewrite that makes deep links work, and
-these lines should be *added* to it, not replace it. Verify a deep link such as
-`/services/podcast-shoots` still loads after deploying.
-
-```apache
-# --- Correct MIME types -------------------------------------------------
-# Hostinger serves .avif as text/plain. Browsers sniff the bytes so it renders
-# today, but only because no nosniff header is sent.
-AddType image/avif .avif
-AddType image/webp .webp
-
-# --- Caching ------------------------------------------------------------
-<IfModule mod_headers.c>
-  # Vite fingerprints these, so the content at a given URL never changes.
-  <FilesMatch "\.(js|css|woff2)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-  </FilesMatch>
-
-  # Image derivatives are content-addressed by name and never rewritten.
-  <FilesMatch "-(400|800|1200|1600|2000)\.(avif|webp)$">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-  </FilesMatch>
-
-  # index.html must revalidate or it keeps pointing at old asset hashes.
-  <FilesMatch "^index\.html$">
-    Header set Cache-Control "public, max-age=0, must-revalidate"
-  </FilesMatch>
-</IfModule>
-```
-
-## After deploying
-
-1. Google Search Console → submit `https://geniestudio.in/sitemap.xml`.
-2. Use URL Inspection on `/` and one service page, then **View Crawled Page** to
-   confirm Google's render shows the per-route `<title>` — that is the check that
-   proves the JS-rendered metadata is being picked up.
-3. Run the [Rich Results Test](https://search.google.com/test/rich-results) on the
-   homepage and one service page to confirm the JSON-LD parses.
+Builds generate robots.txt, sitemap.xml, and llms.txt in dist using the configured release domain. Legacy source sitemap/feed copies are neutralized in build output to avoid advertising an old domain. Final Search Console inspection, social-preview testing, redirects from any old domain, domain ownership, and live indexing remain manual release tasks.

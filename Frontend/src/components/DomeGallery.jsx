@@ -1,3 +1,4 @@
+import { usePublicData } from "../lib/publicData";
 import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import { useGesture } from '@use-gesture/react';
 import './DomeGallery.css';
@@ -35,7 +36,7 @@ function buildItems(pool, seg) {
 
   const totalSlots = coords.length;
   if (pool.length === 0) {
-    return coords.map(c => ({ ...c, src: '', alt: '' }));
+    return [];
   }
   if (pool.length > totalSlots) {
     console.warn(
@@ -137,7 +138,9 @@ export default function DomeGallery({
 
   // Images managed from /admin/gallery. Skipped entirely when a caller passes
   // an `images` prop.
-  const [fetchedImages, setFetchedImages] = useState([]);
+  const initialGallery = usePublicData().gallery;
+  const [fetchedImages, setFetchedImages] = useState(() => (initialGallery || []).map(row => ({ src: row.image_url, alt: row.alt || "Genie Studio gallery photograph" })));
+  const [galleryState, setGalleryState] = useState(images || initialGallery ? "ready" : "loading");
 
   useEffect(() => {
     if (images) return;
@@ -146,9 +149,10 @@ export default function DomeGallery({
       try {
         const rows = await fetchGallery();
         if (cancelled) return;
-        setFetchedImages(rows.map((row) => ({ src: row.image_url, alt: row.alt || '' })));
+        setFetchedImages(rows.map((row) => ({ src: row.image_url, alt: row.alt || 'Genie Studio gallery photograph' })));
+        setGalleryState('ready');
       } catch {
-        if (!cancelled) setFetchedImages([]);
+        if (!cancelled) { setFetchedImages([]); setGalleryState('error'); }
       }
     })();
     return () => { cancelled = true; };
@@ -623,6 +627,9 @@ export default function DomeGallery({
       {/* Was <main>. The Gallery route already provides the page's main
           landmark, and a second one nested inside it is a landmark violation.
           Purely a tag swap — .sphere-main still carries every style. */}
+      {activeImages.length === 0 && <p role="status" className="absolute inset-0 z-10 flex items-center justify-center px-6 text-center text-slate-600">
+        {galleryState === 'loading' ? 'Loading gallery...' : galleryState === 'error' ? 'The gallery is temporarily unavailable. Please try again later.' : 'No gallery images have been published yet.'}
+      </p>}
       <div ref={mainRef} className="sphere-main">
         <div className="stage">
           <div ref={sphereRef} className="sphere">

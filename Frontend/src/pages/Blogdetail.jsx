@@ -1,3 +1,4 @@
+import { usePublicData } from "../lib/publicData";
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -7,9 +8,9 @@ import DOMPurify from "dompurify";
 import BASE_URL from "../api";
 import OptimizedImage from "../components/OptimizedImage";
 import Seo from "../components/Seo";
+import { SITE_URL, absolute, DEFAULT_IMAGE } from "../lib/seoConfig";
 
-const FALLBACK =
-    "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&q=80";
+const FALLBACK = DEFAULT_IMAGE;
 
 const cleanSlug = (raw) =>
     raw ? raw.replace(/^\/+/, "").replace(/^blog\//, "") : raw;
@@ -19,8 +20,12 @@ export default function BlogDetail() {
     const slug = params["*"];
     const navigate = useNavigate();
 
-    const [blog, setBlog] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const initialData = usePublicData();
+    const initialBlog = initialData.blog?.permalink === cleanSlug(slug) ? initialData.blog : null;
+    const [blog, setBlog] = useState(initialBlog);
+    const [canSanitize, setCanSanitize] = useState(false);
+    useEffect(() => setCanSanitize(true), []);
+    const [loading, setLoading] = useState(!initialBlog);
     const [copied, setCopied] = useState(false);
     const [relatedBlogs, setRelated] = useState([]);
     const [imgError, setImgError] = useState(false);
@@ -61,7 +66,7 @@ export default function BlogDetail() {
                             .slice(0, 3);
                         setRelated(related);
                     }
-                } catch (_) { }
+                } catch { /* Related articles are optional. */ }
             } catch (err) {
                 console.error("BlogDetail fetch error:", err);
                 setBlog(null);
@@ -72,17 +77,6 @@ export default function BlogDetail() {
 
         fetchBlog();
     }, [slug]);
-
-    useEffect(() => {
-        if (!blog?.keywords) return;
-        const kw = blog.keywords.split(",").map((k) => k.trim()).filter(Boolean);
-        document.head.querySelector('meta[name="keywords"]')?.remove();
-        const m = document.createElement("meta");
-        m.name = "keywords";
-        m.content = kw.join(", ");
-        document.head.appendChild(m);
-        return () => m.remove();
-    }, [blog]);
 
     const formatDate = (ts) =>
         ts
@@ -179,7 +173,8 @@ export default function BlogDetail() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-slate-600 font-medium text-sm">Blog not found</p>
+                <Seo title="Article unavailable | Genie Studio" path={`/blog/${slug || ''}`} noindex />
+                <h1 className="text-slate-600 font-medium text-sm">Blog not found</h1>
                 <p className="text-slate-500 text-xs mt-1">
                     Slug: <code className="bg-slate-100 px-1 rounded">{slug || "undefined"}</code>
                 </p>
@@ -223,10 +218,10 @@ export default function BlogDetail() {
                         ? new Date(Number(blog.updatedAt)).toISOString()
                         : undefined,
                     author: { "@type": "Organization", name: "GenieStudio" },
-                    publisher: { "@id": "https://geniestudio.in/#organization" },
+                    publisher: { "@id": `${SITE_URL}/#organization` },
                     mainEntityOfPage: {
                         "@type": "WebPage",
-                        "@id": `https://geniestudio.in/blog/${blog.permalink || slug}`,
+                        "@id": absolute(`/blog/${blog.permalink || slug}`),
                     },
                 }}
                 breadcrumbs={[
@@ -394,7 +389,8 @@ export default function BlogDetail() {
               [&_tr:nth-child(even)_td]:bg-slate-50
             "
                         dangerouslySetInnerHTML={{
-                            __html: DOMPurify.sanitize(blog.description),
+                            __html: canSanitize ? DOMPurify.sanitize(blog.description || "") :
+                                String(blog.description || '').replace(/<[^>]*>/g, ' ').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])),
                         }}
                     />
 

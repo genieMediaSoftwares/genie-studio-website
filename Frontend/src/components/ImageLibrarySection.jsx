@@ -97,7 +97,7 @@ function DeleteImageModal({ image, onConfirm, onCancel, loading }) {
           {image.original_name || image.filename}
         </p>
         <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center mb-6">
-          Blogs already using this URL will keep working — the file stays on Hostinger.
+          Only unused images can be deleted. This permanently removes the file and its generated sizes from storage.
         </p>
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm transition">

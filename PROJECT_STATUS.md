@@ -1,3 +1,5 @@
+> Updated 2026-11-20: This historical document predates the security and prerendering changes. Use README.md and PRODUCTION_REVIEW.md for current setup, verification, and release blockers.
+
 # Genie Studio — Project Status & Task Tracking
 
 > **Comprehensive Audit Matrix, Feature Inventory, and Prioritized Task Tracking for Genie Studio.**  

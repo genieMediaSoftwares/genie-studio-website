@@ -285,6 +285,7 @@ const Professionalshoots = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="service_hero_professional"
                     src={HERO_IMAGE}
                     alt="Professional portrait and personal branding photoshoot at GenieStudio in Visakhapatnam"
                     priority

@@ -339,6 +339,7 @@ const Podcastshoots = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="service_hero_podcast"
                     src={HERO_IMAGE}
                     alt="Genie Studio podcast recording studio in Yendada, Visakhapatnam with microphones, studio seating and lighting"
                     priority
@@ -469,6 +470,7 @@ const Podcastshoots = () => {
                     />
                   ) : (
                     <OptimizedImage
+                      sectionKey={`podcast_deliv_${idx + 1}`}
                       src={img.src}
                       alt={img.alt}
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -563,7 +565,7 @@ const Podcastshoots = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {PORTFOLIO_PREVIEWS.map((item) => (
+            {PORTFOLIO_PREVIEWS.map((item, index) => (
               <article
                 key={item.title}
                 className="rounded-2xl border border-slate-200/80 bg-[#FAFAFA] overflow-hidden"
@@ -573,6 +575,7 @@ const Podcastshoots = () => {
                     <PodcastImageFallback icon={FileVideo} title={item.format} />
                   ) : (
                     <OptimizedImage
+                      sectionKey={`podcast_preview_${index + 1}`}
                       src={item.image}
                       alt={item.alt}
                       sizes="(max-width: 768px) 100vw, 50vw"

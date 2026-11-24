@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Clock, Send, Loader2 } from "lucide-react";
 import Seo from "../components/Seo";
+import BASE_URL from "../api";
 import { SEO } from "../lib/seoConfig";
 
 const SectionEyebrow = ({ label, light = false }) => (
@@ -35,6 +36,7 @@ const Contact = () => {
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -57,7 +59,7 @@ const Contact = () => {
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      const response = await fetch("https://geniestudio.in/contact.php", {
+      const response = await fetch(`${BASE_URL}/api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,6 +99,7 @@ const Contact = () => {
           message: "",
         });
       } else {
+        setErrorMessage(result?.message || "Your enquiry could not be sent. Please call or email the studio.");
         setStatus("error");
         console.error("Contact form failed:", {
           status: response.status,
@@ -365,7 +368,7 @@ const Contact = () => {
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span>Failed to send message. Please try again.</span>
+                      <span>{errorMessage || "Your enquiry could not be sent. Please call or email the studio."}</span>
                     </p>
                   </div>
                 )}

@@ -229,7 +229,8 @@ const Businessportfolioshoots = () => {
         <div className="absolute inset-0 pointer-events-none">
           {!heroFailed && (
             <OptimizedImage
-              src={HERO_IMAGE}
+              sectionKey="service_hero_business"
+                    src={HERO_IMAGE}
               alt="Business portfolio photography and executive portrait in Visakhapatnam by GenieStudio"
               priority
               sizes="100vw"
@@ -408,7 +409,7 @@ const Businessportfolioshoots = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {DELIVERABLES.map((item) => {
+            {DELIVERABLES.map((item, index) => {
               const IconComponent = item.icon;
               const isFailed = Boolean(failedCards[item.title]);
               return (
@@ -425,6 +426,7 @@ const Businessportfolioshoots = () => {
                       />
                     ) : (
                       <OptimizedImage
+                        sectionKey={`business_deliv_${index + 1}`}
                         src={item.img}
                         alt={item.alt}
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
@@ -589,6 +591,7 @@ const Businessportfolioshoots = () => {
             <div className="absolute inset-0 pointer-events-none">
               {!ctaFailed && (
                 <OptimizedImage
+                  sectionKey="business_cta"
                   src={CTA_IMAGE}
                   alt="GenieStudio business portfolio photography setup in Visakhapatnam"
                   sizes="100vw"

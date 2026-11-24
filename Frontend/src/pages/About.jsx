@@ -23,7 +23,7 @@ const WHAT_WE_DO_ITEMS = [
     icon: Mic,
     title: "Podcast Studio Rentals",
     paragraphs: [
-      "A professionally equipped recording environment designed to make podcast production simple and convenient. Our studio comes with Sony full-frame cameras (A7M4 & A7M3), Rode PodMics with a dedicated audio interface, professional Digitek & Godox LC500R lighting, and a ready-to-use setup, allowing you to walk in and start recording.",
+      "A professionally equipped recording environment designed to make podcast production simple and convenient. Our studio comes with Sony A7M4 and Sony A7M3 full-frame cameras, Rode PodMics with a dedicated audio interface, professional Digitek & Godox LC500R lighting, and a ready-to-use setup, allowing you to walk in and start recording.",
       "With production team assistance, Hollyland Lark M2 wireless backup audio, and full studio support, we help make your recording experience comfortable and hassle-free.",
     ],
     image:
@@ -178,6 +178,7 @@ const About = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="about_hero"
                     src="https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG"
                     alt="Professional podcast recording studio at Genie Studio with cameras, microphones and studio lighting"
                     priority
@@ -210,6 +211,7 @@ const About = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="about_intro"
                     src="https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp"
                     alt="Genie Studio podcast and creative production studio setup"
                     loading="eager"
@@ -268,7 +270,7 @@ const About = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-7 items-stretch">
-            {WHAT_WE_DO_ITEMS.map((item) => {
+            {WHAT_WE_DO_ITEMS.map((item, index) => {
               const Icon = item.icon;
               return (
                 <article
@@ -280,6 +282,7 @@ const About = () => {
                       <StudioImageFallback icon={Icon} label={item.title} />
                     ) : (
                       <OptimizedImage
+                        sectionKey={`about_story_${index + 1}`}
                         src={item.image}
                         alt={item.alt}
                         loading="eager"
@@ -413,6 +416,7 @@ const About = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="about_equipment"
                     src="https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp"
                     alt="Professional camera lens and studio production equipment at Genie Studio"
                     loading="eager"

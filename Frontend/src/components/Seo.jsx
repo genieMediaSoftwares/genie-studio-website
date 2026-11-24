@@ -1,28 +1,4 @@
-/**
- * Per-route <title>, meta and JSON-LD.
- *
- * HOW THIS WORKS WITHOUT react-helmet
- * -----------------------------------
- * React 19 hoists <title>, <meta> and <link> into document.head no matter how
- * deep in the tree they are rendered, and removes them when the component
- * unmounts. So a page can just render <Seo …/> and get correct head tags on
- * navigation, with no extra dependency and no manual DOM cleanup.
- *
- * WHAT THIS DOES AND DOES NOT FIX
- * The site is a client-rendered SPA served as one static index.html, so:
- *
- *   - Googlebot renders JS, sees these tags, and indexes each route correctly.
- *   - Crawlers that do NOT render JS (Facebook, LinkedIn, WhatsApp, Slack)
- *     only ever see the static tags in index.html. Link previews for deep
- *     routes therefore show the homepage card. Fixing that properly needs
- *     prerendering or SSR — see IMAGE-PIPELINE.md's sibling notes in SEO.md.
- *
- * Because index.html already carries a full default set, every tag here is an
- * OVERRIDE. React keeps the last one rendered for a given <meta name>, so the
- * route-level values win while the component is mounted.
- */
-
-import { SITE_NAME, DEFAULT_IMAGE, absolute } from "../lib/seoConfig";
+import { SITE_NAME, DEFAULT_IMAGE, absolute, SITE_INDEXABLE, BUSINESS_SCHEMA } from "../lib/seoConfig";
 
 export default function Seo({
   title,
@@ -38,6 +14,13 @@ export default function Seo({
   breadcrumbs,
 }) {
   const url = absolute(path);
+  const serialize = value => JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+  const pageSchema = {
+    '@context': 'https://schema.org',
+    '@type': path === '/about' ? 'AboutPage' : path === '/contact' ? 'ContactPage' : path === '/blogs' ? 'Blog' : 'WebPage',
+    name: title, description, url, isPartOf: { '@id': absolute('/#website') },
+    about: { '@id': absolute('/#business') },
+  };
 
   const breadcrumbSchema = breadcrumbs?.length
     ? {
@@ -59,7 +42,7 @@ export default function Seo({
       <link rel="canonical" href={url} />
 
       {/* Overrides index.html's index,follow for pages that must not rank. */}
-      {noindex && <meta name="robots" content="noindex, follow" />}
+      <meta name="robots" content={noindex || !SITE_INDEXABLE ? 'noindex, follow' : 'index, follow, max-image-preview:large'} />
 
       <meta property="og:type" content={type} />
       <meta property="og:site_name" content={SITE_NAME} />
@@ -73,20 +56,10 @@ export default function Seo({
       {description && <meta name="twitter:description" content={description} />}
       <meta name="twitter:image" content={image} />
 
-      {/* `schema` accepts one object or an array — a page like the podcast one
-          needs both Service and FAQPage, and Google reads multiple ld+json
-          blocks on a page perfectly well. */}
-      {schema &&
-        (Array.isArray(schema) ? schema : [schema]).map((entry, i) => (
-          <script key={i} type="application/ld+json">
-            {JSON.stringify(entry)}
-          </script>
+      {[BUSINESS_SCHEMA, pageSchema, ...(schema ? (Array.isArray(schema) ? schema : [schema]) : []), breadcrumbSchema]
+        .filter(Boolean).map((entry, i) => (
+          <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: serialize(entry) }} />
         ))}
-      {breadcrumbSchema && (
-        <script type="application/ld+json">
-          {JSON.stringify(breadcrumbSchema)}
-        </script>
-      )}
     </>
   );
 }

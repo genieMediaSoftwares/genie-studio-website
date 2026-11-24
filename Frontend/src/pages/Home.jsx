@@ -206,7 +206,8 @@ const Home = () => {
               return (
                 <div key={i} className=" group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl transition-all duration-500" data-animate id={`equipment-${i}`} >
                   <div className="aspect-[3/4] sm:aspect-[4/5] lg:aspect-[3/4] overflow-hidden">
-                    <OptimizedImage src={item.image} alt={item.title}
+                    <OptimizedImage sectionKey={`home_equipment_${i + 1}`}
+                        src={item.image} alt={item.title}
                       className="w-full h-full"
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
                       imgClassName="transition-transform duration-700 group-hover:scale-110" />

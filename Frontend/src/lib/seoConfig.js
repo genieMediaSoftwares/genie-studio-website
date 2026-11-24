@@ -1,3 +1,5 @@
+import businessData from "./businessData.json";
+
 /**
  * One place for every route's search metadata.
  *
@@ -16,9 +18,15 @@
 
 const BRAND = "GenieStudio";
 
-export const SITE_URL = "https://geniestudio.in";
+const env = import.meta.env || {};
+const configuredSite = env.VITE_SITE_URL?.trim();
+export const SITE_URL = (configuredSite || "http://localhost:5173").replace(/\/+$/, "");
+export const SITE_INDEXABLE = Boolean(configuredSite && env.VITE_SITE_INDEXABLE === 'true');
+export const MEDIA_URL = (env.VITE_MEDIA_URL || "https://geniestudio.in").replace(/\/+$/, "");
+export const BUSINESS_SCHEMA = JSON.parse(JSON.stringify(businessData).replaceAll('https://geniestudio.in', SITE_URL));
+BUSINESS_SCHEMA['@graph'].push({ '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: 'Genie Studio' });
 export const SITE_NAME = BRAND;
-export const DEFAULT_IMAGE = `${SITE_URL}/uploads/1786601041_1786601041120-705832864.png`;
+export const DEFAULT_IMAGE = `${MEDIA_URL}/uploads/1786601041_1786601041120-705832864.png`;
 
 /** Absolute URLs only — crawlers ignore relative canonicals and og:url. */
 export const absolute = (path = "/") => {
@@ -45,7 +53,7 @@ export function serviceSchema({ name, description, path, serviceType }) {
     // serviceType is the category Google matches against intent, so it can be
     // narrower than the display name — "Podcast Studio", not "Podcast Shoots".
     serviceType: serviceType || name,
-    provider: { "@id": `${SITE_URL}/#localbusiness` },
+    provider: { "@id": `${SITE_URL}/#business` },
     // Both names, because locals search "Vizag" and maps data says
     // "Visakhapatnam". alternateName keeps them as one place, not two.
     areaServed: {
@@ -76,10 +84,10 @@ export const SERVICES = [
     name: "Podcast Shoots",
     path: "/services/podcast-shoots",
     // Highest-priority page on the site.
-    title: "Podcast Studio in Visakhapatnam & Vizag | GenieStudio",
+    title: "Podcast Studio in Visakhapatnam | Genie Studio",
     description:
       "Book a podcast studio in Visakhapatnam (Yendada, Vizag). Genie Studio offers multi-camera video & audio podcast shoots, editing and delivery.",
-    image: `${SITE_URL}/uploads/1786531745_1786531742798-721756481.webp`,
+    image: `${MEDIA_URL}/uploads/1786531745_1786531742798-721756481.webp`,
     keywords: {
       primary: "Podcast Studio in Visakhapatnam",
       secondary: [
@@ -99,8 +107,8 @@ export const SERVICES = [
     path: "/services/product-shoots",
     title: "Product Photography in Vizag | Genie Studio",
     description:
-      "Get professional product photography in Visakhapatnam at Genie Studio. Create high-quality product images for e-commerce, advertising, marketing and brand promotions.",
-    image: `${SITE_URL}/uploads/1786531726_1786531724729-939039825.webp`,
+      "Create product images for e-commerce, advertising and brand campaigns with Genie Studio in Visakhapatnam. Explore our product photography services.",
+    image: `${MEDIA_URL}/uploads/1786531726_1786531724729-939039825.webp`,
     keywords: {
       primary: "Product Photography in Visakhapatnam",
       secondary: [
@@ -118,10 +126,10 @@ export const SERVICES = [
     key: "corporate",
     name: "Corporate Shoots",
     path: "/services/corporate-shoots",
-    title: "Corporate Photography & Video Production in Visakhapatnam | Genie Studio",
+    title: "Corporate Photography & Video in Vizag | Genie Studio",
     description:
       "Professional corporate photography and video production in Visakhapatnam. Showcase your workplace, team and brand with Genie Studio.",
-    image: `${SITE_URL}/uploads/1786601041_1786601041120-705832864.png`,
+    image: `${MEDIA_URL}/uploads/1786601041_1786601041120-705832864.png`,
     keywords: {
       primary: "Corporate Photography and Video Production in Visakhapatnam",
       secondary: [
@@ -142,8 +150,8 @@ export const SERVICES = [
     path: "/services/event-shoots",
     title: "Event Photography in Visakhapatnam | GenieStudio",
     description:
-      "Looking for professional event photography in Visakhapatnam? GenieStudio offers event photography and videography for corporate events, conferences, launches and celebrations. Contact us for a quote.",
-    image: `${SITE_URL}/uploads/1786601438_1786601436150-15515106.png`,
+      "Capture conferences, launches and celebrations with event photography and videography from Genie Studio in Visakhapatnam. Contact us to plan coverage.",
+    image: `${MEDIA_URL}/uploads/1786601438_1786601436150-15515106.png`,
     keywords: {
       primary: "Event Photography in Visakhapatnam",
       secondary: [
@@ -163,8 +171,8 @@ export const SERVICES = [
     path: "/services/professional-shoots",
     title: "Professional Photography in Visakhapatnam | GenieStudio",
     description:
-      "Looking for professional photography in Visakhapatnam? GenieStudio offers portrait photography, professional headshots and personal branding photoshoots in Vizag. Contact us to book.",
-    image: `${SITE_URL}/uploads/1786608030_1786608028512-709035430.png`,
+      "Book professional headshots, portraits and personal branding photography at Genie Studio in Vizag. Plan a studio shoot for your professional profile.",
+    image: `${MEDIA_URL}/uploads/1786608030_1786608028512-709035430.png`,
     keywords: {
       primary: "Professional Photography in Visakhapatnam",
       secondary: [
@@ -192,9 +200,9 @@ export const SEO = {
   // crawls, which is exactly the state that stops it trusting either one.
   home: {
     path: "/",
-    title: "Genie Studio | Photography, Podcast, Product & Professional Shoots",
+    title: "Genie Studio | Photography & Podcast Studio in Visakhapatnam",
     description:
-      "Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography.",
+      "Book photography, video and podcast production at Genie Studio in Yendada, Visakhapatnam. Explore our services and plan your next studio shoot.",
   },
   about: {
     path: "/about",
@@ -210,10 +218,10 @@ export const SEO = {
   },
   portfolio: {
     path: "/portfolio",
-    title: "Genie Studio Portfolio | Podcast & Video Production in Visakhapatnam",
+    title: "Podcast & Video Production Portfolio | Genie Studio",
     description:
       "Explore Genie Studio's podcast videos, podcast shorts, interviews, promotional videos, social media reels, corporate films and professional video editing work.",
-    image: `${SITE_URL}/uploads/1786524726_1786524725461-113127996.JPG`,
+    image: `${MEDIA_URL}/uploads/1786524726_1786524725461-113127996.JPG`,
   },
   gallery: {
     path: "/gallery",
@@ -235,10 +243,10 @@ export const SEO = {
   },
   businessPortfolio: {
     path: "/services/business-portfolio-shoots",
-    title: `Business Portfolio Photography in Visakhapatnam | ${BRAND}`,
+    title: `Business Portfolio Photography in Vizag | ${BRAND}`,
     description:
       "Business portfolio photography in Visakhapatnam by GenieStudio — executive portraits, corporate team photos, workplace photography and brand visuals in Vizag.",
-    image: `${SITE_URL}/uploads/1786519476_1786519476246-824255335.jpg`,
+    image: `${MEDIA_URL}/uploads/1786519476_1786519476246-824255335.jpg`,
   },
 };
 

@@ -1,18 +1,7 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       ANALYTICS — loaded after the page has finished loading.
-       gtag.js was previously the very first thing in <head>. Even with
-       `async` it still downloaded, parsed and executed during exactly the
-       window that LCP and Total Blocking Time are measured in, on a phone
-       CPU that has better things to do. Queuing the calls up front and
-       injecting the script on `load` keeps every pageview and event intact
-       while moving ~60 KB of third-party JS out of the critical path.
-       ══════════════════════════════════════════════════════════════════ -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
@@ -20,7 +9,6 @@
     // so no hit is lost by loading the library later.
     gtag('js', new Date());
     gtag('config', 'G-WCR1MCHLMK');
-
     (function () {
       var loaded = false;
       function loadGtag() {
@@ -41,86 +29,17 @@
     })();
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       PRIMARY SEO
-       This is a client-rendered SPA, so every route is served this same
-       HTML. Googlebot runs the JS and picks up the per-route <title> and
-       <meta> that the <Seo> component renders (React 19 hoists those into
-       <head>). Crawlers that do NOT run JS — Facebook, LinkedIn, WhatsApp,
-       Slack — only ever see what is written here, which is why the homepage
-       values are the static defaults.
-       ══════════════════════════════════════════════════════════════════ -->
-  <title>Genie Studio | Photography, Podcast, Product &amp; Professional Shoots</title>
-  <meta name="description"
-    content="Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography." />
-  <link rel="canonical" href="https://geniestudio.in/" />
-
-  <!-- Local signals. Google reads the LocalBusiness JSON-LD below as the
-       authority, but these are still used by some crawlers and directories. -->
   <meta name="geo.region" content="IN-AP" />
   <meta name="geo.placename" content="Visakhapatnam" />
-
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="author" content="Genie Studio" />
   <meta name="theme-color" content="#6B4A2D" />
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       FAVICON / APP ICONS
-       ══════════════════════════════════════════════════════════════════ -->
   <link rel="icon" type="image/png" sizes="32x32" href="/GenieStudio.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/GenieStudio.png" />
   <link rel="apple-touch-icon" href="/GenieStudio.png" />
   <link rel="shortcut icon" href="/GenieStudio.png" />
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       OPEN GRAPH / TWITTER
-       ══════════════════════════════════════════════════════════════════ -->
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Genie Studio" />
-  <meta property="og:locale" content="en_IN" />
-  <meta property="og:title" content="Genie Studio | Photography, Podcast, Product &amp; Professional Shoots" />
-  <meta property="og:description"
-    content="Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography." />
-  <meta property="og:url" content="https://geniestudio.in/" />
-  <meta property="og:image" content="https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt"
-    content="Genie Studio — professional photography and video studio in Yendada, Visakhapatnam" />
-
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Genie Studio | Photography, Podcast, Product &amp; Professional Shoots" />
-  <meta name="twitter:description"
-    content="Genie Studio is a professional creative studio in Visakhapatnam offering photography, podcast shoots, product shoots, corporate shoots, event shoots, professional shoots and business portfolio photography." />
-  <meta name="twitter:image" content="https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png" />
-
-  <!-- Every photo on the site comes from this origin. Opening the TCP + TLS
-       connection during HTML parse saves a full round trip before the first
-       image byte arrives — worth ~100-300ms on mobile networks. -->
-  <!-- The header logo renders on every route, so it is always in the critical
-       path. -->
   <link rel="preload" as="image" href="/GenieStudio.png" fetchpriority="high">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       FONT — non-blocking.
-       Cormorant Garamond styles every h1–h6, so it sits on the LCP path.
-       As a plain <link rel="stylesheet"> it blocked first render until
-       Google's CSS came back; the media="print" swap lets the browser paint
-       immediately and apply the font as soon as it arrives (`display=swap`
-       already governed that hand-off, so the final rendering is identical).
-
-       Weights trimmed 400;500;600;700 -> 600;700: this family is applied ONLY
-       to headings, and every heading in the app carries font-semibold (600),
-       font-bold (700), font-extrabold or font-black. Nothing rendered 400 or
-       500, so those two files were downloaded and never drawn. 800/900 are
-       deliberately still not requested — the browser synthesises them from
-       700 today, and shipping the real cuts would change how those headings
-       look.
-       ══════════════════════════════════════════════════════════════════ -->
   <link rel="preload" as="style"
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
   <link rel="stylesheet" media="print" onload="this.media='all'"
@@ -128,143 +47,9 @@
   <noscript>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@700;800&display=swap">
   </noscript>
-
-  <!-- ══════════════════════════════════════════════════════════════════
-       STRUCTURED DATA
-       Kept in the static HTML rather than rendered by React so that it is
-       present on the very first byte, with no dependency on JS execution.
-
-       WebSite carries the SearchAction so Google can offer a sitelinks
-       search box; LocalBusiness is what makes the studio eligible for local
-       and map results, which is the point of naming Visakhapatnam.
-       ══════════════════════════════════════════════════════════════════ -->
-  <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-
-    {
-      "@type": "Organization",
-      "@id": "https://geniestudio.in/#organization",
-      "name": "Genie Media and Studio",
-      "alternateName": [
-        "Genie Studio",
-        "GenieStudio",
-        "Genie Studio Visakhapatnam"
-      ],
-      "url": "https://geniestudio.in/",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "https://geniestudio.in/GenieStudio.png"
-      },
-      "description": "Genie Media and Studio, operating as Genie Studio, is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
-      "sameAs": [
-        "https://www.instagram.com/itsgeniestudio_official/"
-      ]
-    },
-
-    {
-      "@type": "LocalBusiness",
-      "@id": "https://geniestudio.in/#business",
-      "name": "Genie Media and Studio",
-      "alternateName": [
-        "Genie Studio",
-        "GenieStudio",
-        "Genie Studio Visakhapatnam"
-      ],
-      "url": "https://geniestudio.in/",
-      "image": "https://geniestudio.in/GenieStudio.png",
-      "logo": "https://geniestudio.in/GenieStudio.png",
-      "description": "Genie Studio is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
-      "telephone": "+91 9032845433",
-      "email": "admin@geniestudio.in",
-
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "5A-2, KP Icon, Yendada",
-        "addressLocality": "Visakhapatnam",
-        "addressRegion": "Andhra Pradesh",
-        "postalCode": "530045",
-        "addressCountry": "IN"
-      },
-
-      "areaServed": {
-        "@type": "City",
-        "name": "Visakhapatnam"
-      },
-
-      "parentOrganization": {
-        "@id": "https://geniestudio.in/#organization"
-      },
-
-      "sameAs": [
-        "https://www.instagram.com/itsgeniestudio_official/"
-      ],
-
-      "hasOfferCatalog": {
-        "@type": "OfferCatalog",
-        "name": "Photography, Videography and Podcast Production Services",
-        "itemListElement": [
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Podcast Shoots",
-              "url": "https://geniestudio.in/services/podcast-shoots"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Product Shoots",
-              "url": "https://geniestudio.in/services/product-shoots"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Corporate Shoots",
-              "url": "https://geniestudio.in/services/corporate-shoots"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Event Shoots",
-              "url": "https://geniestudio.in/services/event-shoots"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Professional Shoots",
-              "url": "https://geniestudio.in/services/professional-shoots"
-            }
-          },
-          {
-            "@type": "Offer",
-            "itemOffered": {
-              "@type": "Service",
-              "name": "Business Portfolio Shoots",
-              "url": "https://geniestudio.in/services/business-portfolio-shoots"
-            }
-          }
-        ]
-      }
-    }
-
-  ]
-}
-</script>
 </head>
-
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
-
 </html>

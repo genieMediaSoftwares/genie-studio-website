@@ -24,11 +24,11 @@
  * manifest is skipped, so an interrupted run can simply be started again.
  */
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env"), quiet: true });
 
 const fs = require("fs");
-const path = require("path");
-const axios = require("axios");
+const { downloadImage, validateDownloadUrl } = require("../lib/safeDownload");
 const mysql = require("mysql2");
 
 const { generateAndUploadVariants } = require("../lib/imagePipeline");
@@ -61,11 +61,14 @@ const LIMIT = (() => {
   return i >= 0 ? Number(args[i + 1]) : Infinity;
 })();
 
+const config = require('../lib/config').loadConfig();
+const allowedOrigins = (process.env.BACKFILL_ALLOWED_ORIGINS || 'https://geniestudio.in').split(',').map(v => {
+  const url = new URL(v.trim());
+  if (url.protocol !== 'https:' || url.origin !== v.trim()) throw new Error('BACKFILL_ALLOWED_ORIGINS must contain HTTPS origins');
+  return url.origin;
+});
 const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  ...config.db,
   waitForConnections: true,
   connectionLimit: 5,
 });
@@ -140,7 +143,9 @@ async function ensureColumns() {
 async function collectUrls() {
   const urls = new Set();
   const add = (u) => {
-    if (typeof u === "string" && u.includes("geniestudio.in/uploads/")) urls.add(u);
+    if (typeof u !== 'string') return;
+    try { urls.add(validateDownloadUrl(u, allowedOrigins)); }
+    catch { /* Ignore external or unapproved destinations, including local addresses. */ }
   };
 
   for (const [table, column] of [
@@ -293,12 +298,7 @@ async function main() {
   for (const [i, url] of todo.entries()) {
     const label = `[${i + 1}/${todo.length}] ${url.split("/").pop()}`;
     try {
-      const response = await axios.get(url, {
-        responseType: "arraybuffer",
-        timeout: 120000,
-        maxContentLength: Infinity,
-      });
-      const buffer = Buffer.from(response.data);
+      const buffer = await downloadImage(url, allowedOrigins);
 
       console.log(`${label}  ${(buffer.length / 1024 / 1024).toFixed(2)} MB`);
 

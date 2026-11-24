@@ -1,11 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { X, CheckCircle, AlertCircle } from "lucide-react";
 
 /** Shared admin toast — same look across Blog Management and Image Library. */
 export default function AdminToast({ toast, onClose }) {
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(onClose, 3500);
+    const t = setTimeout(() => onCloseRef.current(), 3500);
     return () => clearTimeout(t);
   }, [toast]);
 
@@ -26,7 +28,7 @@ export default function AdminToast({ toast, onClose }) {
         ? <CheckCircle size={18} className="shrink-0" style={{ color: "#16a34a" }} />
         : <AlertCircle size={18} className="shrink-0" style={{ color: "#dc2626" }} />}
       <span className="font-semibold text-sm flex-1">{toast.msg}</span>
-      <button onClick={onClose} className="opacity-50 hover:opacity-100 transition shrink-0">
+      <button onClick={onClose} aria-label="Dismiss notification" className="opacity-50 hover:opacity-100 transition shrink-0">
         <X size={15} />
       </button>
     </div>

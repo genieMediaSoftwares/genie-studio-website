@@ -28,6 +28,7 @@ const AdminImages = lazy(() => import("./pages/AdminImages"));
 const AdminPortfolio = lazy(() => import("./pages/AdminPortfolio"));
 const AdminGallery = lazy(() => import("./pages/AdminGallery"));
 import ProtectedRoute from "./components/ProtectedRoute";
+import Seo from "./components/Seo";
 import "aos/dist/aos.css";
 function App() {
   const location = useLocation();
@@ -48,9 +49,10 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden">
+      {location.pathname.startsWith('/admin') && <Seo title="Admin | Genie Studio" path={location.pathname} noindex />}
       <DeferredSplashCursor />
       <ScrollToTop />
-      <Header />
+      <Header key={location.pathname} />
       {/* A plain wrapper, not <main>: every route renders its own <main>, and
           two nested main landmarks make a screen reader's landmark list
           ambiguous ("Document should not have more than one main landmark").
@@ -59,7 +61,7 @@ function App() {
         {/* Only the lazy admin routes can suspend; public routes render
             synchronously exactly as before, so nothing about the visitor-facing
             pages changes. */}
-        <Suspense fallback={null}>
+        <Suspense fallback={<div role="status" className="min-h-[50vh] flex items-center justify-center pt-24">Loading page...</div>}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />

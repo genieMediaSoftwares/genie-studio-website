@@ -1,3 +1,4 @@
+import { getToken } from "./auth";
 import BASE_URL from "../api";
 
 /**
@@ -18,10 +19,7 @@ export const PORTFOLIO_CATEGORIES = [
 export const categoryName = (id) =>
   PORTFOLIO_CATEGORIES.find((c) => c.id === id)?.name || id;
 
-const authHeader = () => {
-  const token = localStorage.getItem("token");
-  return token ? { Authorization: token } : {};
-};
+const authHeader = () => getAuthHeader();
 
 const parseJson = async (res) => {
   try {

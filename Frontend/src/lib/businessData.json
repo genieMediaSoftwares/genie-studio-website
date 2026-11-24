@@ -1,0 +1,112 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://geniestudio.in/#organization",
+      "name": "Genie Media and Studio",
+      "alternateName": [
+        "Genie Studio",
+        "GenieStudio",
+        "Genie Studio Visakhapatnam"
+      ],
+      "url": "https://geniestudio.in/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://geniestudio.in/GenieStudio.png"
+      },
+      "description": "Genie Media and Studio, operating as Genie Studio, is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
+      "sameAs": [
+        "https://www.instagram.com/itsgeniestudio_official/"
+      ]
+    },
+    {
+      "@type": "LocalBusiness",
+      "@id": "https://geniestudio.in/#business",
+      "name": "Genie Media and Studio",
+      "alternateName": [
+        "Genie Studio",
+        "GenieStudio",
+        "Genie Studio Visakhapatnam"
+      ],
+      "url": "https://geniestudio.in/",
+      "image": "https://geniestudio.in/GenieStudio.png",
+      "logo": "https://geniestudio.in/GenieStudio.png",
+      "description": "Genie Studio is a professional photography, videography and podcast production studio in Visakhapatnam, Andhra Pradesh.",
+      "telephone": "+91 9032845433",
+      "email": "admin@geniestudio.in",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "5A-2, KP Icon, Yendada",
+        "addressLocality": "Visakhapatnam",
+        "addressRegion": "Andhra Pradesh",
+        "postalCode": "530045",
+        "addressCountry": "IN"
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "Visakhapatnam"
+      },
+      "parentOrganization": {
+        "@id": "https://geniestudio.in/#organization"
+      },
+      "sameAs": [
+        "https://www.instagram.com/itsgeniestudio_official/"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Photography, Videography and Podcast Production Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Podcast Shoots",
+              "url": "https://geniestudio.in/services/podcast-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Product Shoots",
+              "url": "https://geniestudio.in/services/product-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Corporate Shoots",
+              "url": "https://geniestudio.in/services/corporate-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Event Shoots",
+              "url": "https://geniestudio.in/services/event-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Professional Shoots",
+              "url": "https://geniestudio.in/services/professional-shoots"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Business Portfolio Shoots",
+              "url": "https://geniestudio.in/services/business-portfolio-shoots"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

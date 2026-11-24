@@ -1,3 +1,4 @@
+import { getToken, clearToken } from "../lib/auth";
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Orbit } from "lucide-react";
@@ -12,7 +13,7 @@ import {
 
 export default function AdminGallery() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = getToken();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +109,7 @@ export default function AdminGallery() {
         publishedCount={counts.published}
         draftCount={counts.draft}
         onSelect={handleNav}
-        onLogout={() => { localStorage.removeItem("token"); navigate("/admin"); }}
+        onLogout={() => { clearToken(); navigate("/admin"); }}
       />
 
       <section className="max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-8">

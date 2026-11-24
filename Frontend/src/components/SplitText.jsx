@@ -31,13 +31,7 @@ const SplitText = ({
   }, [onLetterAnimationComplete]);
 
   useEffect(() => {
-    if (document.fonts.status === 'loaded') {
-      setFontsLoaded(true);
-    } else {
-      document.fonts.ready.then(() => {
-        setFontsLoaded(true);
-      });
-    }
+    document.fonts.ready.then(() => setFontsLoaded(true));
   }, []);
 
   useGSAP(() => {
@@ -48,7 +42,7 @@ const SplitText = ({
     if (el._rbsplitInstance) {
       try {
         el._rbsplitInstance.revert();
-      } catch (_) {
+      } catch { /* An already-reverted split needs no further cleanup. */
       }
       el._rbsplitInstance = null;
     }
@@ -112,7 +106,7 @@ const SplitText = ({
       });
       try {
         splitInstance.revert();
-      } catch (_) {
+      } catch { /* An already-reverted split needs no further cleanup. */
         /* ignore */
       }
       el._rbsplitInstance = null;

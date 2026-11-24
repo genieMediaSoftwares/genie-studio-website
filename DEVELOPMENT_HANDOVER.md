@@ -1,3 +1,5 @@
+> Updated 2026-11-20: This historical document predates the security and prerendering changes. Use README.md and PRODUCTION_REVIEW.md for current setup, verification, and release blockers.
+
 # Genie Studio — Developer Handover Guide
 
 > **Target Audience:** Incoming Software Engineers, Full-Stack Developers, and DevOps Engineers.  
@@ -134,9 +136,9 @@ In `backend/.env`:
 ```ini
 DB_HOST=127.0.0.1
 DB_USER=root
-DB_PASSWORD=your_local_mysql_password
+DB_PASSWORD=
 DB_NAME=geniestudio_db
-JWT_SECRET=development_secret_key_minimum_32_characters_long
+JWT_SECRET=
 PORT=5000
 NODE_ENV=development
 BASE_URL=http://localhost:5000
@@ -176,14 +178,8 @@ CREATE TABLE IF NOT EXISTS blogs (
   KEY idx_status_created (status, createdAt)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed an admin account (Email: admin@geniestudio.in, Password: Password@123)
-INSERT INTO admins (email, password, createdAt, updatedAt)
-VALUES (
-  'admin@geniestudio.in',
-  '$2b$10$T1K7JvEaPZsmU33R4h1EaOJ6zF8v/JgYVdY6XgVb0c0HqA5c0e1uG',
-  UNIX_TIMESTAMP() * 1000,
-  UNIX_TIMESTAMP() * 1000
-) ON DUPLICATE KEY UPDATE id=id;
+-- Create an admin using a unique password hashed with bcrypt; do not publish account credentials.
+-- Provision administrator credentials privately with a unique bcrypt hash; no shared account is supplied.
 ```
 
 ### Step 4: Run Locally

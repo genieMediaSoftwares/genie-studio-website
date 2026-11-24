@@ -1,143 +1,95 @@
-const path = require("path");
-const fs = require("fs");
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require("@aws-sdk/client-s3");
+const path = require('node:path');
+const fs = require('node:fs/promises');
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const axios = require('axios');
+const FormData = require('form-data');
+const { httpError } = require('./security');
 
-/**
- * Storage Provider for GenieStudio.
- *
- * Supports Cloudflare R2 (S3-compatible persistent storage) when environment
- * variables are set:
- *   - R2_ACCOUNT_ID
- *   - R2_ACCESS_KEY_ID
- *   - R2_SECRET_ACCESS_KEY
- *   - R2_BUCKET_NAME
- *   - R2_PUBLIC_DOMAIN (e.g., https://pub-xxx.r2.dev or https://media.geniestudio.in)
- *
- * Falls back safely to local persistent storage in backend/public/uploads if R2
- * is not configured.
- */
-
-const hasR2Config = () => {
-  return Boolean(
-    process.env.R2_ACCOUNT_ID &&
-    process.env.R2_ACCESS_KEY_ID &&
-    process.env.R2_SECRET_ACCESS_KEY &&
-    process.env.R2_BUCKET_NAME &&
-    process.env.R2_PUBLIC_DOMAIN
-  );
-};
-
-let s3Client = null;
-
-const getS3Client = () => {
-  if (!s3Client && hasR2Config()) {
-    s3Client = new S3Client({
-      region: "auto",
-      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: process.env.R2_ACCESS_KEY_ID,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-      },
-    });
+const SAFE_NAME = /^[a-zA-Z0-9][a-zA-Z0-9._-]*\.(?:jpg|jpeg|png|webp|avif)$/i;
+function checkedName(filename) {
+  if (typeof filename !== 'string' || filename.length > 255 || !SAFE_NAME.test(filename) || filename.includes('..')) {
+    throw httpError(400, 'Unsafe storage filename.');
   }
-  return s3Client;
-};
-
-/**
- * Upload a buffer or stream to persistent storage (R2 or local fallback).
- *
- * @param {Buffer|fs.ReadStream} bufferOrStream
- * @param {string} filename - Target filename (e.g. 1786601041-image.webp)
- * @param {string} mimeType - e.g. "image/webp", "image/jpeg"
- * @returns {Promise<string>} Public HTTPS URL of the uploaded image
- */
-async function uploadToStorage(bufferOrStream, filename, mimeType = "image/jpeg") {
-  if (hasR2Config()) {
-    const client = getS3Client();
-    const body = Buffer.isBuffer(bufferOrStream)
-      ? bufferOrStream
-      : await streamToBuffer(bufferOrStream);
-
-    const command = new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: filename,
-      Body: body,
-      ContentType: mimeType,
-    });
-
-    await client.send(command);
-
-    const domain = process.env.R2_PUBLIC_DOMAIN.replace(/\/+$/, "");
-    return `${domain}/${filename}`;
-  }
-
-  // Fallback to local storage in public/uploads
-  const uploadDir = path.join(__dirname, "../public/uploads");
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const targetPath = path.join(uploadDir, filename);
-
-  if (Buffer.isBuffer(bufferOrStream)) {
-    fs.writeFileSync(targetPath, bufferOrStream);
-  } else {
-    const writer = fs.createWriteStream(targetPath);
-    await new Promise((resolve, reject) => {
-      bufferOrStream.pipe(writer);
-      writer.on("finish", resolve);
-      writer.on("error", reject);
-    });
-  }
-
-  const baseUrl = (process.env.BASE_URL || "").replace(/\/+$/, "");
-  return `${baseUrl}/uploads/${filename}`;
+  return filename;
 }
 
-/**
- * Delete a file from persistent storage if it exists.
- */
-async function deleteFromStorage(filename) {
-  if (hasR2Config()) {
-    try {
-      const client = getS3Client();
-      await client.send(
-        new DeleteObjectCommand({
-          Bucket: process.env.R2_BUCKET_NAME,
-          Key: filename,
-        })
-      );
-      return true;
-    } catch (err) {
-      console.error("R2 delete error:", err.message);
-      return false;
+function createStorage(config, { transport = axios, client } = {}) {
+  let s3 = client;
+  const getClient = () => s3 ||= new S3Client({
+    region: 'auto', endpoint: `https://${config.r2.accountId}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId: config.r2.accessKeyId, secretAccessKey: config.r2.secretAccessKey },
+  });
+  const provider = config.storageProvider;
+  async function uploadToStorage(input, filename, mimeType = 'image/jpeg') {
+    checkedName(filename);
+    const chunks = [];
+    const buffer = Buffer.isBuffer(input) ? input : await (async () => {
+      for await (const chunk of input) chunks.push(chunk);
+      return Buffer.concat(chunks);
+    })();
+    if (provider === 'r2') {
+      await getClient().send(new PutObjectCommand({
+        Bucket: config.r2.bucket, Key: filename, Body: buffer, ContentType: mimeType,
+        IfNoneMatch: '*',
+      }));
+      return `${config.r2.publicDomain}/${filename}`;
     }
+    if (provider === 'hostinger') {
+      const form = new FormData();
+      form.append('file', buffer, { filename, contentType: mimeType });
+      const response = await transport.post(config.hostingerUploadUrl, form, {
+        headers: { ...form.getHeaders(), ...(config.hostingerUploadToken ? { Authorization: `Bearer ${config.hostingerUploadToken}` } : {}) },
+        timeout: 10000, maxRedirects: 0, maxBodyLength: 30 * 1024 * 1024, maxContentLength: 64 * 1024,
+      });
+      const url = new URL(response.data?.url);
+      if (url.protocol !== 'https:' || url.username || url.password ||
+          url.origin !== new URL(config.hostingerUploadUrl).origin || !url.pathname.startsWith('/uploads/') ||
+          !SAFE_NAME.test(path.posix.basename(url.pathname))) throw new Error('Upload service returned an invalid image URL');
+      return url.href;
+    }
+    await fs.mkdir(config.uploadDir, { recursive: true });
+    const target = path.join(config.uploadDir, filename);
+    try {
+      await fs.writeFile(target, buffer, { flag: 'wx' });
+    } catch (err) {
+      // A resumed backfill may already have produced the exact derivative.
+      if (err.code !== 'EEXIST' || !(await fs.readFile(target)).equals(buffer)) throw err;
+    }
+    return `${config.baseUrl}/uploads/${filename}`;
   }
 
-  try {
-    const targetPath = path.join(__dirname, "../public/uploads", filename);
-    if (fs.existsSync(targetPath)) {
-      fs.unlinkSync(targetPath);
+  function ownsUrl(url) {
+    try {
+      const base = provider === 'r2' ? config.r2.publicDomain : config.baseUrl + '/uploads';
+      const parsed = new URL(url), root = new URL(base);
+      return provider !== 'hostinger' && parsed.origin === root.origin &&
+        parsed.pathname.startsWith(root.pathname.replace(/\/$/, '') + '/') &&
+        !parsed.search && !parsed.hash;
+    } catch { return false; }
+  }
+  async function deleteFromStorage(filename, url) {
+    checkedName(filename);
+    if (!ownsUrl(url)) throw httpError(409, 'This image belongs to legacy or different storage and cannot be safely deleted here.');
+    if (decodeURIComponent(new URL(url).pathname.split('/').pop()) !== filename) throw httpError(409, 'Storage metadata does not match the image URL.');
+    if (provider === 'r2') {
+      await getClient().send(new DeleteObjectCommand({ Bucket: config.r2.bucket, Key: filename }));
+    } else {
+      try { await fs.unlink(path.join(config.uploadDir, filename)); }
+      catch (err) { if (err.code !== 'ENOENT') throw err; }
     }
     return true;
-  } catch (err) {
-    console.error("Local file delete error:", err.message);
-    return false;
   }
+  return { uploadToStorage, deleteFromStorage, ownsUrl, provider };
 }
 
-function streamToBuffer(stream) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    stream.on("data", (chunk) => chunks.push(chunk));
-    stream.on("end", () => resolve(Buffer.concat(chunks)));
-    stream.on("error", reject);
-  });
+// Scripts use the same validated configuration as the application.
+let defaultStorage;
+function configuredStorage() {
+  if (!defaultStorage) defaultStorage = createStorage(require('./config').loadConfig());
+  return defaultStorage;
 }
-
 module.exports = {
-  uploadToStorage,
-  deleteFromStorage,
-  hasR2Config,
+  createStorage, checkedName,
+  uploadToStorage: (...args) => configuredStorage().uploadToStorage(...args),
+  deleteFromStorage: (...args) => configuredStorage().deleteFromStorage(...args),
 };
-

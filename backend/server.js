@@ -1,5 +1,5 @@
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+require("dotenv").config({ path: path.resolve(__dirname, ".env"), quiet: true });
 
 const express = require("express");
 const mysql = require("mysql2");
@@ -7,27 +7,53 @@ const cors = require("cors");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const fs = require("fs");
 const axios = require("axios");
-const FormData = require("form-data");
 const { generateAndUploadVariants } = require("./lib/imagePipeline");
-const { uploadToStorage, deleteFromStorage, hasR2Config } = require("./lib/storageProvider");
+const { createStorage } = require("./lib/storageProvider");
+const fs = require("node:fs");
+const { loadConfig } = require("./lib/config");
+const { transaction } = require("./lib/transaction");
+const { filterImage, validateImage } = require("./lib/imageValidation");
+const { httpError, rateLimit, validSlug, escapeHtml, safeJson, publicImageUrl } = require("./lib/security");
 
-const PORT = process.env.PORT || 5000;
+function createApp({ config = loadConfig(), db: suppliedDb, storage: suppliedStorage, transport = axios, initializeDatabase = true, variantGenerator = generateAndUploadVariants } = {}) {
+const mediaStorage = suppliedStorage || createStorage(config);
+const bundledMedia = new Set(require('./data/siteSections.json').map(slot => slot.image_url));
+for (const url of fs.readFileSync(path.join(__dirname, 'scripts/image-urls.txt'), 'utf8').split(/\r?\n/).map(s => s.trim()).filter(Boolean)) bundledMedia.add(url);
+try {
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../Frontend/src/lib/imageManifest.json'), 'utf8'));
+  for (const [url, entry] of Object.entries(manifest)) {
+    bundledMedia.add(url);
+    for (const variant of Object.values(entry.variants || {}).flatMap(v => Object.values(v))) bundledMedia.add(variant);
+  }
+} catch (err) { if (err.code !== 'ENOENT') throw err; }
+const { uploadToStorage, deleteFromStorage } = mediaStorage;
+
 const app = express();
 
 // ================= CORS =================
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://geniestudio.in",
-];
+app.disable("x-powered-by");
+app.set("trust proxy", config.trustProxy);
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  if (config.production) res.setHeader("Strict-Transport-Security", "max-age=31536000");
+  if (req.path.startsWith('/api/') || req.path.startsWith('/share/')) {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  }
+  next();
+});
+const allowedOrigins = config.corsOrigins;
 
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("Not allowed by CORS"));
+      return callback(httpError(403, "Origin is not allowed"));
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -35,25 +61,42 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 // ================= STATIC FILES =================
-app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+app.use("/uploads", (req, res, next) => {
+  if (!/\.(?:jpe?g|png|webp|avif)$/i.test(req.path)) return res.sendStatus(404);
+  res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+  next();
+}, express.static(config.uploadDir, { dotfiles: "deny", index: false }));
 
 // ================= DB CONNECTION =================
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+const db = suppliedDb || mysql.createPool({
+  ...config.db,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
+  queueLimit: 100,
 });
 
-db.query("SELECT 1", (err) => {
-  if (err) console.log("❌ DB ERROR:", err);
-  else console.log("✅ DB Connected Stable");
+let initialization = Promise.resolve();
+let initializationError;
+const initializeQuery = (sql, params, callback) => {
+  if (!initializeDatabase) return;
+  if (typeof params === 'function') { callback = params; params = []; }
+  initialization = initialization.then(() => {
+    if (initializationError) return;
+    return new Promise((resolve, reject) => {
+    db.query(sql, params || [], (err, result) => {
+      try { callback?.(err, result); } catch (callbackError) { reject(callbackError); return; }
+      if (err) reject(new Error('Database initialization failed. Check server configuration and schema privileges.'));
+      else resolve();
+    });
+    });
+  }).catch(err => { initializationError ||= err; });
+};
+initializeQuery("SELECT 1", (err) => {
+  if (err) console.error("Database connectivity check failed.");
+  else console.log("Database connected");
 });
 
 // Promise wrapper so the newer image endpoints can use async/await
@@ -121,7 +164,7 @@ const attachImageVariants = async (rows, urlKey = "image_url") => {
 // Central registry of every image pushed to Hostinger — used by the standalone
 // Image Library (/admin/images) and by the Blog Editor's Featured Image.
 // Blogs keep storing the image URL, so nothing about existing rows changes.
-db.query(
+initializeQuery(
   `CREATE TABLE IF NOT EXISTS images (
      id            INT AUTO_INCREMENT PRIMARY KEY,
      filename      VARCHAR(255) NOT NULL,
@@ -152,14 +195,14 @@ db.query(
 // Both are nullable: an image with no derivatives yet still renders from
 // file_url, it just does not get a srcSet.
 const addColumnIfMissing = (table, column, definition) => {
-  db.query(
+  initializeQuery(
     `SELECT COUNT(*) AS n FROM information_schema.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
     [table, column],
     (err, rows) => {
       if (err) return console.log(`❌ ${table}.${column} check failed:`, err.message);
       if (rows[0].n > 0) return;
-      db.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`, (alterErr) => {
+      initializeQuery(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`, (alterErr) => {
         if (alterErr) console.log(`❌ ${table}.${column} add failed:`, alterErr.message);
         else console.log(`✅ ${table}.${column} added`);
       });
@@ -169,6 +212,8 @@ const addColumnIfMissing = (table, column, definition) => {
 
 addColumnIfMissing("images", "variants", "TEXT DEFAULT NULL");
 addColumnIfMissing("images", "lqip", "TEXT DEFAULT NULL");
+addColumnIfMissing("images", "storage_provider", "VARCHAR(32) DEFAULT NULL");
+addColumnIfMissing("images", "storage_bucket", "VARCHAR(255) DEFAULT NULL");
 
 // ================= PORTFOLIO =================
 // Categories the public Portfolio page filters by. "all" is a view, not a
@@ -182,30 +227,7 @@ const PORTFOLIO_CATEGORIES = [
   "business",
 ];
 
-// The images the Portfolio page shipped with, used to seed the table on first
-// run so the public page looks identical the moment this goes live.
-const PORTFOLIO_SEED = [
-  ["corporate", "https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?w=800&q=80", "Corporate Leadership Portraits", "Professional portraits crafted for executives and leadership branding."],
-  ["corporate", "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?w=800&q=80", "Office & Workplace Culture", "Authentic visuals showcasing company culture and work environment."],
-  ["corporate", "https://images.pexels.com/photos/1181345/pexels-photo-1181345.jpeg?w=800&q=80", "Team & Staff Photography", "Clean and consistent team photos for websites and corporate profiles."],
-  ["events", "https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?w=800&q=80", "Corporate Conferences", "Complete coverage of conferences, seminars, and business summits."],
-  ["events", "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg?w=800&q=80", "Brand Launch Events", "High-energy visuals capturing brand launches and promotions."],
-  ["events", "https://images.pexels.com/photos/2747449/pexels-photo-2747449.jpeg?w=800&q=80", "Corporate Celebrations", "Professional documentation of corporate gatherings and milestones."],
-  ["product", "https://images.pexels.com/photos/1667088/pexels-photo-1667088.jpeg?w=800&q=80", "E-commerce Product Shoots", "Clean, conversion-focused product photography for online stores."],
-  ["product", "https://images.pexels.com/photos/1342609/pexels-photo-1342609.jpeg?w=800&q=80", "Lifestyle Product Photography", "Products captured in real-life environments for stronger storytelling."],
-  ["product", "https://images.pexels.com/photos/1170986/pexels-photo-1170986.jpeg?w=800&q=80", "Food & Commercial Products", "Stylized product visuals designed for marketing and advertising."],
-  ["podcast", "https://images.pexels.com/photos/7586659/pexels-photo-7586659.jpeg?w=800&q=80", "Podcast Studio Setup", "Professional podcast visuals with studio lighting and clean framing."],
-  ["podcast", "https://images.pexels.com/photos/7648047/pexels-photo-7648047.jpeg?w=800&q=80", "Video Podcast Recording", "High-quality video podcasts ready for YouTube and social platforms."],
-  ["podcast", "https://images.pexels.com/photos/7988086/pexels-photo-7988086.jpeg?w=800&q=80", "Interview Podcast Sessions", "Clean, cinematic podcast interviews with professional audio setup."],
-  ["professional", "https://images.pexels.com/photos/3778603/pexels-photo-3778603.jpeg?w=800&q=80", "Personal Branding Portraits", "Premium portraits for professionals, founders, and creators."],
-  ["professional", "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?w=800&q=80", "Studio Portrait Sessions", "Well-lit studio portraits with a polished professional finish."],
-  ["professional", "https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg?w=800&q=80", "Creative Professional Portraits", "Stylish portraits designed to stand out across platforms."],
-  ["business", "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?w=800&q=80", "Brand Portfolio Photography", "Visual storytelling crafted for business portfolios and websites."],
-  ["business", "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg?w=800&q=80", "Startup & Company Showcases", "End-to-end business visuals highlighting products, teams, and spaces."],
-  ["business", "https://images.pexels.com/photos/3182765/pexels-photo-3182765.jpeg?w=800&q=80", "Corporate Brand Storytelling", "Consistent imagery designed to reflect brand identity and vision."],
-];
-
-db.query(
+initializeQuery(
   `CREATE TABLE IF NOT EXISTS portfolio_images (
      id          INT AUTO_INCREMENT PRIMARY KEY,
      category    VARCHAR(50)  NOT NULL,
@@ -222,42 +244,13 @@ db.query(
     if (err) return console.log("❌ portfolio_images table error:", err.message);
     console.log("✅ portfolio_images table ready");
 
-    // Seed once — only when the table is completely empty, so an admin who
-    // deletes images never gets them silently restored on the next restart.
-    db.query("SELECT COUNT(*) AS n FROM portfolio_images", (err2, rows) => {
-      if (err2 || rows[0].n > 0) return;
-      const now = Date.now();
-      const values = PORTFOLIO_SEED.map(([cat, url, title, desc], i) => [
-        cat, url, title, desc, i, now, now,
-      ]);
-      db.query(
-        `INSERT INTO portfolio_images
-           (category, image_url, title, description, sort_order, created_at, updated_at)
-         VALUES ?`,
-        [values],
-        (err3) => {
-          if (err3) console.log("❌ portfolio seed error:", err3.message);
-          else console.log(`✅ portfolio seeded with ${values.length} images`);
-        }
-      );
-    });
+
   }
 );
 
 // ================= DOME GALLERY =================
 // One flat, ordered list of images for the DomeGallery component on /gallery.
-// Seeded from the values that used to be hardcoded in DomeGallery.jsx.
-const GALLERY_SEED = [
-  ["https://images.unsplash.com/photo-1755331039789-7e5680e26e8f?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", "Abstract art"],
-  ["https://images.unsplash.com/photo-1755569309049-98410b94f66d?q=80&w=772&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", "Modern sculpture"],
-  ["https://images.unsplash.com/photo-1755497595318-7e5e3523854f?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", "Digital artwork"],
-  ["https://images.unsplash.com/photo-1755353985163-c2a0fe5ac3d8?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", "Contemporary art"],
-  ["https://images.unsplash.com/photo-1745965976680-d00be7dc0377?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", "Geometric pattern"],
-  ["https://images.unsplash.com/photo-1752588975228-21f44630bb3c?q=80&w=774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", "Textured surface"],
-  ["https://pbs.twimg.com/media/Gyla7NnXMAAXSo_?format=jpg&name=large", "Social media image"],
-];
-
-db.query(
+initializeQuery(
   `CREATE TABLE IF NOT EXISTS gallery_images (
      id         INT AUTO_INCREMENT PRIMARY KEY,
      image_url  VARCHAR(500) NOT NULL,
@@ -271,313 +264,14 @@ db.query(
     if (err) return console.log("❌ gallery_images table error:", err.message);
     console.log("✅ gallery_images table ready");
 
-    // Seed once, only while empty — deleting images must not bring them back
-    db.query("SELECT COUNT(*) AS n FROM gallery_images", (err2, rows) => {
-      if (err2 || rows[0].n > 0) return;
-      const now = Date.now();
-      const values = GALLERY_SEED.map(([url, alt], i) => [url, alt, i, now, now]);
-      db.query(
-        "INSERT INTO gallery_images (image_url, alt, sort_order, created_at, updated_at) VALUES ?",
-        [values],
-        (err3) => {
-          if (err3) console.log("❌ gallery seed error:", err3.message);
-          else console.log(`✅ dome gallery seeded with ${values.length} images`);
-        }
-      );
-    });
+
   }
 );
 
 // ================= SITE SECTIONS (PAGE IMAGE ASSIGNMENTS) =================
-const DEFAULT_SITE_SECTIONS = [
-  // Homepage Hero
-  {
-    category: "homepage_hero",
-    section_key: "home_hero_slide_1",
-    section_name: "Slide 1 - Main Podcast Studio",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
-    alt_text: "Genie Studio podcast recording set in Visakhapatnam",
-    aspect_ratio: "16:9",
-    sort_order: 1,
-  },
-  {
-    category: "homepage_hero",
-    section_key: "home_hero_slide_2",
-    section_name: "Slide 2 - 4K Multi-Camera Setup",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
-    alt_text: "Multi-camera 4K podcast production setup in Visakhapatnam",
-    aspect_ratio: "16:9",
-    sort_order: 2,
-  },
-  {
-    category: "homepage_hero",
-    section_key: "home_hero_slide_3",
-    section_name: "Slide 3 - Studio Audio Setup",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
-    alt_text: "Genie Studio podcast audio recording and studio sound engineering",
-    aspect_ratio: "16:9",
-    sort_order: 3,
-  },
+const DEFAULT_SITE_SECTIONS = require('./data/siteSections.json');
 
-  // Homepage Services
-  {
-    category: "homepage_services",
-    section_key: "home_service_podcast",
-    section_name: "Podcast Shoots Card",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786530713_1786530711207-616205262.jpg",
-    alt_text: "Podcast Shoots by GenieStudio in Visakhapatnam",
-    aspect_ratio: "4:5",
-    sort_order: 1,
-  },
-  {
-    category: "homepage_services",
-    section_key: "home_service_product",
-    section_name: "Product Shoots Card",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786601780_1786601778626-797870812.png",
-    alt_text: "Product Shoots by GenieStudio in Visakhapatnam",
-    aspect_ratio: "4:5",
-    sort_order: 2,
-  },
-  {
-    category: "homepage_services",
-    section_key: "home_service_corporate",
-    section_name: "Corporate Shoots Card",
-    page_name: "Home Page",
-    image_url: "https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=800",
-    alt_text: "Corporate Shoots by GenieStudio in Visakhapatnam",
-    aspect_ratio: "4:5",
-    sort_order: 3,
-  },
-  {
-    category: "homepage_services",
-    section_key: "home_service_event",
-    section_name: "Event Shoots Card",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
-    alt_text: "Event Shoots by GenieStudio in Visakhapatnam",
-    aspect_ratio: "4:5",
-    sort_order: 4,
-  },
-  {
-    category: "homepage_services",
-    section_key: "home_service_professional",
-    section_name: "Professional Shoots Card",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786520942_1786520939441-392375551.webp",
-    alt_text: "Professional Shoots by GenieStudio in Visakhapatnam",
-    aspect_ratio: "4:5",
-    sort_order: 5,
-  },
-  {
-    category: "homepage_services",
-    section_key: "home_service_business",
-    section_name: "Business Portfolio Card",
-    page_name: "Home Page",
-    image_url: "https://geniestudio.in/uploads/1786519476_1786519476246-824255335.jpg",
-    alt_text: "Business Portfolio Shoots by GenieStudio in Visakhapatnam",
-    aspect_ratio: "4:5",
-    sort_order: 6,
-  },
-
-  // Homepage Portfolio
-  {
-    category: "homepage_portfolio",
-    section_key: "home_equipment_1",
-    section_name: "Equipment 1 - Cinema Cameras",
-    page_name: "Home Page",
-    image_url: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&q=80",
-    alt_text: "Cinema Cameras",
-    aspect_ratio: "3:4",
-    sort_order: 1,
-  },
-  {
-    category: "homepage_portfolio",
-    section_key: "home_equipment_2",
-    section_name: "Equipment 2 - Studio Lighting",
-    page_name: "Home Page",
-    image_url: "https://images.unsplash.com/photo-1527011046414-4781f1f94f8c?w=800&q=80",
-    alt_text: "Studio Lighting",
-    aspect_ratio: "3:4",
-    sort_order: 2,
-  },
-  {
-    category: "homepage_portfolio",
-    section_key: "home_equipment_3",
-    section_name: "Equipment 3 - Prime Lenses",
-    page_name: "Home Page",
-    image_url: "https://images.unsplash.com/photo-1617005082133-548c4dd27f35?w=800&q=80",
-    alt_text: "Prime Lenses",
-    aspect_ratio: "3:4",
-    sort_order: 3,
-  },
-  {
-    category: "homepage_portfolio",
-    section_key: "home_equipment_4",
-    section_name: "Equipment 4 - Audio Gear",
-    page_name: "Home Page",
-    image_url: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&q=80",
-    alt_text: "Audio Gear",
-    aspect_ratio: "3:4",
-    sort_order: 4,
-  },
-
-  // About Page
-  {
-    category: "about",
-    section_key: "about_story_1",
-    section_name: "Our Story - Studio Microphone Setup",
-    page_name: "About Page",
-    image_url: "https://geniestudio.in/uploads/1786531738_1786531737915-76485310.webp",
-    alt_text: "Professional microphone and podcast recording setup at Genie Studio",
-    aspect_ratio: "4:3",
-    sort_order: 1,
-  },
-  {
-    category: "about",
-    section_key: "about_story_2",
-    section_name: "Our Story - Cinema Production Setup",
-    page_name: "About Page",
-    image_url: "https://geniestudio.in/uploads/1786530714_1786530711205-339283661.jpg",
-    alt_text: "Cinema camera and production setup at Genie Studio",
-    aspect_ratio: "4:3",
-    sort_order: 2,
-  },
-  {
-    category: "about",
-    section_key: "about_story_3",
-    section_name: "Our Story - Post-Production Suite",
-    page_name: "About Page",
-    image_url: "https://geniestudio.in/uploads/1786531739_1786531738826-206533018.webp",
-    alt_text: "Video editing and post-production workflow at Genie Studio",
-    aspect_ratio: "4:3",
-    sort_order: 3,
-  },
-  {
-    category: "about",
-    section_key: "about_middle_banner",
-    section_name: "Studio Space Showcase Banner",
-    page_name: "About Page",
-    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
-    alt_text: "Professional podcast recording studio at Genie Studio with cameras and lighting",
-    aspect_ratio: "16:9",
-    sort_order: 4,
-  },
-  {
-    category: "about",
-    section_key: "about_equipment_banner",
-    section_name: "Equipment & Optics Showcase",
-    page_name: "About Page",
-    image_url: "https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp",
-    alt_text: "Professional camera lens and studio production equipment at Genie Studio",
-    aspect_ratio: "16:9",
-    sort_order: 5,
-  },
-
-  // Service Pages
-  {
-    category: "services",
-    section_key: "service_hero_podcast",
-    section_name: "Podcast Shoots Hero Header",
-    page_name: "Podcast Shoots",
-    image_url: "https://geniestudio.in/uploads/1786531745_1786531742798-721756481.webp",
-    alt_text: "Podcast Shoots Hero",
-    aspect_ratio: "16:9",
-    sort_order: 1,
-  },
-  {
-    category: "services",
-    section_key: "service_hero_product",
-    section_name: "Product Shoots Hero Header",
-    page_name: "Product Shoots",
-    image_url: "https://geniestudio.in/uploads/1786531726_1786531724729-939039825.webp",
-    alt_text: "Product Shoots Hero",
-    aspect_ratio: "16:9",
-    sort_order: 2,
-  },
-  {
-    category: "services",
-    section_key: "service_hero_corporate",
-    section_name: "Corporate Shoots Hero Header",
-    page_name: "Corporate Shoots",
-    image_url: "https://geniestudio.in/uploads/1786601041_1786601041120-705832864.png",
-    alt_text: "Corporate Shoots Hero",
-    aspect_ratio: "16:9",
-    sort_order: 3,
-  },
-  {
-    category: "services",
-    section_key: "service_hero_event",
-    section_name: "Event Shoots Hero Header",
-    page_name: "Event Shoots",
-    image_url: "https://geniestudio.in/uploads/1786601438_1786601436150-15515106.png",
-    alt_text: "Event Shoots Hero",
-    aspect_ratio: "16:9",
-    sort_order: 4,
-  },
-  {
-    category: "services",
-    section_key: "service_hero_professional",
-    section_name: "Professional Shoots Hero Header",
-    page_name: "Professional Shoots",
-    image_url: "https://geniestudio.in/uploads/1786608030_1786608028512-709035430.png",
-    alt_text: "Professional Shoots Hero",
-    aspect_ratio: "16:9",
-    sort_order: 5,
-  },
-  {
-    category: "services",
-    section_key: "service_hero_business",
-    section_name: "Business Portfolio Shoots Hero Header",
-    page_name: "Business Portfolio Shoots",
-    image_url: "https://geniestudio.in/uploads/1786519476_1786519476246-824255335.jpg",
-    alt_text: "Business Portfolio Shoots Hero",
-    aspect_ratio: "16:9",
-    sort_order: 6,
-  },
-
-  // Portfolio Page
-  {
-    category: "portfolio",
-    section_key: "portfolio_hero_banner",
-    section_name: "Portfolio Page Hero Banner",
-    page_name: "Portfolio Page",
-    image_url: "https://geniestudio.in/uploads/1786524726_1786524725461-113127996.JPG",
-    alt_text: "Genie Studio Portfolio in Visakhapatnam",
-    aspect_ratio: "16:9",
-    sort_order: 1,
-  },
-
-  // Gallery
-  {
-    category: "gallery",
-    section_key: "gallery_hero_banner",
-    section_name: "Gallery 3D Dome Header Banner",
-    page_name: "Gallery Page",
-    image_url: "https://geniestudio.in/uploads/1786602495_1786602495551-770257142.jpg",
-    alt_text: "Genie Studio Gallery in Visakhapatnam",
-    aspect_ratio: "16:9",
-    sort_order: 1,
-  },
-
-  // Blog
-  {
-    category: "blog",
-    section_key: "blog_hero_banner",
-    section_name: "Blog Listing Hero Banner",
-    page_name: "Blog Page",
-    image_url: "https://geniestudio.in/uploads/1786602495_1786602495551-770257142.jpg",
-    alt_text: "Genie Studio Blog Banner",
-    aspect_ratio: "16:9",
-    sort_order: 1,
-  },
-];
-
-db.query(
+initializeQuery(
   `CREATE TABLE IF NOT EXISTS site_sections (
      id INT AUTO_INCREMENT PRIMARY KEY,
      category VARCHAR(50) NOT NULL,
@@ -596,10 +290,10 @@ db.query(
     console.log("✅ site_sections table ready");
 
     // Seed default section slots if empty
-    db.query("SELECT COUNT(*) AS n FROM site_sections", (err2, rows) => {
+    initializeQuery("SELECT COUNT(*) AS n FROM site_sections", (err2, rows) => {
       if (err2 || rows[0].n > 0) return;
       const now = Date.now();
-      const values = DEFAULT_SITE_SECTIONS.map((s) => [
+      const values = DEFAULT_SITE_SECTIONS.filter(s => s.active !== false).map((s) => [
         s.category,
         s.section_key,
         s.section_name,
@@ -610,7 +304,7 @@ db.query(
         s.sort_order,
         now,
       ]);
-      db.query(
+      initializeQuery(
         `INSERT INTO site_sections
           (category, section_key, section_name, page_name, image_url, alt_text, aspect_ratio, sort_order, updated_at)
          VALUES ?`,
@@ -624,144 +318,53 @@ db.query(
   }
 );
 
-// ================= MULTER =================
-// Multer is only used as a temp buffer before uploading to Hostinger
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, "public/uploads");
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, unique);
-  },
-});
-
+// Bounded memory upload: no unvalidated file is written to a public directory.
 const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error("Only images are allowed"));
-  },
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 20, parts: 21, fieldSize: 1024 * 1024 },
+  fileFilter: filterImage,
 });
-
-// ================= HELPER: Upload file to Storage (R2 / Local / Hostinger) =================
-const uploadToHostinger = async (tempFilePath, originalFilename) => {
-  const filename = path.basename(tempFilePath);
-  const ext = path.extname(originalFilename || tempFilePath).toLowerCase();
-  const mimeType = ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg";
-
-  try {
-    const storedUrl = await uploadToStorage(fs.createReadStream(tempFilePath), filename, mimeType);
-    if (storedUrl) return storedUrl;
-  } catch (storageErr) {
-    console.warn("Storage provider upload failed, trying Hostinger fallback:", storageErr.message);
-  }
-
-  try {
-    const formData = new FormData();
-    formData.append("file", fs.createReadStream(tempFilePath));
-
-    const response = await axios.post(
-      "https://geniestudio.in/upload.php",
-      formData,
-      { headers: formData.getHeaders(), timeout: 10000 }
-    );
-
-    return response.data.url; // full HTTPS URL from Hostinger
-  } finally {
-    // Always clean up the temp file, whether upload succeeded or failed
-    try {
-      if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-    } catch (_) {}
-  }
-};
-
-// ================= HELPER: Upload + register an image =================
-// The single entry point for storing images persistently.
-// Both the standalone Image Library and the Blog Editor's Featured Image go through this.
+let activeUploads = 0;
 const uploadAndRegisterImage = async (file, meta = {}) => {
-  // Read the bytes before uploadToHostinger runs — it deletes the temp file.
-  let sourceBuffer = null;
+  if (activeUploads >= 4) throw httpError(429, "The image processor is busy. Please retry shortly.");
+  activeUploads++;
+  let url, filename, derived;
   try {
-    sourceBuffer = fs.readFileSync(file.path);
-  } catch (readErr) {
-    console.error("Could not read temp file for variants:", readErr.message);
-  }
-
-  const url = await uploadToHostinger(file.path, file.originalname);
-  if (!url) throw new Error("Upload service did not return a URL");
-
-  const filename = String(url).split("/").pop().split("?")[0];
-
-  // Responsive derivatives. Deliberately best-effort: if sharp runs out of
-  // memory on a 33-megapixel original, or Hostinger rejects a variant, the
-  // original has already uploaded successfully and the admin still gets a
-  // working URL back. The image simply renders without a srcSet until the
-  // backfill script picks it up.
-  let derived = null;
-  if (sourceBuffer) {
+    const validated = await validateImage(file);
+    filename = validated.filename;
+    url = await uploadToStorage(validated.buffer, filename, validated.mimeType);
+    filename = decodeURIComponent(new URL(url).pathname.split('/').pop());
     try {
-      derived = await generateAndUploadVariants(sourceBuffer, filename);
-    } catch (variantErr) {
-      console.error("Variant generation failed (original still uploaded):", variantErr.message);
+      derived = await variantGenerator(validated.buffer, filename, { storageUpload: uploadToStorage });
+    } catch {
+      console.error("Image derivative generation failed; validated original was retained.");
     }
-  }
-  const record = {
-    id: null,
-    filename,
-    original_name: file.originalname || filename,
-    url,
-    file_url: url,
-    file_path: `public_html/uploads/${filename}`,
-    mime_type: file.mimetype || null,
-    file_size: file.size || null,
-    // Prefer the dimensions sharp measured (post EXIF-rotation) over whatever
-    // the client reported, so width/height always match the bytes on disk.
-    width: derived?.width || Number(meta.width) || null,
-    height: derived?.height || Number(meta.height) || null,
-    variants: derived?.variants || null,
-    lqip: derived?.lqip || null,
-    created_at: Date.now(),
-  };
-
-  try {
-    // Same physical file must never produce two library rows
-    const existing = await dbQuery("SELECT id FROM images WHERE file_url = ? LIMIT 1", [url]);
-    if (existing.length > 0) {
-      record.id = existing[0].id;
-      return record;
+    const record = {
+      filename, original_name: String(file.originalname).replace(/[\x00-\x1f]/g, '').slice(0, 255),
+      url, file_url: url, file_path: null, mime_type: validated.mimeType, file_size: validated.buffer.length,
+      width: validated.width, height: validated.height,
+      variants: derived?.variants || null, lqip: derived?.lqip || null, created_at: Date.now(),
+    };
+    const result = await dbQuery(`INSERT INTO images
+      (filename, original_name, file_url, file_path, mime_type, file_size, width, height, variants, lqip, source, created_at, storage_provider, storage_bucket)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      record.filename, record.original_name, record.file_url, null, record.mime_type, record.file_size,
+      record.width, record.height, record.variants ? JSON.stringify(record.variants) : null, record.lqip,
+      meta.source || 'library', record.created_at, mediaStorage.provider,
+      mediaStorage.provider === 'r2' ? config.r2.bucket : null,
+    ]);
+    return { ...record, id: result.insertId };
+  } catch (err) {
+    // Roll back only new files from this request, never existing company media.
+    if (url) {
+      const createdUrls = [url, ...Object.values(derived?.variants || {}).flatMap(v => Object.values(v))];
+      for (const createdUrl of createdUrls) {
+        try { await deleteFromStorage(decodeURIComponent(new URL(createdUrl).pathname.split('/').pop()), createdUrl); }
+        catch { console.error("New upload cleanup needs retry."); }
+      }
     }
-
-    const result = await dbQuery(
-      `INSERT INTO images
-        (filename, original_name, file_url, file_path, mime_type, file_size, width, height, variants, lqip, source, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        record.filename,
-        record.original_name,
-        record.file_url,
-        record.file_path,
-        record.mime_type,
-        record.file_size,
-        record.width,
-        record.height,
-        record.variants ? JSON.stringify(record.variants) : null,
-        record.lqip,
-        meta.source || "library",
-        record.created_at,
-      ]
-    );
-    record.id = result.insertId;
-  } catch (dbErr) {
-    console.error("DB error registering image (upload still succeeded):", dbErr.message);
-  }
-
-  return record;
+    throw err;
+  } finally { activeUploads--; }
 };
 
 // ================= HELPER: Normalize image URL =================
@@ -780,22 +383,23 @@ const verifyToken = (req, res, next) => {
     ? authHeader.slice(7)
     : authHeader;
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, config.jwtSecret, { algorithms: ["HS256"] }, async (err, decoded) => {
     if (err)
       return res.status(401).json({ success: false, message: "Invalid or expired token" });
-    req.user = decoded;
-    next();
+    if (!decoded || !Number.isInteger(decoded.id) || decoded.id < 1 || typeof decoded.email !== 'string') {
+      return res.status(401).json({ success: false, message: "Invalid or expired token" });
+    }
+    try {
+      const users = await dbQuery("SELECT id FROM admins WHERE id = ? AND email = ? LIMIT 1", [decoded.id, decoded.email]);
+      if (!users.length) return res.status(401).json({ success: false, message: "Invalid or expired token" });
+      req.user = decoded;
+      next();
+    } catch { res.status(503).json({ success: false, message: "Authentication is temporarily unavailable" }); }
   });
 };
 
 app.use((req, res, next) => {
-  if (
-    process.env.NODE_ENV === "production" &&
-    req.headers["x-forwarded-proto"] &&
-    req.headers["x-forwarded-proto"] !== "https"
-  ) {
-    return res.redirect("https://" + req.headers.host + req.url);
-  }
+  if (config.production && !req.secure) return res.status(400).json({ success: false, message: 'HTTPS is required.' });
   next();
 });
 
@@ -805,38 +409,55 @@ app.get("/", (req, res) => {
 });
 
 // ================= LOGIN =================
-app.post("/api/login", (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
-    return res.status(400).json({ success: false, message: "Email and password required" });
-
-  db.query("SELECT * FROM admins WHERE email = ?", [email], async (err, result) => {
-    if (err) return res.status(500).json({ success: false, message: "Database error" });
-    if (result.length === 0)
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-
-    const user = result[0];
-    const isHashed = user.password.startsWith("$2b$") || user.password.startsWith("$2a$");
-    const passwordMatch = isHashed
-      ? await bcrypt.compare(password, user.password)
-      : password === user.password;
-
-    if (!passwordMatch)
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+const loginLimiter = rateLimit();
+const uploadLimiter = rateLimit({ limit: 120, windowMs: 60 * 60 * 1000 });
+app.post("/api/login", loginLimiter, async (req, res, next) => {
+  const { email, password } = req.body || {};
+  if (typeof email !== 'string' || typeof password !== 'string' || email.length > 255 ||
+      !email.trim() || !password || Buffer.byteLength(password) > 72) {
+    return res.status(400).json({ success: false, message: 'A valid email and password are required.' });
+  }
+  try {
+    const users = await dbQuery("SELECT id, email, password FROM admins WHERE email = ? LIMIT 1", [email.trim()]);
+    const user = users[0];
+    if (!user || typeof user.password !== 'string' || !/^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(user.password) ||
+        !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+    const token = jwt.sign({ id: user.id, email: user.email }, config.jwtSecret, { algorithm: 'HS256', expiresIn: config.jwtTtl });
     res.json({ success: true, token });
-  });
+  } catch (err) { next(err); }
+});
+
+app.post('/api/contact', rateLimit({ limit: 5, windowMs: 60 * 60 * 1000 }), async (req, res, next) => {
+  const fields = ['name', 'email', 'phone', 'service', 'bookingDate', 'message'];
+  const data = {};
+  for (const field of fields) {
+    if (typeof req.body?.[field] !== 'string' || req.body[field].length > (field === 'message' ? 5000 : 255)) {
+      return res.status(400).json({ success: false, message: 'Please check your contact details.' });
+    }
+    data[field] = req.body[field].trim();
+  }
+  if (!data.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || !/^[+()\d\s-]{7,25}$/.test(data.phone) ||
+      data.phone.replace(/\D/g, '').length < 7 || !data.service || !/^\d{4}-\d{2}-\d{2}$/.test(data.bookingDate) ||
+      !Number.isFinite(Date.parse(data.bookingDate)) || new Date(data.bookingDate).toISOString().slice(0, 10) !== data.bookingDate) {
+    return res.status(400).json({ success: false, message: 'Please complete the required contact details.' });
+  }
+  if (!config.contactWebhookUrl) return res.status(503).json({ success: false, message: 'Online enquiries are temporarily unavailable. Please call or email the studio.' });
+  try {
+    const result = await transport.post(config.contactWebhookUrl, data, {
+      timeout: 10000, maxRedirects: 0, maxContentLength: 65536,
+      headers: config.contactWebhookToken ? { Authorization: `Bearer ${config.contactWebhookToken}` } : {},
+    });
+    if (result.data?.success !== true) throw new Error('Contact provider did not confirm delivery');
+    res.json({ success: true, message: 'Your enquiry was sent.' });
+  } catch (err) { next(err); }
 });
 
 // ================= IMAGE LIBRARY =================
 // Standalone upload — no blog required. Uses the exact same pipeline as the
 // Blog Editor's Featured Image (multer → upload.php → public_html/uploads/).
-app.post("/api/images", verifyToken, upload.single("image"), async (req, res) => {
+app.post("/api/images", verifyToken, uploadLimiter, upload.single("image"), async (req, res) => {
   try {
     if (!req.file)
       return res.status(400).json({ success: false, message: "No image file received" });
@@ -850,7 +471,7 @@ app.post("/api/images", verifyToken, upload.single("image"), async (req, res) =>
     res.json({ success: true, message: "Image uploaded successfully", image });
   } catch (err) {
     console.error("Error uploading image:", err.message);
-    res.status(500).json({ success: false, message: "Image upload failed. Please try again." });
+    res.status(err.status || 500).json({ success: false, message: err.status ? err.message : "Image upload failed. Please try again." });
   }
 });
 
@@ -905,45 +526,40 @@ app.put("/api/images/:id", verifyToken, async (req, res) => {
 });
 
 // Removes the library entry and deletes file from persistent storage
-app.delete("/api/images/:id", verifyToken, async (req, res) => {
+app.delete("/api/images/:id", verifyToken, async (req, res, next) => {
   try {
+    if (!/^[1-9]\d*$/.test(req.params.id)) throw httpError(400, 'Invalid image ID.');
     const [image] = await dbQuery("SELECT * FROM images WHERE id = ?", [req.params.id]);
-    if (!image) {
-      return res.status(404).json({ success: false, message: "Image not found" });
-    }
-
-    // Delete physical file from storage
-    if (image.filename) {
-      await deleteFromStorage(image.filename);
-    }
-
-    // Delete variants if any
-    const variants = parseVariants(image.variants);
-    if (variants) {
-      for (const format of ["webp", "avif"]) {
-        if (variants[format]) {
-          for (const varUrl of Object.values(variants[format])) {
-            const varFilename = String(varUrl).split("/").pop().split("?")[0];
-            if (varFilename && varFilename !== image.filename) {
-              await deleteFromStorage(varFilename);
-            }
-          }
-        }
+    if (!image) throw httpError(404, 'Image not found.');
+    const urls = [...new Set([image.file_url, ...Object.values(parseVariants(image.variants) || {}).flatMap(v => Object.values(v))])];
+    if (urls.some(url => bundledMedia.has(url))) throw httpError(409, 'This image is included in the website source and cannot be deleted from the library.');
+    // Preserve images referenced by published content, drafts, or assigned slots.
+    for (const url of urls) {
+      const checks = [
+        ['blogs', 'image = ? OR INSTR(COALESCE(description, \'\'), ?) > 0', [url, url]],
+        ['gallery_images', 'image_url = ?', [url]],
+        ['portfolio_images', 'image_url = ?', [url]],
+        ['site_sections', 'image_url = ?', [url]],
+      ];
+      for (const [table, condition, params] of checks) {
+        const rows = await dbQuery(`SELECT id FROM ${table} WHERE ${condition} LIMIT 1`, params);
+        if (rows.length) throw httpError(409, 'This image is in use. Replace or remove its content references before deleting it.');
       }
     }
-
-    await dbQuery("DELETE FROM images WHERE id = ?", [req.params.id]);
-
-    // If assigned to site_sections, clear reference so frontend does not point to deleted image
-    if (image.file_url) {
-      await dbQuery("UPDATE site_sections SET image_url = NULL WHERE image_url = ?", [image.file_url]);
+    if (image.storage_provider && image.storage_provider !== mediaStorage.provider ||
+        image.storage_bucket && image.storage_bucket !== config.r2.bucket) {
+      throw httpError(409, 'This image belongs to a different storage configuration.');
     }
-
-    res.json({ success: true, message: "Image deleted successfully from storage and library" });
-  } catch (err) {
-    console.error("DB error deleting image:", err.message);
-    res.status(500).json({ success: false, message: "Failed to delete image" });
-  }
+    // Preflight every target before deleting anything. Unknown legacy storage is retained.
+    if (urls.some(url => !mediaStorage.ownsUrl(url))) throw httpError(409, 'Legacy or external images must be reviewed before physical deletion.');
+    for (const url of urls) {
+      const name = decodeURIComponent(new URL(url).pathname.split('/').pop());
+      const deleted = await deleteFromStorage(name, url);
+      if (deleted !== true) throw new Error('Storage deletion failed');
+    }
+    await dbQuery("DELETE FROM images WHERE id = ?", [req.params.id]);
+    res.json({ success: true, message: 'Unreferenced image deleted from storage and library.' });
+  } catch (err) { next(err); }
 });
 
 // ================= SITE SECTIONS API (CENTRALIZED IMAGE MANAGEMENT) =================
@@ -951,16 +567,21 @@ app.delete("/api/images/:id", verifyToken, async (req, res) => {
 app.get("/api/site-sections", async (req, res) => {
   try {
     const { category } = req.query;
-    const where = category ? "WHERE category = ?" : "";
-    const params = category ? [category] : [];
+    const where = "";
+    const params = [];
 
     const sections = await dbQuery(
       `SELECT * FROM site_sections ${where} ORDER BY sort_order ASC, id ASC`,
       params
     );
 
-    const withVariants = await attachImageVariants(sections, "image_url");
-
+    const definitions = DEFAULT_SITE_SECTIONS.filter(slot => slot.active !== false && (!category || slot.category === category));
+    const byKey = new Map(sections.map(row => [row.section_key, row]));
+    const merged = definitions.map(slot => ({ ...slot, ...byKey.get(slot.section_key),
+      section_heading: slot.section_heading, category: slot.category, page_name: slot.page_name,
+      default_image_url: slot.image_url,
+    }));
+    const withVariants = await attachImageVariants(merged, "image_url");
     // Fast key-value dictionary: { [section_key]: { image_url, alt_text, variants, lqip } }
     const map = {};
     for (const s of withVariants) {
@@ -972,6 +593,7 @@ app.get("/api/site-sections", async (req, res) => {
         section_name: s.section_name,
         page_name: s.page_name,
         category: s.category,
+        default_image_url: s.default_image_url,
       };
     }
 
@@ -996,17 +618,17 @@ app.put("/api/site-sections/:section_key", verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: "Valid image URL is required" });
     }
 
-    const trimmedUrl = image_url.trim();
+    const trimmedUrl = publicImageUrl(image_url);
     const now = Date.now();
 
-    const result = await dbQuery(
-      "UPDATE site_sections SET image_url = ?, alt_text = COALESCE(?, alt_text), updated_at = ? WHERE section_key = ?",
-      [trimmedUrl, alt_text || null, now, section_key]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "Section key not found" });
-    }
+    const slot = DEFAULT_SITE_SECTIONS.find(item => item.active !== false && item.section_key === section_key);
+    if (!slot) throw httpError(404, 'Unknown website image slot.');
+    if (alt_text != null && (typeof alt_text !== 'string' || alt_text.length > 255)) throw httpError(400, 'Alt text must be at most 255 characters.');
+    const result = await dbQuery(`INSERT INTO site_sections
+      (category, section_key, section_name, page_name, image_url, alt_text, aspect_ratio, sort_order, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE image_url = VALUES(image_url), alt_text = COALESCE(?, alt_text), updated_at = VALUES(updated_at)`,
+      [slot.category, section_key, slot.section_name, slot.page_name, trimmedUrl, alt_text || slot.alt_text, slot.aspect_ratio, slot.sort_order, now, alt_text || null]);
 
     const [updated] = await dbQuery(
       "SELECT * FROM site_sections WHERE section_key = ?",
@@ -1022,7 +644,7 @@ app.put("/api/site-sections/:section_key", verifyToken, async (req, res) => {
     });
   } catch (err) {
     console.error("DB error updating site section:", err.message);
-    res.status(500).json({ success: false, message: "Failed to update site section" });
+    res.status(err.status || 500).json({ success: false, message: err.status ? err.message : "Failed to update site section" });
   }
 });
 
@@ -1037,7 +659,7 @@ app.delete("/api/site-sections/:section_key", verifyToken, async (req, res) => {
       [now, section_key]
     );
 
-    if (result.affectedRows === 0) {
+    if (!DEFAULT_SITE_SECTIONS.some(item => item.active !== false && item.section_key === section_key)) {
       return res.status(404).json({ success: false, message: "Section key not found" });
     }
 
@@ -1053,16 +675,16 @@ app.delete("/api/site-sections/:section_key", verifyToken, async (req, res) => {
 // identically: trim, drop blanks, reject non-http(s) lines, and de-duplicate
 // within the pasted list itself.
 const parseUrlList = (raw) => {
-  const lines = Array.isArray(raw) ? raw : String(raw || "").split(/\r?\n/);
+  const lines = (Array.isArray(raw) ? raw : String(raw || "").split(/\r?\n/)).slice(0, 500);
   const seen = new Set();
   const invalid = [];
   const urls = [];
   let repeated = 0;
 
   for (const line of lines) {
-    const url = String(line || "").trim();
+    let url = String(line || "").trim();
     if (!url) continue;
-    if (!/^https?:\/\/\S+$/i.test(url)) { invalid.push(url); continue; }
+    try { url = publicImageUrl(url); } catch { invalid.push(url); continue; }
     if (seen.has(url)) { repeated += 1; continue; }
     seen.add(url);
     urls.push(url);
@@ -1124,17 +746,18 @@ app.post("/api/portfolio/bulk", verifyToken, async (req, res) => {
       });
     }
 
+    const response = await transaction(db, async query => {
     if (mode === "replace") {
-      await dbQuery("DELETE FROM portfolio_images WHERE category = ?", [category]);
+      await query("DELETE FROM portfolio_images WHERE category = ?", [category]);
     }
 
-    const existing = await dbQuery(
+    const existing = await query(
       "SELECT image_url FROM portfolio_images WHERE category = ?",
       [category]
     );
     const already = new Set(existing.map((r) => r.image_url));
 
-    const [{ maxOrder }] = await dbQuery(
+    const [{ maxOrder }] = await query(
       "SELECT COALESCE(MAX(sort_order), -1) AS maxOrder FROM portfolio_images WHERE category = ?",
       [category]
     );
@@ -1154,7 +777,7 @@ app.post("/api/portfolio/bulk", verifyToken, async (req, res) => {
     }
 
     if (rows.length > 0) {
-      await dbQuery(
+      await query(
         `INSERT IGNORE INTO portfolio_images
            (category, image_url, title, description, sort_order, created_at, updated_at)
          VALUES ?`,
@@ -1162,19 +785,21 @@ app.post("/api/portfolio/bulk", verifyToken, async (req, res) => {
       );
     }
 
-    const items = await dbQuery(
+    const items = await query(
       "SELECT * FROM portfolio_images WHERE category = ? ORDER BY sort_order ASC, id ASC",
       [category]
     );
 
-    res.json({
+    return {
       success: true,
       message: `${rows.length} image${rows.length === 1 ? "" : "s"} added${skipped ? `, ${skipped} duplicate skipped` : ""}`,
       added: rows.length,
       skipped,
       invalid,
       items,
+    };
     });
+    res.json(response);
   } catch (err) {
     console.error("DB error bulk-saving portfolio:", err.message);
     res.status(500).json({ success: false, message: "Failed to update portfolio" });
@@ -1204,9 +829,7 @@ app.put("/api/portfolio/reorder", verifyToken, async (req, res) => {
 // Edit a single entry (URL, title or description)
 app.put("/api/portfolio/:id", verifyToken, async (req, res) => {
   try {
-    const url = String(req.body.image_url || "").trim();
-    if (!/^https?:\/\/\S+$/i.test(url))
-      return res.status(400).json({ success: false, message: "Enter a valid http:// or https:// image URL." });
+    const url = publicImageUrl(req.body.image_url);
 
     const result = await dbQuery(
       "UPDATE portfolio_images SET image_url = ?, title = ?, description = ?, updated_at = ? WHERE id = ?",
@@ -1227,7 +850,7 @@ app.put("/api/portfolio/:id", verifyToken, async (req, res) => {
     if (err.code === "ER_DUP_ENTRY")
       return res.status(409).json({ success: false, message: "That URL is already in this category." });
     console.error("DB error updating portfolio image:", err.message);
-    res.status(500).json({ success: false, message: "Failed to update the image" });
+    res.status(err.status || 500).json({ success: false, message: err.status ? err.message : "Failed to update the image" });
   }
 });
 
@@ -1273,14 +896,15 @@ app.post("/api/gallery/bulk", verifyToken, async (req, res) => {
       });
     }
 
+    const response = await transaction(db, async query => {
     if (mode === "replace") {
-      await dbQuery("DELETE FROM gallery_images");
+      await query("DELETE FROM gallery_images");
     }
 
-    const existing = await dbQuery("SELECT image_url FROM gallery_images");
+    const existing = await query("SELECT image_url FROM gallery_images");
     const already = new Set(existing.map((r) => r.image_url));
 
-    const [{ maxOrder }] = await dbQuery(
+    const [{ maxOrder }] = await query(
       "SELECT COALESCE(MAX(sort_order), -1) AS maxOrder FROM gallery_images"
     );
 
@@ -1296,24 +920,26 @@ app.post("/api/gallery/bulk", verifyToken, async (req, res) => {
     }
 
     if (rows.length > 0) {
-      await dbQuery(
+      await query(
         "INSERT IGNORE INTO gallery_images (image_url, alt, sort_order, created_at, updated_at) VALUES ?",
         [rows]
       );
     }
 
-    const items = await dbQuery(
+    const items = await query(
       "SELECT * FROM gallery_images ORDER BY sort_order ASC, id ASC"
     );
 
-    res.json({
+    return {
       success: true,
       message: `${rows.length} image${rows.length === 1 ? "" : "s"} added${skipped ? `, ${skipped} duplicate skipped` : ""}`,
       added: rows.length,
       skipped,
       invalid,
       items,
+    };
     });
+    res.json(response);
   } catch (err) {
     console.error("DB error bulk-saving gallery:", err.message);
     res.status(500).json({ success: false, message: "Failed to update the gallery" });
@@ -1342,9 +968,7 @@ app.put("/api/gallery/reorder", verifyToken, async (req, res) => {
 
 app.put("/api/gallery/:id", verifyToken, async (req, res) => {
   try {
-    const url = String(req.body.image_url || "").trim();
-    if (!/^https?:\/\/\S+$/i.test(url))
-      return res.status(400).json({ success: false, message: "Enter a valid http:// or https:// image URL." });
+    const url = publicImageUrl(req.body.image_url);
 
     const result = await dbQuery(
       "UPDATE gallery_images SET image_url = ?, alt = ?, updated_at = ? WHERE id = ?",
@@ -1359,7 +983,7 @@ app.put("/api/gallery/:id", verifyToken, async (req, res) => {
     if (err.code === "ER_DUP_ENTRY")
       return res.status(409).json({ success: false, message: "That URL is already in the gallery." });
     console.error("DB error updating gallery image:", err.message);
-    res.status(500).json({ success: false, message: "Failed to update the image" });
+    res.status(err.status || 500).json({ success: false, message: err.status ? err.message : "Failed to update the image" });
   }
 });
 
@@ -1374,8 +998,13 @@ app.delete("/api/gallery/:id", verifyToken, async (req, res) => {
 });
 
 // ================= CREATE BLOG =================
-app.post("/api/blogs", verifyToken, upload.single("image"), async (req, res) => {
+app.post("/api/blogs", verifyToken, uploadLimiter, upload.single("image"), async (req, res) => {
   try {
+    if (!validSlug(req.body.permalink) || !['draft', 'published'].includes(req.body.status) ||
+        typeof req.body.title !== 'string' || !req.body.title.trim() || req.body.title.length > 255) {
+      return res.status(400).json({ success: false, message: 'A title, valid permalink, and draft/published status are required.' });
+    }
+    if (req.body.existingImage) publicImageUrl(req.body.existingImage);
     let imageUrl = null;
 
     if (req.file) {
@@ -1415,15 +1044,15 @@ app.post("/api/blogs", verifyToken, upload.single("image"), async (req, res) => 
       ],
       (err) => {
         if (err) {
-          console.error("DB error creating blog:", err);
+          console.error("DB error creating blog:");
           return res.status(500).json({ success: false, message: "Failed to create blog" });
         }
         res.json({ success: true, message: "Blog created" });
       }
     );
   } catch (err) {
-    console.error("Error creating blog:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("Error creating blog:");
+    res.status(err.status || 500).json({ success: false, message: err.status ? err.message : "Server error" });
   }
 });
 
@@ -1461,10 +1090,10 @@ app.get("/api/admin/blogs", verifyToken, (req, res) => {
 // ================= GET SINGLE BLOG BY SLUG =================
 app.use("/api/blog", (req, res) => {
   const slug = req.path.replace(/^\//, "");
-  if (!slug)
+  if (!slug || !validSlug(slug))
     return res.status(404).json({ success: false, message: "No slug provided" });
 
-  db.query("SELECT * FROM blogs WHERE permalink = ?", [slug], async (err, result) => {
+  db.query("SELECT * FROM blogs WHERE permalink = ? AND status = 'published'", [slug], async (err, result) => {
     if (err) return res.status(500).json({ success: false, message: "Database error" });
     if (result.length === 0)
       return res.status(404).json({ success: false, message: "Blog not found" });
@@ -1478,8 +1107,14 @@ app.use("/api/blog", (req, res) => {
 });
 
 // ================= UPDATE BLOG =================
-app.put("/api/blogs/:id", verifyToken, upload.single("image"), async (req, res) => {
+app.put("/api/blogs/:id", verifyToken, uploadLimiter, upload.single("image"), async (req, res) => {
   const { id } = req.params;
+  if (!/^[1-9]\d*$/.test(id) || !validSlug(req.body.permalink) || !['draft', 'published'].includes(req.body.status) ||
+      typeof req.body.title !== 'string' || !req.body.title.trim() || req.body.title.length > 255) {
+    return res.status(400).json({ success: false, message: 'A title, valid permalink, and draft/published status are required.' });
+  }
+  try { if (req.body.existingImage) publicImageUrl(req.body.existingImage); }
+  catch (err) { return res.status(400).json({ success: false, message: err.message }); }
   const {
     title,
     permalink,
@@ -1540,14 +1175,14 @@ app.put("/api/blogs/:id", verifyToken, upload.single("image"), async (req, res) 
 
     db.query(sql, values, (err) => {
       if (err) {
-        console.error("DB error updating blog:", err);
+        console.error("DB error updating blog:");
         return res.status(500).json({ success: false, message: "Failed to update blog" });
       }
       res.json({ success: true, message: "Blog updated" });
     });
   } catch (err) {
-    console.error("Error updating blog:", err);
-    res.status(500).json({ success: false, message: "Server error uploading image" });
+    console.error("Error updating blog:");
+    res.status(err.status || 500).json({ success: false, message: err.status ? err.message : "Server error uploading image" });
   }
 });
 
@@ -1574,30 +1209,23 @@ app.delete("/api/blogs/:id", verifyToken, (req, res) => {
 //
 // In AdminBlogs.jsx the "Copy Share Link" button copies exactly this URL.
 
-const escapeHtml = (str) =>
-  String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-// ================= OG SHARE PREVIEW =================
 app.use("/share/", (req, res) => {
   const permalink = req.path.replace(/^\//, "");
-  if (!permalink) return res.redirect("https://geniestudio.in");
+  if (!permalink || !validSlug(permalink)) return res.sendStatus(404);
 
   db.query(
-    "SELECT title, metaDescription, image, permalink FROM blogs WHERE permalink = ?",
+    "SELECT title, metaDescription, image, permalink FROM blogs WHERE permalink = ? AND status = 'published'",
     [permalink],
     (err, result) => {
       if (err || result.length === 0) {
-        return res.redirect("https://geniestudio.in/blog");
+        return res.sendStatus(404);
       }
       const blog        = result[0];
       const title       = escapeHtml(blog.title || "GenieStudio Blog");
       const description = escapeHtml(blog.metaDescription || "Read this article on GenieStudio");
-      const image       = escapeHtml(blog.image || "https://geniestudio.in/og-default.jpg");
-      const pageUrl     = `https://geniestudio.in/blog/${blog.permalink}`;
+      const image       = escapeHtml(blog.image || `${config.siteUrl}/GenieStudio.png`);
+      const pageUrl = `${config.siteUrl}/blog/${blog.permalink.split('/').map(encodeURIComponent).join('/')}`;
+      const escapedPageUrl = escapeHtml(pageUrl);
 
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.send(`<!DOCTYPE html>
@@ -1612,20 +1240,20 @@ app.use("/share/", (req, res) => {
   <meta property="og:image"       content="${image}" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:url"         content="${pageUrl}" />
+  <meta property="og:url"         content="${escapedPageUrl}" />
   <meta property="og:site_name"   content="GenieStudio" />
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image"       content="${image}" />
-  <meta http-equiv="refresh" content="0;url=${pageUrl}" />
+  <meta http-equiv="refresh" content="0;url=${escapedPageUrl}" />
 </head>
 <body style="margin:0;background:#1a1a1a;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;">
   <div>
     <p style="font-size:14px;color:#aaa;margin-bottom:12px;">Redirecting you to the article…</p>
-    <a href="${pageUrl}" style="color:#D4B49A;font-size:16px;font-weight:bold;">${title}</a>
+    <a href="${escapedPageUrl}" style="color:#D4B49A;font-size:16px;font-weight:bold;">${title}</a>
   </div>
-  <script>window.location.replace("${pageUrl}");</script>
+  <script>window.location.replace(${safeJson(pageUrl)});</script>
 </body>
 </html>`);
     }
@@ -1638,21 +1266,48 @@ app.use("/share/", (req, res) => {
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
 
-  console.error("Request error:", err.message);
+  console.error("Request failed", { status: err.status || 500, code: err.code || "REQUEST_ERROR" });
 
   if (err.code === "LIMIT_FILE_SIZE")
     return res.status(413).json({ success: false, message: "Image size must be less than 5 MB." });
+
+  if (err.code?.startsWith('LIMIT_')) return res.status(400).json({ success: false, message: 'The upload form exceeds the allowed file or field limits.' });
 
   if (err.message === "Only images are allowed")
     return res
       .status(415)
       .json({ success: false, message: "Please upload a JPG, JPEG, PNG, or WebP image." });
 
-  res.status(500).json({ success: false, message: err.message || "Server error" });
+  const status = err.status >= 400 && err.status < 500 ? err.status : 500;
+  res.status(status).json({ success: false, message: status < 500 ? err.message : "Server error. Please try again later." });
 });
 
-// ================= START =================
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`👉 Open: http://localhost:${PORT}`);
-});
+app.locals.db = db;
+app.locals.ready = async () => {
+  // Callbacks may enqueue column changes or seed checks; wait until the queue is stable.
+  let pending;
+  do { pending = initialization; await pending; } while (pending !== initialization);
+  if (initializationError) throw initializationError;
+};
+return app;
+}
+
+if (require.main === module) {
+  try {
+    const config = loadConfig();
+    const app = createApp({ config });
+    app.locals.ready().then(() => {
+      const server = app.listen(config.port, () => console.log(`Backend listening on port ${config.port}`));
+      server.requestTimeout = 30000;
+      server.headersTimeout = 15000;
+    }).catch(() => {
+      console.error('Backend database initialization failed. Check connectivity, TLS, and schema privileges.');
+      app.locals.db.end();
+      process.exitCode = 1;
+    });
+  } catch (err) {
+    console.error(`Backend configuration error: ${err.message}`);
+    process.exitCode = 1;
+  }
+}
+module.exports = { createApp };

@@ -1,5 +1,6 @@
+import { getToken, setToken } from "../lib/auth";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import BASE_URL from "../api";
 
@@ -10,11 +11,15 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) navigate("/admin/blogs");
-  }, [navigate]);
+    const token = getToken();
+    if (token) {
+      const destination = location.state?.from?.pathname || "/admin/blogs";
+      navigate(destination, { replace: true });
+    }
+  }, [navigate, location]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,8 +52,9 @@ export default function AdminLogin() {
       const data = await res.json();
 
       if (data.success) {
-        localStorage.setItem("token", data.token);
-        navigate("/admin/blogs");
+        setToken(data.token);
+        const destination = location.state?.from?.pathname || "/admin/blogs";
+        navigate(destination, { replace: true });
       } else {
         setError(data.message || "Invalid credentials.");
       }
@@ -124,7 +130,7 @@ export default function AdminLogin() {
                   <input
                     id="email"
                     type="email"
-                    placeholder="admin@geniemedia.in"
+                    placeholder="Your admin email"
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);

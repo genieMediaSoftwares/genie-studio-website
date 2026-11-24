@@ -284,6 +284,7 @@ const Eventshoots = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="service_hero_event"
                     src={HERO_IMAGE}
                     alt="Event photography and stage video coverage by GenieStudio in Visakhapatnam"
                     priority

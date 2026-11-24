@@ -20,9 +20,6 @@ const Header = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [location.pathname]);
 
   const navItems = [
     { name: "Home", path: "/" },
@@ -58,8 +55,8 @@ const Header = () => {
             <img
               src="/GenieStudio.png"
               alt=""
-              width="30"
-              height="93"
+              width="409"
+              height="921"
               className="h-9 sm:h-10 md:h-11 w-auto object-contain flex-shrink-0"
               fetchPriority="high"
               decoding="async"

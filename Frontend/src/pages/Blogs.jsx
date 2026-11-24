@@ -1,3 +1,4 @@
+import { usePublicData } from "../lib/publicData";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, FileText } from "lucide-react";
@@ -27,8 +28,9 @@ const SectionEyebrow = ({ label, light = false }) => (
 );
 
 export default function Blogs() {
-  const [blogs, setBlogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const initialData = usePublicData();
+  const [blogs, setBlogs] = useState(initialData.blogs || []);
+  const [loading, setLoading] = useState(!initialData.blogs);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [failedImages, setFailedImages] = useState({});
   const [lightbox, setLightbox] = useState(null);
@@ -53,18 +55,6 @@ export default function Blogs() {
     };
     fetchBlogs();
   }, []);
-
-  useEffect(() => {
-    if (!blogs.length) return;
-    const allKeywords = blogs.map((b) => b.keywords).filter(Boolean).join(", ");
-    if (allKeywords) {
-      document.head.querySelector('meta[name="keywords"]')?.remove();
-      const m = document.createElement("meta");
-      m.name = "keywords";
-      m.content = allKeywords;
-      document.head.appendChild(m);
-    }
-  }, [blogs]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -92,7 +82,7 @@ export default function Blogs() {
 
   const getExcerpt = (blog) => {
     if (blog.metaDescription) return blog.metaDescription;
-    if (blog.description) return blog.description;
+    if (blog.description) return blog.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     if (typeof blog.content === "string") {
       return blog.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     }

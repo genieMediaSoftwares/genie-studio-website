@@ -237,6 +237,7 @@ const Corporateshoots = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="service_hero_corporate"
                     src={HERO_IMAGE}
                     alt="Corporate photography and company profile video production by Genie Studio in Visakhapatnam"
                     priority

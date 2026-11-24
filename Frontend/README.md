@@ -1,94 +1,17 @@
-# Genie Studio — Frontend Module Documentation
+# Genie Studio frontend
 
-This directory contains the client-side Single Page Application (SPA) for **Genie Studio**, built with React 19, Vite, Tailwind CSS, GSAP, and Three.js.
+React 19 + Vite, preserving the existing studio design, animations, equipment, and genuine company content.
 
----
+For local development, keep public settings in `Frontend/.env`; this file stays local and is ignored by Git. On Vercel, configure the variables in the project's environment settings before building; uploading a local environment file is not required. Provider variables take precedence over local files. `VITE_API_URL` points to the separately hosted backend. `VITE_SITE_URL` is the confirmed public website origin; leave it blank while the final domain is unconfirmed. `VITE_SITE_INDEXABLE` enables indexing only for a confirmed release. `VITE_MEDIA_URL` preserves the existing media origin independently of the future site domain. Every `VITE_` value is public in the browser. `SEO_FETCH_PUBLIC_DATA` controls the read-only build snapshot and does not carry credentials. Never put database, JWT, storage, or private API secrets in frontend variables.
 
-## Architecture Overview
+Commands: `npm run dev`, `npm run lint`, `npm run build`, `node scripts/check-site.mjs`, and `npm run preview`. Native config loading avoids bundling the Vite config and supports this ESM project. Node must satisfy Vite 7 requirements.
 
-- **Framework**: React `19.2.0` with React Router DOM `7.13.0`.
-- **Styling**: Tailwind CSS `3.4.19` with custom studio theme configuration (`tailwind.config.js`).
-- **Interactive Visuals**:
-  - **3D Dome Gallery** (`src/components/DomeGallery.jsx`): Interactive WebGL sphere using Three.js and OGL to project photographic works into a 3D dome.
-  - **Fluid Cursor** (`src/components/SplashCursor.jsx`, `DeferredSplashCursor.jsx`): Interactive pointer particle effect.
-  - **Animations**: GSAP `3.14.2` and Framer Motion (`motion` `12.29.2`) for smooth viewport transitions.
-- **Image Optimization Engine** (`src/components/OptimizedImage.jsx`):
-  - Resolves responsive images using precomputed `src/lib/imageManifest.json`.
-  - Emits `<picture>` elements with AVIF and WebP sources across standard screen resolutions (400px - 2000px).
-  - Integrates blurred Low-Quality Image Placeholders (LQIP) to eliminate layout shift (CLS).
-- **SEO & Social Metadata** (`src/components/Seo.jsx` & `src/lib/seoConfig.js`):
-  - React 19 native head element hoisting for per-route `<title>`, `<meta>`, and Schema.org JSON-LD tags.
+Build output is `dist`. The prerenderer renders the actual React routes to static HTML, including lazy public routes, and emits unique metadata, canonical URLs, Open Graph, Twitter cards, and structured data. React hydrates the generated markup. Existing page layouts and CSS are retained. Admin and error pages are noindex. There are no meta-keywords tags.
 
----
+Preview builds are noindex with a blocking robots.txt and empty sitemap. Enable public indexing only with `VITE_SITE_INDEXABLE=true`, the confirmed HTTPS `VITE_SITE_URL`, HTTPS `VITE_API_URL`, and `SEO_FETCH_PUBLIC_DATA=true`. This explicitly snapshots only published blog data and public gallery/image assignments from the backend at build time. The release must be rebuilt whenever published content/status changes. No deployment hook is configured.
 
-## Directory Structure
+For Vercel: root directory `Frontend`, build command `npm run build`, output directory `dist`. `vercel.json` uses clean URLs and static routing; unknown paths use the custom 404 document. It does not deploy the Express backend. Set the documented frontend/build variables in the appropriate Vercel environment. Do not set backend secrets in Vercel frontend build variables.
 
-```
-Frontend/
-├── public/                     # Static assets served at web root
-│   ├── .htaccess               # Apache SPA rewrite rules & caching headers
-│   ├── robots.txt              # Crawler instructions & sitemap link
-│   ├── sitemap.xml             # XML sitemap (auto-generated during build)
-│   ├── llms.txt                # Contextual AI documentation
-│   └── GenieStudio-logo.webp   # Studio logo brand assets
-├── scripts/
-│   └── generate-sitemap.mjs    # Node.js script generating dynamic XML sitemaps
-├── src/
-│   ├── api.js                  # Centralized backend URL configuration
-│   ├── App.jsx                 # Route definitions and layout wrapper
-│   ├── main.jsx                # Application mounting entry point
-│   ├── components/             # Reusable UI widgets and layout components
-│   │   ├── Header.jsx          # Studio navigation header
-│   │   ├── Footer.jsx          # Site footer with contact info
-│   │   ├── DomeGallery.jsx     # WebGL 3D spherical dome gallery
-│   │   ├── BlogEditor.jsx      # TipTap rich text WYSIWYG editor
-│   │   ├── OptimizedImage.jsx  # Multi-format responsive picture component
-│   │   └── ProtectedRoute.jsx  # Route guard for /admin routes
-│   ├── context/                # Theme and state context providers
-│   ├── lib/                    # API clients and utility libraries
-│   │   ├── seoConfig.js        # Search metadata for all routes
-│   │   ├── imageManifest.json  # Precomputed image variant lookup
-│   │   ├── imageApi.js         # Library image API handlers
-│   │   ├── portfolioApi.js     # Portfolio API handlers
-│   │   └── galleryApi.js       # Dome gallery API handlers
-│   └── pages/                  # Page route components (Public & Admin)
-├── package.json
-└── vite.config.js
-```
+Image assignments load through the shared public image provider. Existing approved images remain the fallback when the backend is unavailable. Gallery/blog empty states do not invent replacement records. Tokens are stored per browser tab and expire; the backend verifies every protected operation.
 
----
-
-## Environment Variables
-
-Create `.env` in this directory:
-
-```ini
-# Backend API service URL (defaults to Render backend if unset)
-VITE_API_URL=http://localhost:5000
-
-# Optional: EmailJS credentials if restored for contact form
-# VITE_EMAILJS_SERVICE_ID=your_service_id
-# VITE_EMAILJS_TEMPLATE_ID=your_template_id
-# VITE_EMAILJS_PUBLIC_KEY=your_public_key
-```
-
----
-
-## NPM Scripts
-
-- `npm run dev`: Launch local development server on `http://localhost:5173`.
-- `npm run build`: Run sitemap generation script followed by production Vite bundling to `dist/`.
-- `npm run sitemap`: Generate `public/sitemap.xml` without triggering a full build.
-- `npm run lint`: Run ESLint analysis across all source files.
-- `npm run preview`: Preview the compiled production build locally.
-
----
-
-## Subdomain Migration Notes
-
-When moving from `geniestudio.in` to a subdomain (e.g., `studio.yourdomain.com`):
-1. **API Endpoint**: Set `VITE_API_URL` in `.env` to your backend subdomain (e.g. `https://api-studio.yourdomain.com`).
-2. **SEO URLs**: In `src/lib/seoConfig.js`, update `SITE_URL` to the new subdomain.
-3. **HTML Metadata**: In `index.html`, update canonical URLs and Open Graph meta tags.
-4. **Sitemap**: In `scripts/generate-sitemap.mjs`, update `SITE` to the new subdomain.
-5. **Contact Form**: In `src/pages/Contact.jsx`, replace the hardcoded `geniestudio.in/contact.php` endpoint with the backend `/api/contact` route.
+Browser/mobile visual verification is still required before release because the browser-control host was unavailable during the local review. See `../PRODUCTION_REVIEW.md`.

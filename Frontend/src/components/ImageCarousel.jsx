@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import OptimizedImage from './OptimizedImage';
 
-export default function imageCarousel() {
+export default function ImageCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
@@ -61,9 +61,9 @@ export default function imageCarousel() {
   useEffect(() => {
     if (!isAutoPlaying) return;
 
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(() => setCurrentSlide(prev => (prev + 1) % slides.length), 5000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, currentSlide]);
+  }, [isAutoPlaying, currentSlide, slides.length]);
 
   return (
     <div className="bg-black flex flex-col">

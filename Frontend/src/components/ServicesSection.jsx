@@ -196,6 +196,7 @@ const ServicesSection = () => {
                   <ServiceImageFallback service={service} />
                 ) : (
                   <OptimizedImage
+                    sectionKey={`home_service_${service.id.replace("-shoots", "").replace("business-portfolio", "business")}`}
                     src={service.image}
                     alt={service.imageAlt}
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

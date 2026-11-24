@@ -282,6 +282,7 @@ const Productshoots = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="service_hero_product"
                     src={HERO_IMAGE}
                     alt="Studio product photography shoot setup at Genie Studio in Visakhapatnam"
                     priority
@@ -472,7 +473,7 @@ const Productshoots = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {RECENT_PRODUCT_SHOOTS.map((item) => (
+            {RECENT_PRODUCT_SHOOTS.map((item, index) => (
               <figure
                 key={item.id}
                 className="rounded-2xl overflow-hidden bg-white border border-slate-200/80 shadow-sm"
@@ -482,6 +483,7 @@ const Productshoots = () => {
                     <ProductImageFallback icon={Camera} title={item.caption} />
                   ) : (
                     <OptimizedImage
+                      sectionKey={`product_recent_${index + 1}`}
                       src={item.src}
                       alt={item.alt}
                       sizes="(max-width: 768px) 100vw, 33vw"

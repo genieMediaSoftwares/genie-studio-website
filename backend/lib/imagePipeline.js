@@ -28,8 +28,6 @@
  */
 
 const sharp = require("sharp");
-const axios = require("axios");
-const FormData = require("form-data");
 const { uploadToStorage } = require("./storageProvider");
 
 /** Ladder chosen to cover 1× phones through 2× desktop without gaps. */
@@ -46,45 +44,12 @@ const AVIF_QUALITY = 58;
 /** Placeholder is 24px wide; it is stretched and blurred by CSS, never seen sharp. */
 const LQIP_WIDTH = 24;
 
-const HOSTINGER_UPLOAD_URL = "https://geniestudio.in/upload.php";
+const READ_OPTIONS = { failOn: "warning", limitInputPixels: 40_000_000 };
 
-/**
- * sharp defaults to bailing out on any malformed chunk. These originals come
- * from cameras and phones, some with truncated EXIF, so decode as much as the
- * file allows instead of throwing.
- */
-const READ_OPTIONS = { failOn: "none", limitInputPixels: 500_000_000 };
-
-/**
- * Pushes a buffer to storage (Cloudflare R2 or local fallback, with Hostinger fallback).
- */
-async function uploadBufferToHostinger(buffer, filename) {
-  // If storageProvider (R2 or local persistent) is available, use it directly
-  try {
-    const ext = filename.split(".").pop().toLowerCase();
-    const mimeType = ext === "avif" ? "image/avif" : ext === "webp" ? "image/webp" : "image/jpeg";
-    return await uploadToStorage(buffer, filename, mimeType);
-  } catch (storageErr) {
-    console.warn(`Primary storage failed for ${filename}, attempting Hostinger fallback:`, storageErr.message);
-  }
-
-  const formData = new FormData();
-  formData.append("file", buffer, { filename });
-
-  const response = await axios.post(HOSTINGER_UPLOAD_URL, formData, {
-    headers: formData.getHeaders(),
-    maxContentLength: Infinity,
-    maxBodyLength: Infinity,
-    timeout: 10000,
-  });
-
-  const url = response.data?.url;
-  if (!url) {
-    throw new Error(
-      `upload.php returned no URL for ${filename}: ${JSON.stringify(response.data).slice(0, 200)}`
-    );
-  }
-  return url;
+async function uploadBufferToHostinger(buffer, filename, storageUpload = uploadToStorage) {
+  const ext = filename.split(".").pop().toLowerCase();
+  const mimeType = ext === "avif" ? "image/avif" : ext === "webp" ? "image/webp" : "image/jpeg";
+  return storageUpload(buffer, filename, mimeType);
 }
 
 /** `1786519468_1786519468526-962658427.jpg` → `1786519468_1786519468526-962658427` */
@@ -117,7 +82,7 @@ async function makeLqip(pipeline) {
  * @returns {Promise<{width:number, height:number, lqip:string,
  *                    variants:{webp:Object<number,string>, avif:Object<number,string>}}>}
  */
-async function generateAndUploadVariants(input, nameSeed, { log } = {}) {
+async function generateAndUploadVariants(input, nameSeed, { log, storageUpload = uploadToStorage } = {}) {
   const base = baseNameOf(nameSeed);
 
   // .rotate() with no argument applies the EXIF orientation and then strips it.
@@ -152,8 +117,8 @@ async function generateAndUploadVariants(input, nameSeed, { log } = {}) {
     ]);
 
     const [webpUrl, avifUrl] = await Promise.all([
-      uploadBufferToHostinger(webpBuf, `${base}-${w}.webp`),
-      uploadBufferToHostinger(avifBuf, `${base}-${w}.avif`),
+      uploadBufferToHostinger(webpBuf, `${base}-${w}.webp`, storageUpload),
+      uploadBufferToHostinger(avifBuf, `${base}-${w}.avif`, storageUpload),
     ]);
 
     variants.webp[w] = webpUrl;

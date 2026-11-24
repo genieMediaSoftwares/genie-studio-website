@@ -243,7 +243,8 @@ const PodcastHero = () => {
                         <StudioFallbackBackdrop title={slide.title} />
                       ) : (
                         <OptimizedImage
-                          src={slide.image}
+                          sectionKey={`home_hero_slide_${slide.id}`}
+                    src={slide.image}
                           alt={slide.alt}
                           priority={index === 0}
                           sizes="(max-width: 1024px) 100vw, 50vw"
@@ -395,6 +396,7 @@ const PodcastHero = () => {
                 <StudioFallbackBackdrop title={currentSlide.title} />
               ) : (
                 <OptimizedImage
+                  sectionKey={`home_hero_slide_${currentSlide.id}`}
                   src={currentSlide.image}
                   alt={currentSlide.alt}
                   sizes="(max-width: 768px) 100vw, 768px"

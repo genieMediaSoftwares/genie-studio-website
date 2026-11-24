@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import { getToken, clearToken } from "../lib/auth";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BlogEditor from "../components/BlogEditor";
 import AdminNav from "../components/AdminNav";
@@ -356,7 +357,7 @@ const buildPermalink = (title, category) => {
 export default function AdminBlogs() {
   const navigate = useNavigate();
   const location = useLocation();
-  const token = localStorage.getItem("token");
+  const token = getToken();
   const formTopRef = useRef();
 
   const [form, setForm] = useState(emptyForm);
@@ -380,7 +381,7 @@ export default function AdminBlogs() {
   // same API call, so both pages agree immediately and after a refresh.
   const library = useImageLibrary();
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = useCallback(async () => {
     setDbLoading(true);
     try {
       const allRes = await fetch(`${BASE_URL}/api/admin/blogs`, {
@@ -391,18 +392,20 @@ export default function AdminBlogs() {
         const allData = await allRes.json();
         setBlogs(Array.isArray(allData) ? allData.sort((a, b) => b.createdAt - a.createdAt) : []);
       } else {
-        const pubRes = await fetch(`${BASE_URL}/api/blogs`);
-        const pubData = await pubRes.json();
-        setBlogs(Array.isArray(pubData) ? pubData.sort((a, b) => b.createdAt - a.createdAt) : []);
+        if (allRes.status === 401 || allRes.status === 403) {
+          clearToken();
+          navigate('/admin', { replace: true });
+        }
+        throw new Error('Could not load the admin blog list.');
       }
-    } catch (err) {
-      showToast("Error loading blogs.", "error");
+    } catch {
+      setToast({ msg: 'Error loading blogs. Please check your session and try again.', type: 'error' });
     } finally {
       setDbLoading(false);
     }
-  };
+  }, [token, navigate]);
 
-  useEffect(() => { fetchBlogs(); }, []);
+  useEffect(() => { fetchBlogs(); }, [fetchBlogs]);
 
   const publishedBlogs = blogs.filter((b) => b.status === "published");
   const draftBlogs = blogs.filter((b) => b.status === "draft");
@@ -570,7 +573,7 @@ export default function AdminBlogs() {
       } else {
         showToast(data.message || "Something went wrong. Please try again.", "error");
       }
-    } catch (err) {
+    } catch {
       showToast("Network error. Please try again.", "error");
     } finally {
       setLoading(false);
@@ -608,7 +611,7 @@ export default function AdminBlogs() {
       } else {
         showToast("Error publishing blog.", "error");
       }
-    } catch (err) {
+    } catch {
       showToast("Error publishing blog.", "error");
     } finally {
       setLoading(false);
@@ -637,7 +640,7 @@ export default function AdminBlogs() {
       });
       showToast("Blog moved to drafts — hidden from users.");
       fetchBlogs();
-    } catch (err) {
+    } catch {
       showToast("Error updating blog.", "error");
     }
   };
@@ -671,7 +674,7 @@ export default function AdminBlogs() {
       showToast("Blog deleted.");
       setDeleteTarget(null);
       fetchBlogs();
-    } catch (err) {
+    } catch {
       showToast("Error deleting blog.", "error");
     } finally {
       setLoading(false);
@@ -689,7 +692,7 @@ export default function AdminBlogs() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    clearToken();
     navigate("/admin");
   };
 

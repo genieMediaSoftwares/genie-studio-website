@@ -474,6 +474,7 @@ const Portfolio = () => {
                         />
                       ) : (
                         <OptimizedImage
+                          sectionKey={["portfolio_cat_podcast", "portfolio_cat_shorts", "portfolio_cat_interviews", "portfolio_cat_promotional", "portfolio_cat_reels", "portfolio_cat_corporate", "portfolio_cat_editing"][index]}
                           src={category.image}
                           alt={category.alt}
                           sizes="(max-width: 1024px) 100vw, 50vw"
@@ -561,7 +562,8 @@ const Portfolio = () => {
                     />
                   ) : (
                     <OptimizedImage
-                      src="https://geniestudio.in/uploads/1786601936_1786601934919-89162093.jpg"
+                      sectionKey="portfolio_story_callout"
+                    src="https://geniestudio.in/uploads/1786601936_1786601934919-89162093.jpg"
                       alt="Genie Studio creative production environment in Visakhapatnam"
                       sizes="(max-width: 1024px) 100vw, 42vw"
                       className="w-full h-full"
@@ -624,6 +626,7 @@ const Portfolio = () => {
                   />
                 ) : (
                   <OptimizedImage
+                    sectionKey="portfolio_cta_banner"
                     src="https://geniestudio.in/uploads/1786531747_1786531746636-336880294.webp"
                     alt="Professional cinema camera lens at Genie Studio"
                     sizes="(max-width: 1024px) 100vw, 25vw"
